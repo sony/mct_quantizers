@@ -18,7 +18,7 @@ import inspect
 
 from mct_quantizers.common.base_inferable_quantizer import BaseInferableQuantizer
 from mct_quantizers.common.constants import FOUND_TORCH, LAYER, TRAINING
-from logger import Logger
+from mct_quantizers.logger import Logger
 
 if FOUND_TORCH:
     import torch

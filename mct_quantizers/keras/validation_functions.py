@@ -16,7 +16,7 @@ from typing import Any
 
 import numpy as np
 
-from logger import Logger
+from mct_quantizers.logger import Logger
 
 
 def validate_uniform_min_max_ranges(min_range: Any, max_range: Any) -> None:

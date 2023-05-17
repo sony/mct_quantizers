@@ -15,7 +15,7 @@
 from mct_quantizers.common.constants import FOUND_TF
 from mct_quantizers.common.get_all_subclasses import get_all_subclasses
 from mct_quantizers.keras.quantizers.base_keras_inferable_quantizer import BaseKerasInferableQuantizer
-from logger import Logger
+from mct_quantizers.logger import Logger
 
 if FOUND_TF:
     import tensorflow as tf

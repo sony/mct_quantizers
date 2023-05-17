@@ -20,7 +20,7 @@ from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, Quant
 from mct_quantizers.common.constants import FOUND_TF
 from mct_quantizers.common.quant_info import QuantizationMethod
 from mct_quantizers.common.quant_utils import adjust_range_to_include_zero
-from logger import Logger
+from mct_quantizers.logger import Logger
 
 
 if FOUND_TF:

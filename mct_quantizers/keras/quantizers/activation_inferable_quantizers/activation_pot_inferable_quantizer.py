@@ -19,7 +19,7 @@ import numpy as np
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget
 from mct_quantizers.common.constants import FOUND_TF
 from mct_quantizers.common.quant_info import QuantizationMethod
-from logger import Logger
+from mct_quantizers.logger import Logger
 
 
 if FOUND_TF:

@@ -16,7 +16,7 @@ from typing import Dict, List, Any, Tuple
 
 from mct_quantizers.common.base_inferable_quantizer import BaseInferableQuantizer
 from mct_quantizers.common.constants import FOUND_TF, ACTIVATION_QUANTIZERS, WEIGHTS_QUANTIZERS, STEPS, LAYER, TRAINING
-from logger import Logger
+from mct_quantizers.logger import Logger
 
 if FOUND_TF:
     import tensorflow as tf

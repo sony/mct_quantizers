@@ -16,7 +16,7 @@ from mct_quantizers.common.base_inferable_quantizer import QuantizationTarget
 from mct_quantizers.common.constants import QUANTIZATION_TARGET, QUANTIZATION_METHOD
 from mct_quantizers.common.get_all_subclasses import get_all_subclasses
 from mct_quantizers.common.quant_info import QuantizationMethod
-from logger import Logger
+from mct_quantizers.logger import Logger
 
 
 def get_inferable_quantizer_class(quant_target: QuantizationTarget,
