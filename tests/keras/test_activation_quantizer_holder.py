@@ -28,7 +28,7 @@ from mct_quantizers.keras.quantizers.activation_inferable_quantizers.activation_
     ActivationSymmetricInferableQuantizer
 
 
-class TestActivationQuantizationHolder(unittest.TestCase):
+class TestKerasActivationQuantizationHolder(unittest.TestCase):
 
     def test_activation_quantization_holder_inference(self):
         num_bits = 3
