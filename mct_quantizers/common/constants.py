@@ -63,8 +63,6 @@ MIN_RANGE = 'min_range'
 MAX_RANGE = 'max_range'
 CHANNEL_AXIS = 'channel_axis'
 CLUSTER_CENTERS = 'cluster_centers'
-MULTIPLIER_N_BITS = 'multiplier_n_bits'
-EPS = 'eps'
 
 
 ## Constant values
