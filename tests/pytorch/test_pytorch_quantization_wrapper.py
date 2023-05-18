@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+import unittest
 
 import torch
 import torch.nn as nn
 import numpy as np
 
 from mct_quantizers.pytorch.quantize_wrapper import PytorchQuantizationWrapper
-from tests.base_inferable_quantizer_test import BaseInferableQuantizerTest
 
 
 class ZeroWeightsQuantizer:
@@ -57,41 +57,31 @@ class ZeroActivationsQuantizer:
         return {}
 
 
-class TestPytorchWeightsQuantizationWrapper(BaseInferableQuantizerTest):
+class TestPytorchWeightsQuantizationWrapper(unittest.TestCase):
 
-    def __init__(self, unit_test):
-        super().__init__(unit_test)
-
+    def setUp(self):
         self.input_shapes = [(1, 3, 8, 8)]
         self.inputs = [np.random.randn(*in_shape) for in_shape in self.input_shapes]
+        self.layer = nn.Conv2d(3, 20, 3)
 
-    def create_layer(self):
-        return nn.Conv2d(3, 20, 3)
-
-    def run_test(self):
-        wrapper = PytorchQuantizationWrapper(nn.Conv2d(3, 20, 3))
+    def test_weights_quantization_wrapper(self):
+        wrapper = PytorchQuantizationWrapper(self.layer)
         wrapper.add_weights_quantizer('weight', ZeroWeightsQuantizer())
         wrapper._set_weights_vars()
         (name, weight, quantizer) = wrapper._weights_vars[0]
-        self.unit_test.assertTrue(isinstance(wrapper, PytorchQuantizationWrapper))
-        self.unit_test.assertTrue(isinstance(wrapper.layer, nn.Conv2d))
-        self.unit_test.assertTrue(name == 'weight')
-        self.unit_test.assertTrue((weight == getattr(wrapper.layer, 'weight')).any())
-        self.unit_test.assertTrue(isinstance(quantizer, ZeroWeightsQuantizer))
+        self.assertTrue(isinstance(wrapper, PytorchQuantizationWrapper))
+        self.assertTrue(isinstance(wrapper.layer, nn.Conv2d))
+        self.assertTrue(name == 'weight')
+        self.assertTrue((weight == getattr(wrapper.layer, 'weight')).any())
+        self.assertTrue(isinstance(quantizer, ZeroWeightsQuantizer))
         y = wrapper(torch.Tensor(self.inputs[0])) # apply the wrapper on some random inputs
-        self.unit_test.assertTrue((0 == getattr(wrapper.layer, 'weight')).any()) # check the weight are now quantized
-        self.unit_test.assertTrue((y[0,:,0,0] == getattr(wrapper.layer, 'bias')).any()) # check the wrapper's outputs are equal to biases
+        self.assertTrue((0 == getattr(wrapper.layer, 'weight')).any()) # check the weight are now quantized
+        self.assertTrue((y[0,:,0,0] == getattr(wrapper.layer, 'bias')).any()) # check the wrapper's outputs are equal to biases
 
-
-class TestPytorchActivationQuantizationWrapper(TestPytorchWeightsQuantizationWrapper):
-
-    def __init__(self, unit_test):
-        super().__init__(unit_test)
-
-    def run_test(self):
-        wrapper = PytorchQuantizationWrapper(self.create_layer(), activation_quantizers=[ZeroActivationsQuantizer()])
+    def test_activation_quantization_wrapper(self):
+        wrapper = PytorchQuantizationWrapper(self.layer, activation_quantizers=[ZeroActivationsQuantizer()])
 
         (quantizer) = wrapper._activation_vars[0]
-        self.unit_test.assertTrue(isinstance(quantizer, ZeroActivationsQuantizer))
+        self.assertTrue(isinstance(quantizer, ZeroActivationsQuantizer))
         y = wrapper(torch.Tensor(self.inputs[0]))  # apply the wrapper on some random inputs
-        self.unit_test.assertTrue((y == 0).any())  # check the wrapper's outputs are equal to biases
+        self.assertTrue((y == 0).any())  # check the wrapper's outputs are equal to biases

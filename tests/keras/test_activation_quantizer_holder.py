@@ -20,19 +20,17 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 
-import model_compression_toolkit as mct
-
 from mct_quantizers.common.constants import ACTIVATION_HOLDER_QUANTIZER
+from mct_quantizers.keras.activation_quantization_holder import ActivationQuantizationHolder
 from mct_quantizers.keras.quantizers.activation_inferable_quantizers.activation_pot_inferable_quantizer import \
     ActivationPOTInferableQuantizer
 from mct_quantizers.keras.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import \
     ActivationSymmetricInferableQuantizer
-from tests.base_inferable_quantizer_test import BaseInferableQuantizerTest
 
 
-class TestActivationQuantizationHolderInference(BaseInferableQuantizerTest):
+class TestActivationQuantizationHolder(unittest.TestCase):
 
-    def run_test(self):
+    def test_activation_quantization_holder_inference(self):
         num_bits = 3
         thresholds = [4.]
         signed = True
@@ -40,7 +38,7 @@ class TestActivationQuantizationHolderInference(BaseInferableQuantizerTest):
         quantizer = ActivationSymmetricInferableQuantizer(num_bits=num_bits,
                                                           threshold=thresholds,
                                                           signed=signed)
-        model = keras.Sequential([mct.quantizers_infrastructure.ActivationQuantizationHolder(quantizer)])
+        model = keras.Sequential([ActivationQuantizationHolder(quantizer)])
 
         # Initialize a random input to quantize between -50 to 50.
         input_tensor = tf.constant(np.random.rand(1, 50, 50, 3) * 100 - 50, tf.float32)
@@ -49,23 +47,19 @@ class TestActivationQuantizationHolderInference(BaseInferableQuantizerTest):
 
         holder_config = model.layers[0].get_config()
         q_config = holder_config[ACTIVATION_HOLDER_QUANTIZER]['config']
-        self.unit_test.assertTrue(q_config['num_bits'] == num_bits)
-        self.unit_test.assertTrue(q_config['threshold'] == thresholds)
-        self.unit_test.assertTrue(q_config['signed'] == signed)
-
+        self.assertTrue(q_config['num_bits'] == num_bits)
+        self.assertTrue(q_config['threshold'] == thresholds)
+        self.assertTrue(q_config['signed'] == signed)
 
         # The maximal threshold is 4 using a signed quantization, so we expect all values to be between -4 and 4
-        self.unit_test.assertTrue(np.max( quantized_tensor) < thresholds[0], f'Quantized values should not contain values greater than maximal threshold ')
-        self.unit_test.assertTrue(np.min(quantized_tensor) >= -thresholds[0], f'Quantized values should not contain values lower than minimal threshold ')
+        self.assertTrue(np.max( quantized_tensor) < thresholds[0], f'Quantized values should not contain values greater than maximal threshold ')
+        self.assertTrue(np.min(quantized_tensor) >= -thresholds[0], f'Quantized values should not contain values lower than minimal threshold ')
 
-        self.unit_test.assertTrue(len(np.unique(quantized_tensor)) <= 2 ** num_bits, f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has {len(np.unique(quantized_tensor))} unique values')
+        self.assertTrue(len(np.unique(quantized_tensor)) <= 2 ** num_bits, f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has {len(np.unique(quantized_tensor))} unique values')
         # Assert some values are negative (signed quantization)
-        self.unit_test.assertTrue(np.any(quantized_tensor < 0), f'Expected some values to be negative but quantized tensor is {quantized_tensor}')
+        self.assertTrue(np.any(quantized_tensor < 0), f'Expected some values to be negative but quantized tensor is {quantized_tensor}')
 
-
-class TestActivationQuantizationHolderSaveAndLoad(BaseInferableQuantizerTest):
-
-    def run_test(self):
+    def test_activation_quantization_holder_save_and_load(self):
         num_bits = 3
         thresholds = [4.]
         signed = True
@@ -73,12 +67,13 @@ class TestActivationQuantizationHolderSaveAndLoad(BaseInferableQuantizerTest):
         quantizer = ActivationPOTInferableQuantizer(num_bits=num_bits,
                                                     threshold=thresholds,
                                                     signed=signed)
-        model = keras.Sequential([mct.quantizers_infrastructure.ActivationQuantizationHolder(quantizer)])
+        model = keras.Sequential([ActivationQuantizationHolder(quantizer)])
         x = tf.ones((3, 3))
         model(x)
 
         _, tmp_h5_file = tempfile.mkstemp('.h5')
         keras.models.save_model(model, tmp_h5_file)
-        loaded_model = mct.quantizers_infrastructure.keras_load_quantized_model(tmp_h5_file)
+        loaded_model = keras.models.load_model(tmp_h5_file, {ActivationQuantizationHolder.__name__: ActivationQuantizationHolder,
+                                                             ActivationPOTInferableQuantizer.__name__: ActivationPOTInferableQuantizer})
         os.remove(tmp_h5_file)
         loaded_model(x)

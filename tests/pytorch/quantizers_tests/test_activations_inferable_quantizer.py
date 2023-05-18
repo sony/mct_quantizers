@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+import unittest
+
 import numpy as np
 import torch
 
@@ -21,12 +23,11 @@ from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activatio
     ActivationPOTInferableQuantizer
 from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import \
     ActivationSymmetricInferableQuantizer
-from tests.base_inferable_quantizer_test import BaseInferableQuantizerTest
 
 
-class TestPytorchActivationsSymmetricInferableQuantizer(BaseInferableQuantizerTest):
+class TestPytorchActivationInferableQuantizers(unittest.TestCase):
 
-    def run_test(self):
+    def test_symmetric_activation_quantizer(self):
         thresholds = np.asarray([4])
         num_bits = 2
         quantizer = ActivationSymmetricInferableQuantizer(num_bits=num_bits,
@@ -45,11 +46,11 @@ class TestPytorchActivationsSymmetricInferableQuantizer(BaseInferableQuantizerTe
             quantized_tensor) >= -thresholds[
             0], f'Quantized values should not contain values lower than minimal threshold'
         # Expect to have no more than 2**num_bits unique values
-        self.unit_test.assertTrue(len(quantized_tensor.unique()) <= 2 ** num_bits,
+        self.assertTrue(len(quantized_tensor.unique()) <= 2 ** num_bits,
                         f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                         f'{len(quantized_tensor.unique())} unique values')
         # Assert some values are negative (signed quantization)
-        self.unit_test.assertTrue(torch.any(quantized_tensor < 0),
+        self.assertTrue(torch.any(quantized_tensor < 0),
                         f'Expected some values to be negative but quantized tensor is {quantized_tensor}')
 
         # Assert manually quantized values are the same:
@@ -57,12 +58,9 @@ class TestPytorchActivationsSymmetricInferableQuantizer(BaseInferableQuantizerTe
         scale = thresholds / (2 ** (num_bits - 1))
         manually_quantized_tensor = torch.round(
             torch.clip(input_tensor.to(get_working_device()), -thresholds, thresholds - scale) / scale) * scale
-        self.unit_test.assertTrue(torch.all(manually_quantized_tensor == quantized_tensor))
+        self.assertTrue(torch.all(manually_quantized_tensor == quantized_tensor))
 
-
-class TestPytorchActivationsUnsignedSymmetricInferableQuantizer(BaseInferableQuantizerTest):
-
-    def run_test(self):
+    def test_unsigned_symmetric_activation_quantizer(self):
         thresholds = np.asarray([4])
         num_bits = 2
         quantizer = ActivationSymmetricInferableQuantizer(num_bits=num_bits,
@@ -80,11 +78,11 @@ class TestPytorchActivationsUnsignedSymmetricInferableQuantizer(BaseInferableQua
         assert torch.min(
             quantized_tensor) >= 0, f'Quantized values should not contain values lower than minimal threshold'
         # Expect to have no more than 2**num_bits unique values
-        self.unit_test.assertTrue(len(quantized_tensor.unique()) <= 2 ** num_bits,
+        self.assertTrue(len(quantized_tensor.unique()) <= 2 ** num_bits,
                         f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                         f'{len(quantized_tensor.unique())} unique values')
         # Assert all values are non-negative (unsigned quantization)
-        self.unit_test.assertTrue(torch.all(quantized_tensor >= 0),
+        self.assertTrue(torch.all(quantized_tensor >= 0),
                         f'Expected all values to be non-negative but quantized tensor is {quantized_tensor}')
 
         # Assert manually quantized values are the same:
@@ -92,31 +90,25 @@ class TestPytorchActivationsUnsignedSymmetricInferableQuantizer(BaseInferableQua
         scale = thresholds / (2 ** num_bits)
         manually_quantized_tensor = torch.round(
             torch.clip(input_tensor.to(get_working_device()), 0, thresholds - scale) / scale) * scale
-        self.unit_test.assertTrue(torch.all(manually_quantized_tensor == quantized_tensor))
+        self.assertTrue(torch.all(manually_quantized_tensor == quantized_tensor))
 
-
-class TestPytorchActivationsPOTInferableQuantizerRaise(BaseInferableQuantizerTest):
-    
-    def run_test(self):
-        with self.unit_test.assertRaises(Exception) as e:
+    def test_illegal_power_of_two_threshold(self):
+        with self.assertRaises(Exception) as e:
             ActivationPOTInferableQuantizer(num_bits=8,
                                             # Not POT threshold
                                             threshold=np.asarray([3]),
                                             signed=True)
-        self.unit_test.assertEqual('Expected threshold to be power of 2 but is [3]', str(e.exception))
+        self.assertEqual('Expected threshold to be power of 2 but is [3]', str(e.exception))
 
-        with self.unit_test.assertRaises(Exception) as e:
+        with self.assertRaises(Exception) as e:
             ActivationPOTInferableQuantizer(num_bits=8,
                                             # Not float
                                             threshold=4,
                                             signed=True)
 
-        self.unit_test.assertEqual('Threshold is expected to be numpy array, but is of type <class \'int\'>', str(e.exception))
+        self.assertEqual('Threshold is expected to be numpy array, but is of type <class \'int\'>', str(e.exception))
 
-
-class TestPytorchActivationsSignedPOTInferableQuantizer(BaseInferableQuantizerTest):
-    
-    def run_test(self):
+    def test_power_of_two_activation_quantizer(self):
         thresholds = np.asarray([1])
         num_bits = 2
         quantizer = ActivationPOTInferableQuantizer(num_bits=num_bits,
@@ -132,11 +124,11 @@ class TestPytorchActivationsSignedPOTInferableQuantizer(BaseInferableQuantizerTe
         assert torch.min(
             fake_quantized_tensor) >= -thresholds[0], f'Quantized values should not contain values lower than threshold'
         # Expect to have no more than 2**num_bits unique values
-        self.unit_test.assertTrue(len(fake_quantized_tensor.unique()) <= 2 ** num_bits,
+        self.assertTrue(len(fake_quantized_tensor.unique()) <= 2 ** num_bits,
                         f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                         f'{len(fake_quantized_tensor.unique())} unique values')
         # Assert some values are negative (signed quantization)
-        self.unit_test.assertTrue(torch.any(fake_quantized_tensor < 0),
+        self.assertTrue(torch.any(fake_quantized_tensor < 0),
                         f'Expected some values to be negative but quantized tensor is {fake_quantized_tensor}')
 
         # Assert manually quantized values are the same:
@@ -144,12 +136,9 @@ class TestPytorchActivationsSignedPOTInferableQuantizer(BaseInferableQuantizerTe
         scale = thresholds / (2 ** (num_bits - 1))
         manually_quantized_tensor = torch.round(
             torch.clip(input_tensor.to(get_working_device()), -thresholds, thresholds - scale) / scale) * scale
-        self.unit_test.assertTrue(torch.all(manually_quantized_tensor == fake_quantized_tensor))
+        self.assertTrue(torch.all(manually_quantized_tensor == fake_quantized_tensor))
 
-
-class TestPytorchActivationsUnsignedPOTInferableQuantizer(BaseInferableQuantizerTest):
-    
-    def run_test(self):
+    def test_unsigned_power_of_two_activation_quantizer(self):
         thresholds = np.asarray([1])
         num_bits = 2
         quantizer = ActivationPOTInferableQuantizer(num_bits=num_bits,
@@ -164,7 +153,7 @@ class TestPytorchActivationsUnsignedPOTInferableQuantizer(BaseInferableQuantizer
             fake_quantized_tensor) < thresholds[0], f'Quantized values should not contain values greater than threshold'
         assert torch.min(fake_quantized_tensor) >= 0, f'Quantized values should not contain values lower than threshold'
         # Expect to have no more than 2**num_bits unique values
-        self.unit_test.assertTrue(len(fake_quantized_tensor.unique()) <= 2 ** num_bits,
+        self.assertTrue(len(fake_quantized_tensor.unique()) <= 2 ** num_bits,
                         f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                         f'{len(fake_quantized_tensor.unique())} unique values')
 
@@ -173,12 +162,9 @@ class TestPytorchActivationsUnsignedPOTInferableQuantizer(BaseInferableQuantizer
         scale = thresholds / (2 ** num_bits)
         manually_quantized_tensor = torch.round(
             torch.clip(input_tensor.to(get_working_device()), 0, thresholds - scale) / scale) * scale
-        self.unit_test.assertTrue(torch.all(manually_quantized_tensor == fake_quantized_tensor))
+        self.assertTrue(torch.all(manually_quantized_tensor == fake_quantized_tensor))
 
-
-class TestPytorchActivationsUniformInferableQuantizer(BaseInferableQuantizerTest):
-    
-    def run_test(self):
+    def test_uniform_activation_quantizer(self):
         min_range = np.asarray([-10])
         max_range = np.asarray([5])
         num_bits = 2
@@ -198,11 +184,11 @@ class TestPytorchActivationsUniformInferableQuantizer(BaseInferableQuantizerTest
             quantized_tensor) >= min_range[
                    0], f'Quantized values should not contain values lower than minimal threshold'
         # Expect to have no more than 2**num_bits unique values
-        self.unit_test.assertTrue(len(quantized_tensor.unique()) <= 2 ** num_bits,
+        self.assertTrue(len(quantized_tensor.unique()) <= 2 ** num_bits,
                         f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                         f'{len(quantized_tensor.unique())} unique values')
         # Assert some values are negative (signed quantization)
-        self.unit_test.assertTrue(torch.any(quantized_tensor < 0),
+        self.assertTrue(torch.any(quantized_tensor < 0),
                         f'Expected some values to be negative but quantized tensor is {quantized_tensor}')
 
         # Assert manually quantized values are the same:
@@ -212,12 +198,9 @@ class TestPytorchActivationsUniformInferableQuantizer(BaseInferableQuantizerTest
 
         manually_quantized_tensor = torch.round((torch.clip(input_tensor.to(get_working_device()), min_range,
                                                             max_range) - min_range) / scale) * scale + min_range
-        self.unit_test.assertTrue(torch.all(manually_quantized_tensor == quantized_tensor))
+        self.assertTrue(torch.all(manually_quantized_tensor == quantized_tensor))
 
-
-class TestPytorchActivationsUniformInferableZeroNotInRange(BaseInferableQuantizerTest):
-    
-    def run_test(self):
+    def test_illegal_range_uniform_activation_quantizer(self):
         min_range = np.asarray([3])
         max_range = np.asarray([10])
         num_bits = 2
@@ -236,12 +219,12 @@ class TestPytorchActivationsUniformInferableZeroNotInRange(BaseInferableQuantize
         assert torch.min(
             quantized_tensor) >= 0, f'Quantized values should not contain values lower than minimal threshold'
         # Expect to have no more than 2**num_bits unique values
-        self.unit_test.assertTrue(len(quantized_tensor.unique()) <= 2 ** num_bits,
+        self.assertTrue(len(quantized_tensor.unique()) <= 2 ** num_bits,
                         f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                         f'{len(quantized_tensor.unique())} unique values')
 
         # Assert that quantization range was fixed to include 0
-        self.unit_test.assertTrue(0 in quantized_tensor.unique(),
+        self.assertTrue(0 in quantized_tensor.unique(),
                         f'Expected to find 0 in quantized values but unique values are {quantized_tensor.unique()}')
 
         # Assert manually quantized values are the same:
@@ -251,4 +234,4 @@ class TestPytorchActivationsUniformInferableZeroNotInRange(BaseInferableQuantize
 
         manually_quantized_tensor = torch.round((torch.clip(input_tensor.to(get_working_device()), min_range,
                                                             max_range) - min_range) / scale) * scale + min_range
-        self.unit_test.assertTrue(torch.all(manually_quantized_tensor == quantized_tensor))
+        self.assertTrue(torch.all(manually_quantized_tensor == quantized_tensor))
