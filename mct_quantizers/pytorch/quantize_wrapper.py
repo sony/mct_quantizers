@@ -105,10 +105,7 @@ if FOUND_TORCH:
             if self.is_activation_quantization:
                 inferable_activation_quantizers = []
                 for quantizer in self.activation_quantizers:
-                    if isinstance(quantizer, BasePytorchTrainableQuantizer):
-                        inferable_activation_quantizers.append(quantizer.convert2inferable())
-                    else:
-                        Logger.error('Can only convert trainable quantizers based on BasePytorchTrainableQuantizer') # pragma: no cover
+                    inferable_activation_quantizers.append(quantizer.convert2inferable())
                 self.activation_quantizers = inferable_activation_quantizers
                 self._set_activation_vars()
 
@@ -116,10 +113,7 @@ if FOUND_TORCH:
             if self.is_weights_quantization:
                 inferable_weight_quantizers = {}
                 for name, quantizer in self.weights_quantizers.items():
-                    if isinstance(quantizer, BasePytorchTrainableQuantizer):
-                        inferable_weight_quantizers.update({name: quantizer.convert2inferable()})
-                    else:
-                        Logger.error('Can only convert trainable quantizers based on BasePytorchTrainableQuantizer') # pragma: no cover
+                    inferable_weight_quantizers.update({name: quantizer.convert2inferable()})
                 self.weights_quantizers = inferable_weight_quantizers
                 self._set_weights_vars(False)
 
