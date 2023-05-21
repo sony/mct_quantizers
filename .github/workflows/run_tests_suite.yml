@@ -27,4 +27,4 @@ jobs:
           pip install tensorflow_model_optimization
           pip install torch
       - name: Run unittests
-        run: python -m unittest tests/test_suite.py -v
+        run: python -m unittest discover -s tests
