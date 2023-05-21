@@ -7,6 +7,22 @@ found_pytorch = importlib.util.find_spec("torch")
 
 if found_tf:
     from tests.keras_tests.test_get_quantizers import TestKerasGetInferableQuantizer
+    from tests.keras_tests.test_activation_quantizer_holder import TestKerasActivationQuantizationHolder
+    from tests.keras_tests.test_keras_quantization_wrapper import TestKerasQuantizationWrapper
+    from tests.keras_tests.quantizers_tests.test_activation_inferable_quantizers import \
+        TestKerasActivationInferableQuantizers
+    from tests.keras_tests.quantizers_tests.test_activation_lut_pot_inferable_quantizer import \
+        TestKerasActivationLutPotQuantizer
+    from tests.keras_tests.quantizers_tests.test_illegal_activation_lut_pot_inferable_quantizer import \
+        TestKerasActivationIllegalLutPotQuantizer
+    from tests.keras_tests.quantizers_tests.test_illegal_weights_inferable_quantizer import \
+        TestKerasWeightsIllegalInferableQuantizers
+    from tests.keras_tests.quantizers_tests.test_illegal_weights_lut_inferable_quantizer import \
+        TestKerasWeightsIllegalSymmetricLutQuantizer, TestKerasWeightsIllegalPotLutQuantizer
+    from tests.keras_tests.quantizers_tests.test_weights_inferable_quantizer import TestKerasWeightsInferableQuantizers
+    from tests.keras_tests.quantizers_tests.test_weights_lut_inferable_quantizer import TestKerasWeightsLutQuantizers
+
+
 if found_pytorch:
     from tests.pytorch_tests.test_get_quantizers import TestPytorchGetInferableQuantizer
 
