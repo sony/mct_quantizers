@@ -14,12 +14,12 @@ if __name__ == '__main__':
 
     # Add TF tests only if tensorflow is installed
     if found_tf:
-        package_tests = test_loader.discover("tests.keras", pattern="test_*.py")
+        package_tests = test_loader.discover("tests.keras_tests", pattern="test_*.py")
         MCTQuantizersSuite.addTests(package_tests)
 
     # Add Pytorch tests only if Pytorch is installed
     if found_pytorch:
-        package_tests = test_loader.discover("tests.pytorch", pattern="test_*.py")
+        package_tests = test_loader.discover("tests.pytorch_tests", pattern="test_*.py")
         MCTQuantizersSuite.addTests(package_tests)
 
     unittest.TextTestRunner(verbosity=0).run(MCTQuantizersSuite)
