@@ -76,4 +76,24 @@ class TestKerasLoadModel(unittest.TestCase):
         layer_with_quantizer = ActivationQuantizationHolder(quantizer)
         self._quantization_holder_save_and_load(layer_with_quantizer)
 
+    def test_save_and_load_activation_lut_pot(self):
+        cluster_centers = [-25, 25]
+        thresholds = [4.]
+        num_bits = 3
+        signed = True
+        multiplier_n_bits = 8
+        eps = 1e-8
+
+        quantizer = ActivationLutPOTInferableQuantizer(num_bits=num_bits,
+                                                       cluster_centers=cluster_centers,
+                                                       signed=signed,
+                                                       threshold=thresholds,
+                                                       multiplier_n_bits=
+                                                       multiplier_n_bits,
+                                                       eps=eps)
+
+        layer_with_quantizer = ActivationQuantizationHolder(quantizer)
+        self._quantization_holder_save_and_load(layer_with_quantizer)
+
+
 
