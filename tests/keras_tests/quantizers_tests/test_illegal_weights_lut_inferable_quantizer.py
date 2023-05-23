@@ -347,11 +347,11 @@ class TestKerasWeightsIllegalPotLutQuantizer(BaseKerasWeightsIllegalLutQuantizer
         with self.assertRaises(Exception) as e:
             self.inferable_quantizer(num_bits=8,
                                      per_channel=False,
-                                     cluster_centers=np.asarray([25., 85.]),
+                                     cluster_centers=[25., 85.],
                                      threshold=[3.],
                                      channel_axis=None,
                                      input_rank=4)
-        self.assertEqual('Expected threshold to be power of 2 but is 3.0', str(e.exception))
+        self.assertEqual('Expected threshold to be power of 2 but is [3.]', str(e.exception))
 
     def test_illegal_cluster_centers_pot_lut_quantizer(self):
         self.illegal_cluster_centers_inferable_quantizer_test(inferable_quantizer=self.inferable_quantizer,
@@ -393,7 +393,7 @@ class TestKerasWeightsIllegalPotLutQuantizer(BaseKerasWeightsIllegalLutQuantizer
         self.warning_num_bit_equal_multiplier_n_bits_inferable_quantizer_test(
             inferable_quantizer=self.inferable_quantizer,
             threshold=[2.],
-            cluster_centers=np.asarray([-25, 25]),
+            cluster_centers=[-25, 25],
             per_channel=False,
             channel_axis=None,
             input_rank=4,

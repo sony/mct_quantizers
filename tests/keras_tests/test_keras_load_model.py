@@ -49,7 +49,8 @@ class TestKerasLoadModel(unittest.TestCase):
     def _one_layer_model_save_and_load(self, layer_with_quantizer):
         model = keras.Sequential([layer_with_quantizer])
 
-        x = tf.ones((1, 3, 3, 3))
+        x = np.random.randn(1,99,99,3)
+        # x = tf.ones((1, 99, 99, 3))
         pred = model(x)
 
         _, tmp_h5_file = tempfile.mkstemp('.h5')
@@ -147,45 +148,45 @@ class TestKerasLoadModel(unittest.TestCase):
                                                         {'kernel': quantizer})
         self._one_layer_model_save_and_load(layer_with_quantizer)
 
-    # TODO: inference fails
-    # def test_save_and_load_weights_lut_symmetric(self):
-    #     cluster_centers = np.asarray([-25, 25])
-    #     per_channel = True
-    #     input_rank = 4
-    #     num_bits = 8
-    #     threshold = [3., 8., 7.]
-    #     channel_axis = 3
-    #     multiplier_n_bits = 8
-    #     eps = 1e-8
-    #     quantizer = WeightsLUTSymmetricInferableQuantizer(num_bits=num_bits,
-    #                                                       cluster_centers=cluster_centers,
-    #                                                       threshold=threshold,
-    #                                                       per_channel=per_channel,
-    #                                                       channel_axis=channel_axis,
-    #                                                       input_rank=input_rank,
-    #                                                       multiplier_n_bits=multiplier_n_bits,
-    #                                                       eps=eps)
-    #     layer_with_quantizer = KerasQuantizationWrapper(Conv2D(3, 3),
-    #                                                     {'kernel': quantizer})
-    #     self._one_layer_model_save_and_load(layer_with_quantizer)
-    #
-    # def test_save_and_load_weights_lut_pot(self):
-    #     cluster_centers = np.asarray([-25, 25])
-    #     per_channel = True
-    #     input_rank = 4
-    #     num_bits = 8
-    #     threshold = [1., 8., 4.]
-    #     channel_axis = 3
-    #     multiplier_n_bits = 8
-    #     eps = 1e-8
-    #     quantizer = WeightsLUTPOTInferableQuantizer(num_bits=num_bits,
-    #                                                 cluster_centers=cluster_centers,
-    #                                                 threshold=threshold,
-    #                                                 per_channel=per_channel,
-    #                                                 channel_axis=channel_axis,
-    #                                                 input_rank=input_rank,
-    #                                                 multiplier_n_bits=multiplier_n_bits,
-    #                                                 eps=eps)
-    #     layer_with_quantizer = KerasQuantizationWrapper(Conv2D(3, 3),
-    #                                                     {'kernel': quantizer})
-    #     self._one_layer_model_save_and_load(layer_with_quantizer)
+    def test_save_and_load_weights_lut_symmetric(self):
+        cluster_centers = [-25, 25]
+        per_channel = True
+        input_rank = 4
+        num_bits = 8
+        threshold = [3., 8., 7.]
+        channel_axis = 3
+        multiplier_n_bits = 8
+        eps = 1e-8
+        quantizer = WeightsLUTSymmetricInferableQuantizer(num_bits=num_bits,
+                                                          cluster_centers=cluster_centers,
+                                                          threshold=threshold,
+                                                          per_channel=per_channel,
+                                                          channel_axis=channel_axis,
+                                                          input_rank=input_rank,
+                                                          multiplier_n_bits=multiplier_n_bits,
+                                                          eps=eps)
+        layer_with_quantizer = KerasQuantizationWrapper(Conv2D(3,3),
+                                                        {'kernel': quantizer})
+        self._one_layer_model_save_and_load(layer_with_quantizer)
+
+
+    def test_save_and_load_weights_lut_pot(self):
+        cluster_centers = [-25, 25]
+        per_channel = True
+        input_rank = 4
+        num_bits = 8
+        threshold = [1., 8., 4.]
+        channel_axis = 3
+        multiplier_n_bits = 8
+        eps = 1e-8
+        quantizer = WeightsLUTPOTInferableQuantizer(num_bits=num_bits,
+                                                    cluster_centers=cluster_centers,
+                                                    threshold=threshold,
+                                                    per_channel=per_channel,
+                                                    channel_axis=channel_axis,
+                                                    input_rank=input_rank,
+                                                    multiplier_n_bits=multiplier_n_bits,
+                                                    eps=eps)
+        layer_with_quantizer = KerasQuantizationWrapper(Conv2D(3, 3),
+                                                        {'kernel': quantizer})
+        self._one_layer_model_save_and_load(layer_with_quantizer)
