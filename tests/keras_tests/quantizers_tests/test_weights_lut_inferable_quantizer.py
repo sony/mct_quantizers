@@ -34,6 +34,8 @@ class TestKerasWeightsLutQuantizers(unittest.TestCase):
                                         multiplier_n_bits=multiplier_n_bits,
                                         eps=eps)
 
+        cluster_centers = np.asarray(cluster_centers, dtype=np.float32)
+
         # check config
         quantizer_config = quantizer.get_config()
         self.assertTrue(quantizer_config['num_bits'] == num_bits)
@@ -131,7 +133,7 @@ class TestKerasWeightsLutQuantizers(unittest.TestCase):
 
     def test_weights_symmetric_lut_quantizer(self):
         inferable_quantizer = WeightsLUTSymmetricInferableQuantizer
-        cluster_centers = np.asarray([-25, 25])
+        cluster_centers = [-25, 25]
         per_channel = True
         input_rank = 4
         num_bits = 8
@@ -169,7 +171,7 @@ class TestKerasWeightsLutQuantizers(unittest.TestCase):
     def test_weights_pot_lut_quantizer(self):
         inferable_quantizer = WeightsLUTSymmetricInferableQuantizer
 
-        cluster_centers = np.asarray([-25, 25])
+        cluster_centers = [-25, 25]
         input_rank = 4
         num_bits = 8
 
