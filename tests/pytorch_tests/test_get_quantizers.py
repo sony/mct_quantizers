@@ -17,7 +17,8 @@ import unittest
 from mct_quantizers.common.base_inferable_quantizer import QuantizationTarget
 from mct_quantizers.common.get_quantizers import get_inferable_quantizer_class
 from mct_quantizers.common.quant_info import QuantizationMethod
-from mct_quantizers.pytorch.quantizers import ActivationUniformInferableQuantizer
+from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_uniform_inferable_quantizer \
+    import ActivationUniformInferableQuantizer
 from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_pot_inferable_quantizer import \
     ActivationPOTInferableQuantizer
 from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import \
