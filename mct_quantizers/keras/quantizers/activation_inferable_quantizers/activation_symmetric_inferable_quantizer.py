@@ -23,7 +23,8 @@ from mct_quantizers.common.quant_info import QuantizationMethod
 
 if FOUND_TF:
     import tensorflow as tf
-    from mct_quantizers.keras.quantizers import ActivationUniformInferableQuantizer
+    from mct_quantizers.keras.quantizers.activation_inferable_quantizers.activation_uniform_inferable_quantizer \
+        import ActivationUniformInferableQuantizer
 
     @mark_quantizer(quantization_target=QuantizationTarget.Activation,
                     quantization_method=[QuantizationMethod.SYMMETRIC],

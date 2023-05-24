@@ -13,4 +13,24 @@
 # limitations under the License.
 # ==============================================================================
 
-from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_uniform_inferable_quantizer import ActivationUniformInferableQuantizer
+from mct_quantizers.pytorch.quantizers.base_pytorch_inferable_quantizer import BasePyTorchInferableQuantizer
+
+from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_lut_pot_inferable_quantizer import \
+    ActivationLutPOTInferableQuantizer
+from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_pot_inferable_quantizer import \
+    ActivationPOTInferableQuantizer
+from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import \
+    ActivationSymmetricInferableQuantizer
+from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_uniform_inferable_quantizer import \
+    ActivationUniformInferableQuantizer
+
+from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_lut_pot_inferable_quantizer import \
+    WeightsLUTPOTInferableQuantizer
+from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_lut_symmetric_inferable_quantizer import \
+    WeightsLUTSymmetricInferableQuantizer
+from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_pot_inferable_quantizer import \
+    WeightsPOTInferableQuantizer
+from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_symmetric_inferable_quantizer import \
+    WeightsSymmetricInferableQuantizer
+from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_uniform_inferable_quantizer import \
+    WeightsUniformInferableQuantizer

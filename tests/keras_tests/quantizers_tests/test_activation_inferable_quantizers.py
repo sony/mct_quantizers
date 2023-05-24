@@ -17,7 +17,8 @@ import unittest
 import numpy as np
 import tensorflow as tf
 
-from mct_quantizers.keras.quantizers import ActivationUniformInferableQuantizer
+from mct_quantizers.keras.quantizers.activation_inferable_quantizers.activation_uniform_inferable_quantizer import  \
+    ActivationUniformInferableQuantizer
 from mct_quantizers.keras.quantizers.activation_inferable_quantizers.activation_pot_inferable_quantizer import \
     ActivationPOTInferableQuantizer
 from mct_quantizers.keras.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import \
