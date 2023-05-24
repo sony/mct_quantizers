@@ -15,7 +15,7 @@
 
 
 from mct_quantizers.common.base_inferable_quantizer import BaseInferableQuantizer
-from mct_quantizers.common.constants import ACTIVATION_HOLDER_QUANTIZER, FOUND_TF
+from mct_quantizers.common.constants import ACTIVATION_HOLDER_QUANTIZER, FOUND_TF, TRAINING
 from mct_quantizers.logger import Logger
 
 if FOUND_TF:
