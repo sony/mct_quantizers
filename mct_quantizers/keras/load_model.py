@@ -21,7 +21,7 @@ from mct_quantizers.logger import Logger
 if FOUND_TF:
     import tensorflow as tf
     from tensorflow.python.saved_model.load_options import LoadOptions
-    from mct_quantizers.keras.activation_quantization_holder import ActivationQuantizationHolder
+    from mct_quantizers.keras.activation_quantization_holder import KerasActivationQuantizationHolder
     from mct_quantizers.keras.quantize_wrapper import KerasQuantizationWrapper
     from mct_quantizers.keras.quantizers.base_keras_inferable_quantizer import BaseKerasInferableQuantizer
     keras = tf.keras
@@ -51,7 +51,7 @@ if FOUND_TF:
 
         # Add non-quantizers custom objects
         qi_custom_objects.update({KerasQuantizationWrapper.__name__: KerasQuantizationWrapper})
-        qi_custom_objects.update({ActivationQuantizationHolder.__name__: ActivationQuantizationHolder})
+        qi_custom_objects.update({KerasActivationQuantizationHolder.__name__: KerasActivationQuantizationHolder})
 
         if custom_objects is not None:
             qi_custom_objects.update(custom_objects)

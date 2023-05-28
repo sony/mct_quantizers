@@ -15,14 +15,26 @@
 
 
 from mct_quantizers.common.base_inferable_quantizer import BaseInferableQuantizer
-from mct_quantizers.common.constants import ACTIVATION_HOLDER_QUANTIZER, FOUND_TF
+from mct_quantizers.common.constants import ACTIVATION_HOLDER_QUANTIZER, FOUND_TF, TRAINING
 from mct_quantizers.logger import Logger
 
 if FOUND_TF:
     import tensorflow as tf
+    from keras.utils import tf_inspect
+    from tensorflow_model_optimization.python.core.keras import utils
     keras = tf.keras
 
-    class ActivationQuantizationHolder(keras.layers.Layer):
+
+    def _make_quantizer_fn(quantizer, x, training):
+        """Use currying to return True/False specialized fns to the cond."""
+
+        def quantizer_fn():
+            return quantizer(x, training)
+
+        return quantizer_fn
+
+
+    class KerasActivationQuantizationHolder(keras.layers.Layer):
         """
         Keras layer to hold an activation quantizer and quantize during inference.
         """
@@ -36,15 +48,17 @@ if FOUND_TF:
                 **kwargs: Key-word arguments for the base layer
             """
 
-            super(ActivationQuantizationHolder, self).__init__(**kwargs)
+            super(KerasActivationQuantizationHolder, self).__init__(**kwargs)
             self.activation_holder_quantizer = activation_holder_quantizer
 
         def get_config(self):
             """
+            config(dict): dictionary  of ActivationQuantizationHolder Configuration
+
             Returns: Configuration of ActivationQuantizationHolder.
 
             """
-            base_config = super(ActivationQuantizationHolder, self).get_config()
+            base_config = super(KerasActivationQuantizationHolder, self).get_config()
             config = {
                 ACTIVATION_HOLDER_QUANTIZER: keras.utils.serialize_keras_object(self.activation_holder_quantizer)}
 
@@ -68,17 +82,61 @@ if FOUND_TF:
             return cls(activation_holder_quantizer=activation_holder_quantizer,
                        **config)
 
-        def call(self, inputs):
+        def build(self, input_shape):
+            """
+            ActivationQuantizationHolder build function.
+            Args:
+                input_shape: the layer input shape
+
+            Returns: None
+
+            """
+            super(KerasActivationQuantizationHolder, self).build(input_shape)
+
+            self.optimizer_step = self.add_weight(
+                STEPS,
+                initializer=tf.keras.initializers.Constant(-1),
+                dtype=tf.dtypes.int32,
+                trainable=False)
+
+            self.activation_holder_quantizer.initialize_quantization(None,
+                                                                     self.name + '/out_',
+                                                                     self)
+
+        def call(self,
+                 inputs: tf.Tensor,
+                 training=None) -> tf.Tensor:
             """
             Quantizes the input tensor using the activation quantizer the ActivationQuantizationHolder holds.
 
             Args:
                 inputs: Input tensors to quantize use the activation quantizer the object holds
+                training: a boolean stating if layer is in training mode.
 
             Returns: Output of the activation quantizer (quantized input tensor).
 
             """
+            if training is None:
+                training = tf.keras.backend.learning_phase()
+
+            activation_quantizer_args_spec = tf_inspect.getfullargspec(self.activation_holder_quantizer.__call__).args
+            if TRAINING in activation_quantizer_args_spec:
+                return utils.smart_cond(
+                    training,
+                    _make_quantizer_fn(self.activation_holder_quantizer, inputs, True),
+                    _make_quantizer_fn(self.activation_holder_quantizer, inputs, False))
+
             return self.activation_holder_quantizer(inputs)
+
+        def convert_to_inferable_quantizers(self):
+            """
+            Convert layer's quantizer to inferable quantizer.
+
+            Returns:
+                None
+            """
+            self.activation_holder_quantizer = self.activation_holder_quantizer.convert2inferable()
+
 
 else:
     class ActivationQuantizationHolder:  # pragma: no cover
