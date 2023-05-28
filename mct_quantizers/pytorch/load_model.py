@@ -34,7 +34,7 @@ if FOUND_TORCH:
         return torch.load(filepath, **kwargs)
 
 else:
-    def keras_load_quantized_model(filepath, **kwargs):
+    def pytorch_load_quantized_model(filepath, **kwargs):
         """
         This function wraps the Pytorch load model.
 
@@ -45,6 +45,6 @@ else:
         Returns: A Pytorch Model
 
         """
-        Logger.critical('Installing tensorflow and tensorflow_model_optimization is mandatory '
-                        'when using keras_load_quantized_model. '
-                        'Could not find Tensorflow package.')  # pragma: no cover
+        Logger.critical('Installing Pytorch is mandatory '
+                        'when using pytorch_load_quantized_model. '
+                        'Could not find torch package.')  # pragma: no cover
