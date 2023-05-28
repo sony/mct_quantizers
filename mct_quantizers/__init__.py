@@ -23,7 +23,7 @@ from mct_quantizers.pytorch.load_model import pytorch_load_quantized_model
 from mct_quantizers.pytorch.quantize_wrapper import PytorchQuantizationWrapper
 
 from mct_quantizers.common import constants
-from mct_quantizers.keras import quantizers
-from mct_quantizers.pytorch import quantizers
+from mct_quantizers.keras import keras_quantizers
+from mct_quantizers.pytorch import pytorch_quantizers
 
 __version__ = "1.0.0"
