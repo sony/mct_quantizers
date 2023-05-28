@@ -22,3 +22,4 @@ from mct_quantizers.keras.quantize_wrapper import KerasQuantizationWrapper
 from mct_quantizers.pytorch.load_model import pytorch_load_quantized_model
 from mct_quantizers.pytorch.quantize_wrapper import PytorchQuantizationWrapper
 
+__version__ = "1.0.0"
