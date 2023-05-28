@@ -21,7 +21,7 @@ import tensorflow as tf
 from tensorflow import keras
 
 from mct_quantizers.common.constants import ACTIVATION_HOLDER_QUANTIZER
-from mct_quantizers.keras.activation_quantization_holder import ActivationQuantizationHolder
+from mct_quantizers.keras.activation_quantization_holder import KerasActivationQuantizationHolder
 from mct_quantizers.keras.quantizers.activation_inferable_quantizers.activation_pot_inferable_quantizer import \
     ActivationPOTInferableQuantizer
 from mct_quantizers.keras.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import \
@@ -38,7 +38,7 @@ class TestKerasActivationQuantizationHolder(unittest.TestCase):
         quantizer = ActivationSymmetricInferableQuantizer(num_bits=num_bits,
                                                           threshold=thresholds,
                                                           signed=signed)
-        model = keras.Sequential([ActivationQuantizationHolder(quantizer)])
+        model = keras.Sequential([KerasActivationQuantizationHolder(quantizer)])
 
         # Initialize a random input to quantize between -50 to 50.
         input_tensor = tf.constant(np.random.rand(1, 50, 50, 3) * 100 - 50, tf.float32)
@@ -67,13 +67,13 @@ class TestKerasActivationQuantizationHolder(unittest.TestCase):
         quantizer = ActivationPOTInferableQuantizer(num_bits=num_bits,
                                                     threshold=thresholds,
                                                     signed=signed)
-        model = keras.Sequential([ActivationQuantizationHolder(quantizer)])
+        model = keras.Sequential([KerasActivationQuantizationHolder(quantizer)])
         x = tf.ones((3, 3))
         model(x)
 
         _, tmp_h5_file = tempfile.mkstemp('.h5')
         keras.models.save_model(model, tmp_h5_file)
-        loaded_model = keras.models.load_model(tmp_h5_file, {ActivationQuantizationHolder.__name__: ActivationQuantizationHolder,
+        loaded_model = keras.models.load_model(tmp_h5_file, {KerasActivationQuantizationHolder.__name__: KerasActivationQuantizationHolder,
                                                              ActivationPOTInferableQuantizer.__name__: ActivationPOTInferableQuantizer})
         os.remove(tmp_h5_file)
         loaded_model(x)

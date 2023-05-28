@@ -17,11 +17,10 @@ import tempfile
 import unittest
 
 import numpy as np
-import tensorflow as tf
 from keras.layers import Conv2D
 from tensorflow import keras
 
-from mct_quantizers.keras.activation_quantization_holder import ActivationQuantizationHolder
+from mct_quantizers.keras.activation_quantization_holder import KerasActivationQuantizationHolder
 from mct_quantizers.keras.load_model import keras_load_quantized_model
 from mct_quantizers.keras.quantize_wrapper import KerasQuantizationWrapper
 from mct_quantizers.keras.quantizers.activation_inferable_quantizers.activation_lut_pot_inferable_quantizer import \
@@ -49,8 +48,7 @@ class TestKerasLoadModel(unittest.TestCase):
     def _one_layer_model_save_and_load(self, layer_with_quantizer):
         model = keras.Sequential([layer_with_quantizer])
 
-        x = np.random.randn(1,99,99,3)
-        # x = tf.ones((1, 99, 99, 3))
+        x = np.random.randn(1, 99, 99, 3)
         pred = model(x)
 
         _, tmp_h5_file = tempfile.mkstemp('.h5')
@@ -68,7 +66,7 @@ class TestKerasLoadModel(unittest.TestCase):
         quantizer = ActivationPOTInferableQuantizer(num_bits=num_bits,
                                                     threshold=thresholds,
                                                     signed=signed)
-        layer_with_quantizer = ActivationQuantizationHolder(quantizer)
+        layer_with_quantizer = KerasActivationQuantizationHolder(quantizer)
         self._one_layer_model_save_and_load(layer_with_quantizer)
 
     def test_save_and_load_activation_symmetric(self):
@@ -78,7 +76,7 @@ class TestKerasLoadModel(unittest.TestCase):
         quantizer = ActivationSymmetricInferableQuantizer(num_bits=num_bits,
                                                           threshold=thresholds,
                                                           signed=signed)
-        layer_with_quantizer = ActivationQuantizationHolder(quantizer)
+        layer_with_quantizer = KerasActivationQuantizationHolder(quantizer)
         self._one_layer_model_save_and_load(layer_with_quantizer)
 
     def test_save_and_load_activation_uniform(self):
@@ -88,7 +86,7 @@ class TestKerasLoadModel(unittest.TestCase):
         quantizer = ActivationUniformInferableQuantizer(num_bits=num_bits,
                                                         min_range=min_range,
                                                         max_range=max_range)
-        layer_with_quantizer = ActivationQuantizationHolder(quantizer)
+        layer_with_quantizer = KerasActivationQuantizationHolder(quantizer)
         self._one_layer_model_save_and_load(layer_with_quantizer)
 
     def test_save_and_load_activation_lut_pot(self):
@@ -107,7 +105,7 @@ class TestKerasLoadModel(unittest.TestCase):
                                                        multiplier_n_bits,
                                                        eps=eps)
 
-        layer_with_quantizer = ActivationQuantizationHolder(quantizer)
+        layer_with_quantizer = KerasActivationQuantizationHolder(quantizer)
         self._one_layer_model_save_and_load(layer_with_quantizer)
 
     def test_save_and_load_weights_pot(self):

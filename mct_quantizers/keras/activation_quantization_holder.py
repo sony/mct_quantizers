@@ -34,7 +34,7 @@ if FOUND_TF:
         return quantizer_fn
 
 
-    class ActivationQuantizationHolder(keras.layers.Layer):
+    class KerasActivationQuantizationHolder(keras.layers.Layer):
         """
         Keras layer to hold an activation quantizer and quantize during inference.
         """
@@ -48,7 +48,7 @@ if FOUND_TF:
                 **kwargs: Key-word arguments for the base layer
             """
 
-            super(ActivationQuantizationHolder, self).__init__(**kwargs)
+            super(KerasActivationQuantizationHolder, self).__init__(**kwargs)
             self.activation_holder_quantizer = activation_holder_quantizer
 
         def get_config(self):
@@ -58,7 +58,7 @@ if FOUND_TF:
             Returns: Configuration of ActivationQuantizationHolder.
 
             """
-            base_config = super(ActivationQuantizationHolder, self).get_config()
+            base_config = super(KerasActivationQuantizationHolder, self).get_config()
             config = {
                 ACTIVATION_HOLDER_QUANTIZER: keras.utils.serialize_keras_object(self.activation_holder_quantizer)}
 
@@ -91,7 +91,7 @@ if FOUND_TF:
             Returns: None
 
             """
-            super(ActivationQuantizationHolder, self).build(input_shape)
+            super(KerasActivationQuantizationHolder, self).build(input_shape)
 
             self.optimizer_step = self.add_weight(
                 STEPS,
