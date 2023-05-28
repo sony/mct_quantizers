@@ -1,0 +1,33 @@
+name: Nightly
+on:
+  workflow_dispatch:  # Allow manual triggers
+  schedule:
+    - cron: 0 0 * * *
+
+jobs:
+  build:
+    if: github.repository == 'sony/mct_quantizers' # Don't do this in forks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Python 3
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install twine
+      - name: Build nightly
+        run: |
+          version=$(python -c 'import mct_quantizers; print(mct_quantizers.__version__)')
+          now=$(date +'%d%m%Y-%H%M%S')
+          echo "nightly_version=$version.$now" >> $GITHUB_ENV
+          sed -i "s/attr: mct_quantizers.__version__/$version.$now/g" setup.cfg
+          sed -i "s/name='mct_quantizers'/name='mct_quantizers-nightly'/g" setup.py
+          python setup.py sdist bdist_wheel
+      - name: Publish nightly
+        run: |
+          twine upload --repository pypi dist/* --verbose -u __token__ -p ${{ secrets.PYPI_API_KEY }}
+
