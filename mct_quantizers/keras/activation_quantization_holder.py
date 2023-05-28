@@ -139,7 +139,7 @@ if FOUND_TF:
 
 
 else:
-    class ActivationQuantizationHolder:  # pragma: no cover
+    class KerasActivationQuantizationHolder:  # pragma: no cover
         def __init__(self, *args, **kwargs):
             Logger.error('Installing tensorflow and tensorflow_model_optimization is mandatory '
                          'when using ActivationQuantizationHolder. '
