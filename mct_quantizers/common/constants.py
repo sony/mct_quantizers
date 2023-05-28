@@ -62,6 +62,7 @@ PER_CHANNEL = 'per_channel'
 MIN_RANGE = 'min_range'
 MAX_RANGE = 'max_range'
 CHANNEL_AXIS = 'channel_axis'
+INPUT_RANK = 'input_rank'
 CLUSTER_CENTERS = 'cluster_centers'
 
 
