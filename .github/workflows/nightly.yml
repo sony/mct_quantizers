@@ -19,6 +19,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install twine
+          pip install wheel
       - name: Build nightly
         run: |
           version=$(python -c 'import mct_quantizers; print(mct_quantizers.__version__)')
