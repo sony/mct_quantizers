@@ -288,7 +288,8 @@ if FOUND_TF:
             inferable_activation_quantizers = []
             if self.is_activation_quantization:
                 for quantizer in self.activation_quantizers:
-                    inferable_activation_quantizers.append(quantizer.convert2inferable())
+                    if hasattr(quantizer, 'convert2inferable') and callable(quantizer.convert2inferable):
+                        inferable_activation_quantizers.append(quantizer.convert2inferable())
                 self.activation_quantizers = inferable_activation_quantizers
                 self._set_activations_vars()
 
@@ -296,7 +297,8 @@ if FOUND_TF:
             inferable_weight_quantizers = {}
             if self.is_weights_quantization:
                 for name, quantizer in self.weights_quantizers.items():
-                    inferable_weight_quantizers.update({name: quantizer.convert2inferable()})
+                    if hasattr(quantizer, 'convert2inferable') and callable(quantizer.convert2inferable):
+                        inferable_weight_quantizers.update({name: quantizer.convert2inferable()})
                 self.weights_quantizers = inferable_weight_quantizers
                 self._set_weights_vars(False)
 

@@ -58,7 +58,9 @@ if FOUND_TORCH:
             Returns:
                 None
             """
-            self.activation_holder_quantizer = self.activation_holder_quantizer.convert2inferable()
+            if hasattr(self.activation_holder_quantizer, 'convert2inferable') and callable(
+                    self.activation_holder_quantizer.convert2inferable):  # pragma: no cover
+                self.activation_holder_quantizer = self.activation_holder_quantizer.convert2inferable()
 
 else:
     class PytorchActivationQuantizationHolder:  # pragma: no cover
