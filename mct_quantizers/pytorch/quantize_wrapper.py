@@ -105,7 +105,8 @@ if FOUND_TORCH:
             if self.is_activation_quantization:
                 inferable_activation_quantizers = []
                 for quantizer in self.activation_quantizers:
-                    inferable_activation_quantizers.append(quantizer.convert2inferable())
+                    if hasattr(quantizer, 'convert2inferable') and callable(quantizer.convert2inferable):
+                        inferable_activation_quantizers.append(quantizer.convert2inferable())
                 self.activation_quantizers = inferable_activation_quantizers
                 self._set_activation_vars()
 
@@ -113,7 +114,8 @@ if FOUND_TORCH:
             if self.is_weights_quantization:
                 inferable_weight_quantizers = {}
                 for name, quantizer in self.weights_quantizers.items():
-                    inferable_weight_quantizers.update({name: quantizer.convert2inferable()})
+                    if hasattr(quantizer, 'convert2inferable') and callable(quantizer.convert2inferable):
+                        inferable_weight_quantizers.update({name: quantizer.convert2inferable()})
                 self.weights_quantizers = inferable_weight_quantizers
                 self._set_weights_vars(False)
 
