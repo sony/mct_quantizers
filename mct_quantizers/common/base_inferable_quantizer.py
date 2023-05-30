@@ -16,7 +16,6 @@ from enum import Enum
 from typing import Any, Dict, List
 
 from mct_quantizers.common.quant_info import QuantizationMethod
-from mct_quantizers.logger import Logger
 
 
 class QuantizationTarget(Enum):
