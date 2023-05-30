@@ -28,15 +28,13 @@ if FOUND_TORCH:
     class PytorchQuantizationWrapper(nn.Module):
         def __init__(self,
                      module: nn.Module,
-                     weights_quantizers: Dict[str, BaseInferableQuantizer] = None,
-                     activation_quantizers: List[BaseInferableQuantizer] = None):
+                     weights_quantizers: Dict[str, BaseInferableQuantizer] = None):
             """
             Pytorch Quantization Wrapper takes a pytorch module and quantizers and infer a quantized module.
 
             Args:
                 module: A pytorch module.
                 weights_quantizers: A dictionary between a weight's name to its quantizer.
-                activation_quantizers: A list of activations quantization, one for each layer output.
             """
             super().__init__()
             if isinstance(module, nn.Module):
@@ -46,9 +44,7 @@ if FOUND_TORCH:
                 setattr(self, LAYER, module)
 
             self.weights_quantizers = weights_quantizers if weights_quantizers is not None else dict()
-            self.activation_quantizers = activation_quantizers if activation_quantizers is not None else list()
             self._set_weights_vars(True)
-            self._set_activation_vars()
 
         def add_weights_quantizer(self, param_name: str, quantizer: BaseInferableQuantizer):
             """
@@ -62,15 +58,6 @@ if FOUND_TORCH:
 
             """
             self.weights_quantizers.update({param_name: quantizer})
-
-        @property
-        def is_activation_quantization(self) -> bool:
-            """
-            This function check activation quantizer exists in wrapper.
-            Returns: a boolean if activation quantizer exists
-
-            """
-            return self.num_activation_quantizers > 0
 
         @property
         def is_weights_quantization(self) -> bool:
@@ -89,27 +76,11 @@ if FOUND_TORCH:
             """
             return len(self.weights_quantizers)
 
-        @property
-        def num_activation_quantizers(self) -> int:
-            """
-            Returns: number of activations quantizers
-            """
-            return len(self.activation_quantizers)
-
         def convert_to_inferable_quantizers(self):
             """
             Convert the wrapper quantizers with inferable quantizers
 
             """
-            # Activation quantizers
-            if self.is_activation_quantization:
-                inferable_activation_quantizers = []
-                for quantizer in self.activation_quantizers:
-                    if hasattr(quantizer, 'convert2inferable') and callable(quantizer.convert2inferable):
-                        inferable_activation_quantizers.append(quantizer.convert2inferable())
-                self.activation_quantizers = inferable_activation_quantizers
-                self._set_activation_vars()
-
             # Weight quantizers
             if self.is_weights_quantization:
                 inferable_weight_quantizers = {}
@@ -142,15 +113,6 @@ if FOUND_TORCH:
                     setattr(self.layer, name, weight)
                 quantizer.initialize_quantization(weight.shape, name, self)
                 self._weights_vars.append((name, getattr(self, name), quantizer))
-
-        def _set_activation_vars(self):
-            """
-            Initialize layer outputs and their quantizers in the wrapper
-            """
-            self._activation_vars = []
-            for i, quantizer in enumerate(self.activation_quantizers):
-                quantizer.initialize_quantization(None, f"tensor{i}", self)
-                self._activation_vars.append(quantizer)
 
         def set_quantize_weights(self, quantized_weights: dict):
             """
@@ -207,28 +169,11 @@ if FOUND_TORCH:
 
                 self.set_quantize_weights(quantized_weights)
 
+
             # ----------------------------------
             # Layer operation
             # ----------------------------------
             outputs = self.layer(*args, **kwargs)
-
-            # ----------------------------------
-            # Quantize all activations
-            # ----------------------------------
-            if self.is_activation_quantization:
-
-                if not isinstance(outputs, list):
-                    outputs = [outputs]
-
-                if len(outputs) != self.num_activation_quantizers:
-                    Logger.error(f"Number of outputs {len(outputs)} is incompatible number of activation quantizers {self.num_activation_quantizers}")  # pragma: no cover
-
-                # Quantize all activations tensors
-                outputs_quantized = []
-                for quantizer, output in zip(self._activation_vars, outputs):
-                    outputs_quantized.append(quantizer(output))
-
-                outputs = outputs_quantized[0] if len(outputs_quantized) == 1 else outputs_quantized
 
             return outputs
 
@@ -248,15 +193,13 @@ else:
     class PytorchQuantizationWrapper(object):
         def __init__(self,
                      layer,
-                     weight_quantizers: Dict[str, BaseInferableQuantizer] = None,
-                     activation_quantizers: List[BaseInferableQuantizer] = None):
+                     weight_quantizers: Dict[str, BaseInferableQuantizer] = None):
             """
             Pytorch Quantization Wrapper takes a pytorch module and quantizers and infer a quantized layer.
 
             Args:
                 layer: A pytorch module.
                 weight_quantizers: A dictionary between a weight's name to its quantizer.
-                activation_quantizers: A list of activations quantization, one for each layer output.
             """
             Logger.critical('Installing Pytorch is mandatory '
                             'when using PytorchQuantizationWrapper. '
