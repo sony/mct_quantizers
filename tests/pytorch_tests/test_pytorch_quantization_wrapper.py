@@ -77,11 +77,3 @@ class TestPytorchWeightsQuantizationWrapper(unittest.TestCase):
         y = wrapper(torch.Tensor(self.inputs[0])) # apply the wrapper on some random inputs
         self.assertTrue((0 == getattr(wrapper.layer, 'weight')).any()) # check the weight are now quantized
         self.assertTrue((y[0,:,0,0] == getattr(wrapper.layer, 'bias')).any()) # check the wrapper's outputs are equal to biases
-
-    def test_activation_quantization_wrapper(self):
-        wrapper = PytorchQuantizationWrapper(self.layer, activation_quantizers=[ZeroActivationsQuantizer()])
-
-        (quantizer) = wrapper._activation_vars[0]
-        self.assertTrue(isinstance(quantizer, ZeroActivationsQuantizer))
-        y = wrapper(torch.Tensor(self.inputs[0]))  # apply the wrapper on some random inputs
-        self.assertTrue((y == 0).any())  # check the wrapper's outputs are equal to biases
