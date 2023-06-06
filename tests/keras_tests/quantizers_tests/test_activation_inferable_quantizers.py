@@ -118,7 +118,7 @@ class TestKerasActivationInferableQuantizers(unittest.TestCase):
             ActivationPOTInferableQuantizer(num_bits=8,
                                             threshold=[3.],
                                             signed=True)
-        self.assertEqual('Expected threshold to be power of 2 but is [3.]', str(e.exception))
+        self.assertEqual('Expected threshold to be power of 2 but is [3.0]', str(e.exception))
 
     def test_power_of_two_activation_quantizer(self):
         thresholds = [1.]
