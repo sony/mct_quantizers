@@ -16,12 +16,15 @@
 
 from mct_quantizers.common.base_inferable_quantizer import BaseInferableQuantizer
 from mct_quantizers.common.constants import ACTIVATION_HOLDER_QUANTIZER, FOUND_TF, TRAINING, STEPS
+from mct_quantizers.common.get_all_subclasses import get_all_subclasses
 from mct_quantizers.logger import Logger
 
 if FOUND_TF:
     import tensorflow as tf
     from keras.utils import tf_inspect
     from tensorflow_model_optimization.python.core.keras import utils
+    from mct_quantizers.keras.quantizers import BaseKerasInferableQuantizer
+
     keras = tf.keras
 
 
@@ -74,10 +77,12 @@ if FOUND_TF:
             Returns: A ActivationQuantizationHolder object
 
             """
+            qi_inferable_custom_objects = {subclass.__name__: subclass for subclass in
+                                           get_all_subclasses(BaseKerasInferableQuantizer)}
             config = config.copy()
             activation_holder_quantizer = keras.utils.deserialize_keras_object(config.pop(ACTIVATION_HOLDER_QUANTIZER),
                                                                                module_objects=globals(),
-                                                                               custom_objects=None)
+                                                                               custom_objects=qi_inferable_custom_objects)
 
             return cls(activation_holder_quantizer=activation_holder_quantizer,
                        **config)
@@ -138,6 +143,7 @@ if FOUND_TF:
             if hasattr(self.activation_holder_quantizer, 'convert2inferable') and callable(
                     self.activation_holder_quantizer.convert2inferable):  # pragma: no cover
                 self.activation_holder_quantizer = self.activation_holder_quantizer.convert2inferable()
+                return self.from_config(self.get_config()) # return new layer with no weights. It assumes holder of inferable quantizers have no weights
 
 
 else:
