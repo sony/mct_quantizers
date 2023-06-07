@@ -17,13 +17,14 @@
 from mct_quantizers.common.base_inferable_quantizer import BaseInferableQuantizer
 from mct_quantizers.common.constants import ACTIVATION_HOLDER_QUANTIZER, FOUND_TF, TRAINING, STEPS
 from mct_quantizers.common.get_all_subclasses import get_all_subclasses
-from mct_quantizers.keras.quantizers import BaseKerasInferableQuantizer
 from mct_quantizers.logger import Logger
 
 if FOUND_TF:
     import tensorflow as tf
     from keras.utils import tf_inspect
     from tensorflow_model_optimization.python.core.keras import utils
+    from mct_quantizers.keras.quantizers import BaseKerasInferableQuantizer
+
     keras = tf.keras
 
 
