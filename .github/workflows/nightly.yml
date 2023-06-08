@@ -24,9 +24,8 @@ jobs:
         run: |
           version=$(python -c 'import mct_quantizers; print(mct_quantizers.__version__)')
           now=$(date +'%Y%m%d-%H%M%S')
-          deli="._"
           echo "nightly_version=$version.$now" >> $GITHUB_ENV
-          sed -i "s/attr: mct_quantizers.__version__/$version$deli$now/g" setup.cfg
+          sed -i "s/attr: mct_quantizers.__version__/$version_4_$now/g" setup.cfg
           sed -i "s/name='mct-quantizers'/name='mct-quantizers-nightly'/g" setup.py
           python setup.py sdist bdist_wheel
       - name: Publish nightly
