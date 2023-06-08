@@ -1,44 +1,44 @@
-# Model Compression Tollkit (MCT) Quantizers
+# Model Compression Toolkit (MCT) Quantizers
 
-This is an open-source library that provides tools that enable to easily represent a quantized neural network, both in Keras and in PyTorch.
-It provides researchers, developers, and engineers a set of useful quantizers and, in addition, a simple interface for implementing new custom quantizers.
+The MCT Quantizers library is an open-source library developed by researchers and engineers working at Sony Semiconductor Israel. 
 
-The MCT Quantizers library is developed by researchers and engineers working at Sony Semiconductor Israel.
+It provides tools for easily representing a quantized neural network in both Keras and PyTorch. The library offers researchers, developers, and engineers a set of useful quantizers, along with a simple interface for implementing new custom quantizers.
 
-## High level description
+## High level description:
 
-The quantizers interface is composed of two main components:
-1. `QuantizationWrapper` - an object that takes a layer with weights and a set of weights quantizers and infer a quantized layer.
-2. `ActivationQuantizationHolder` - an object that holds an activation quantizer to be quantized during inference.
+The library's quantizers interface consists of two main components:
 
-The quantizers and all the quantization information for each layer can be set by initializing the weights_quantizer and activation_quantizer API.
+1. `QuantizationWrapper`: This object takes a layer with weights and a set of weight quantizers to infer a quantized layer.
+2. `ActivationQuantizationHolder`: An object that holds an activation quantizer to be used during inference.
 
-Notice that the quantization wrapper and the quantizers are per framework.
+Users can set the quantizers and all the quantization information for each layer by initializing the weights_quantizer and activation_quantizer API.
+
+Please note that the quantization wrapper and the quantizers are framework-specific.
 
 <img src="quantization_infra.png" width="700">
 
-## Quantizers 
+## Quantizers:
 
-The library defines the "Inferable Quantizer" interface for implementing new quantizers.
-It is based on the basic class [`BaseInferableQuantizer`](common/base_inferable_quantizer.py) which allows to define quantizers that are used for emulating inference-time quantization.
+The library provides the "Inferable Quantizer" interface for implementing new quantizers. 
+This interface is based on the [`BaseInferableQuantizer`](common/base_inferable_quantizer.py) class, which allows the definition of quantizers used for emulating inference-time quantization.
 
-On top of `BaseInferableQuantizer` we define a set of framework-specific quantizers for both weights and activations:
+On top of `BaseInferableQuantizer` the library defines a set of framework-specific quantizers for both weights and activations:
 1. [Keras Quantizers](mct_quantizers/keras/quantizers)
 2. [Pytorch Quantizers](mct_quantizers/pytorch/quantizers)
 
 ### The mark_quantizer Decorator
 
-The [`@mark_quantizer`](mct_quantizers/common/base_inferable_quantizer.py) decorator is used to supply each quantizer with static properties which define its task compatibility. Each quantizer class should be decorated with this decorator. It defines the following properties:
- - [`QuantizationTarget`](mct_quantizers/common/base_inferable_quantizer.py): An Enum that indicates whether the quantizer is designated for weights or activations quantization.
+The [`@mark_quantizer`](mct_quantizers/common/base_inferable_quantizer.py) decorator is used to assign each quantizer with static properties that define its task compatibility. Each quantizer class should be decorated with this decorator, which defines the following properties:
+ - [`QuantizationTarget`](mct_quantizers/common/base_inferable_quantizer.py): An Enum that indicates whether the quantizer is intended for weights or activations quantization.
  - [`QuantizationMethod`](mct_quantizers/common/quant_info.py): A list of quantization methods (Uniform, Symmetric, etc.).
- - `quantizer_type`: An optional property that defines the type of the quantization technique. This is a helper property to allow creating advanced quantizers for specific tasks. 
+ - `quantizer_type`: An optional property that defines the type of the quantization technique. This is a helper property that allows the creation of advanced quantizers for specific tasks.
  
 ## Getting Started
 
-This section provides a quick starting guide. We begin with installation via source code or pip server. Then, we provide a short usage example.
+This section provides a quick guide to getting started. We begin with the installation process, either via source code or the pip server. Then, we provide a short example of usage.
 
 ### Installation
-See the MCT install guide for the pip package, and build from the source.
+Please refer to the MCT install guide for installing the pip package or building from the source.
 
 #### From Source
 ```
@@ -54,16 +54,16 @@ pip install mct-quantizers-nightly
 
 ### Requirements
 
-To use MCT Quantizers, one of the supported frameworks, Tensorflow/PyTorch, needs to be installed.
+To use MCT Quantizers, you need to have one of the supported frameworks, Tensorflow or PyTorch, installed.
 
-For use with Tensorflow please install the packages: 
+For use with Tensorflow, please install the following packages:
 [tensorflow](https://www.tensorflow.org/install), 
 [tensorflow-model-optimization](https://www.tensorflow.org/model_optimization/guide/install)
 
-For use with PyTorch please install the packages: 
+For use with PyTorch, please install the following package:
 [torch](https://pytorch.org/)
 
-Also, a [requirements](requirements.txt) file can be used to set up your environment.
+You can also use the [requirements](requirements.txt) file to set up your environment.
 
 ## License
 [Apache License 2.0](LICENSE.md).
