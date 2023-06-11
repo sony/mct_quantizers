@@ -56,7 +56,7 @@ if FOUND_TF:
                                                                channel_axis=channel_axis,
                                                                input_rank=input_rank)
 
-            is_threshold_pot = np.all([int(np.log2(x)) == np.log2(x) for x in self.threshold.flatten()])
+            is_threshold_pot = np.all([int(np.log2(x)) == np.log2(x) for x in self._np_threshold.flatten()])
             assert is_threshold_pot, f'Expected threshold to be power of 2 but is {self.threshold}'
 
 

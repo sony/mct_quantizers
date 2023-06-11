@@ -54,10 +54,10 @@ if FOUND_TF:
                         threshold]), f'Expected threshold list to contain float or np.float values but found ' \
                                      f'{[type(x) for x in threshold]}'
 
-            self.threshold = np.asarray(threshold)
-
-            _min_range = -self.threshold
-            _max_range = self.threshold - self.threshold / (2 ** (num_bits - 1))
+            self.threshold = threshold
+            self._np_threshold = np.asarray(threshold)
+            _min_range = -self._np_threshold
+            _max_range = self._np_threshold - self._np_threshold / (2 ** (num_bits - 1))
 
             super(WeightsSymmetricInferableQuantizer, self).__init__(num_bits=num_bits,
                                                                      min_range=list(_min_range),
