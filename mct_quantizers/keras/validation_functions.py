@@ -62,5 +62,8 @@ def validate_adjusted_min_max_ranges(min_range: Any,
 
     assert np.all(adj_min <= 0) and np.all(
         adj_max >= 0), f'Expected zero to be in the range, got min_range={adj_min}, max_range={adj_max}'
-    if not np.isclose(np.linalg.norm(adj_min - min_range), 0, atol=1e-6) or not np.isclose(np.linalg.norm(adj_max - max_range), 0, atol=1e-6):
+
+    grid_range = (max_range - min_range)
+    if not np.all(np.isclose((adj_min - min_range) / grid_range, 0, atol=1e-6)) \
+            or not np.all(np.isclose((adj_max - max_range) / grid_range, 0, atol=1e-6)):
         Logger.warning(f"Adjusting (min_range, max_range) from ({min_range},{max_range}) to ({adj_min},{adj_max})")  # pragma: no cover
