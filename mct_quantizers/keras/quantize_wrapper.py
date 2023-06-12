@@ -17,11 +17,13 @@ from typing import Dict, List, Any, Tuple
 from mct_quantizers.common.base_inferable_quantizer import BaseInferableQuantizer
 from mct_quantizers.common.constants import FOUND_TF, ACTIVATION_QUANTIZERS, WEIGHTS_QUANTIZERS, STEPS, LAYER, TRAINING
 from mct_quantizers.logger import Logger
+from mct_quantizers.common.get_all_subclasses import get_all_subclasses
 
 if FOUND_TF:
     import tensorflow as tf
     from tensorflow.python.util import tf_inspect
     from tensorflow_model_optimization.python.core.keras import utils
+    from mct_quantizers.keras.quantizers import BaseKerasInferableQuantizer
 
     keras = tf.keras
 
@@ -163,14 +165,14 @@ if FOUND_TF:
 
             """
             config = config.copy()
+            qi_inferable_custom_objects = {subclass.__name__: subclass for subclass in
+                                           get_all_subclasses(BaseKerasInferableQuantizer)}
             activation_quantizers = [keras.utils.deserialize_keras_object(act,
                                                                           module_objects=globals(),
-                                                                          custom_objects=None) for act in
-                                     config.pop(ACTIVATION_QUANTIZERS)]
+                                                                          custom_objects=None) for act in config.pop(ACTIVATION_QUANTIZERS)]
             weights_quantizers = {k: keras.utils.deserialize_keras_object(v,
-                                                                         module_objects=globals(),
-                                                                         custom_objects=None) for k, v in
-                                 config.pop(WEIGHTS_QUANTIZERS).items()}
+                                                                          module_objects=globals(),
+                                                                          custom_objects=qi_inferable_custom_objects) for k, v in config.pop(WEIGHTS_QUANTIZERS).items()}
             layer = tf.keras.layers.deserialize(config.pop(LAYER))
             return cls(layer=layer, weights_quantizers=weights_quantizers, activation_quantizers=activation_quantizers, **config)
 
@@ -291,7 +293,6 @@ if FOUND_TF:
                     if hasattr(quantizer, 'convert2inferable') and callable(quantizer.convert2inferable):
                         inferable_activation_quantizers.append(quantizer.convert2inferable())
                 self.activation_quantizers = inferable_activation_quantizers
-                self._set_activations_vars()
 
             # Weight quantizers
             inferable_weight_quantizers = {}
@@ -300,7 +301,19 @@ if FOUND_TF:
                     if hasattr(quantizer, 'convert2inferable') and callable(quantizer.convert2inferable):
                         inferable_weight_quantizers.update({name: quantizer.convert2inferable()})
                 self.weights_quantizers = inferable_weight_quantizers
-                self._set_weights_vars(False)
+
+            # Create new layer with inferable quantizers
+            inferable_quantizers_wrapper = self.from_config(self.get_config())
+            inferable_quantizers_wrapper.layer.build(self.get_input_shape_at(0))
+            layer_weights_list = []
+            for weight_attr in self.weights_quantizers.keys():
+                layer_weights_list.append(getattr(self.layer, weight_attr)) # quantized weights
+            layer_weights_list.extend(self.layer.get_weights()) # non quantized weights
+            inferable_quantizers_wrapper.layer.set_weights(layer_weights_list)
+            inferable_quantizers_wrapper._set_activations_vars()
+            # The wrapper inference is using the weights of the quantizers so it expectes to create them by running _set_weights_vars
+            inferable_quantizers_wrapper._set_weights_vars(False)
+            return inferable_quantizers_wrapper
 
         def get_weights_vars(self) -> List[Tuple[str, Any, BaseInferableQuantizer]]:
             """

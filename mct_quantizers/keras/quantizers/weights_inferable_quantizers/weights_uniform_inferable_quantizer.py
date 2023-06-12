@@ -57,33 +57,36 @@ if FOUND_TF:
 
             super(WeightsUniformInferableQuantizer, self).__init__()
 
+            self.min_range = min_range
+            self.max_range = max_range
+
             # Validate inputs properties
             validate_uniform_min_max_ranges(min_range,
                                             max_range)
 
             # Convert min/max to numpy arrays
-            min_range, max_range = np.asarray(min_range), np.asarray(max_range)
-            _min_range, _max_range = adjust_range_to_include_zero(min_range, max_range, num_bits)
-            validate_adjusted_min_max_ranges(min_range=min_range,
-                                             max_range=max_range,
-                                             adj_min=_min_range,
-                                             adj_max=_max_range)
+            min_range_np, max_range_np = np.asarray(min_range), np.asarray(max_range)
+            _min_range_np, _max_range_np = adjust_range_to_include_zero(min_range_np, max_range_np, num_bits)
+            validate_adjusted_min_max_ranges(min_range=min_range_np,
+                                             max_range=max_range_np,
+                                             adj_min=_min_range_np,
+                                             adj_max=_max_range_np)
 
             self.num_bits = num_bits
-            self.max_range = _max_range
-            self.min_range = _min_range
+            self.max_range_np = _max_range_np
+            self.min_range_np = _min_range_np
 
             if per_channel:
                 assert input_rank is not None, f'Input rank is missing in per channel quantization'
                 assert channel_axis is not None, f'Channel axis is missing in per channel quantization'
-                assert len(self.min_range) >= 1, f'In per-channel quantization min ranges list should be of length >= 1 but is {len(self.min_range)}'
-                assert len(self.max_range) >= 1, f'In per-channel quantization max ranges list should be of length >= 1 but is {len(self.max_range)}'
+                assert len(self.min_range_np) >= 1, f'In per-channel quantization min ranges list should be of length >= 1 but is {len(self.min_range_np)}'
+                assert len(self.max_range_np) >= 1, f'In per-channel quantization max ranges list should be of length >= 1 but is {len(self.max_range_np)}'
             else:
-                assert len(self.min_range) == 1, f'In per-tensor quantization min/max should be of length 1 but is {len(min_range)}'
-                assert len(self.min_range) == 1, f'In per-tensor quantization min_range should be of length 1 but is {len(self.min_range)}'
-                assert len(self.max_range) == 1, f'In per-tensor quantization max_range should be of length 1 but is {len(self.max_range)}'
-                self.min_range = self.min_range[0]
-                self.max_range = self.max_range[0]
+                assert len(self.min_range_np) == 1, f'In per-tensor quantization min/max should be of length 1 but is {len(self.min_range)}'
+                assert len(self.min_range_np) == 1, f'In per-tensor quantization min_range should be of length 1 but is {len(self.min_range_np)}'
+                assert len(self.max_range_np) == 1, f'In per-tensor quantization max_range should be of length 1 but is {len(self.max_range_np)}'
+                self.min_range_np = self.min_range_np[0]
+                self.max_range_np = self.max_range_np[0]
 
             self.per_channel = per_channel
             self.channel_axis = channel_axis
@@ -123,8 +126,8 @@ if FOUND_TF:
 
                 # Quantize the input tensor using per-channel quantization
                 q_tensor = tf.quantization.fake_quant_with_min_max_vars_per_channel(inputs,
-                                                                                    min=self.min_range,
-                                                                                    max=self.max_range,
+                                                                                    min=self.min_range_np,
+                                                                                    max=self.max_range_np,
                                                                                     num_bits=self.num_bits)
                 if self.perm_vec:
                     # Transpose the quantized tensor back to its original shape
@@ -135,8 +138,8 @@ if FOUND_TF:
             else:
                 # If per-channel quantization is not being used, quantize the input tensor using regular quantization
                 return tf.quantization.fake_quant_with_min_max_vars(inputs,
-                                                                    min=self.min_range,
-                                                                    max=self.max_range,
+                                                                    min=self.min_range_np,
+                                                                    max=self.max_range_np,
                                                                     num_bits=self.num_bits)
 
 
