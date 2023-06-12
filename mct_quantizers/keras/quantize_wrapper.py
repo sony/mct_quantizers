@@ -15,7 +15,7 @@
 from typing import Dict, List, Any, Tuple
 
 from mct_quantizers.common.base_inferable_quantizer import BaseInferableQuantizer
-from mct_quantizers.common.constants import FOUND_TF, ACTIVATION_QUANTIZERS, WEIGHTS_QUANTIZERS, STEPS, LAYER, TRAINING
+from mct_quantizers.common.constants import FOUND_TF, WEIGHTS_QUANTIZERS, STEPS, LAYER, TRAINING
 from mct_quantizers.logger import Logger
 from mct_quantizers.common.get_all_subclasses import get_all_subclasses
 
@@ -54,7 +54,6 @@ if FOUND_TF:
         def __init__(self,
                      layer,
                      weights_quantizers: Dict[str, BaseInferableQuantizer] = None,
-                     activation_quantizers: List[BaseInferableQuantizer] = None,
                      **kwargs):
             """
             Keras Quantization Wrapper takes a keras layer and quantizers and infer a quantized layer.
@@ -62,12 +61,10 @@ if FOUND_TF:
             Args:
                 layer: A keras layer.
                 weights_quantizers: A dictionary between a weight's name to its quantizer.
-                activation_quantizers: A list of activations quantization, one for each layer output.
             """
             super(KerasQuantizationWrapper, self).__init__(layer, **kwargs)
             self._track_trackable(layer, name='layer')
             self.weights_quantizers = weights_quantizers if weights_quantizers is not None else dict()
-            self.activation_quantizers = activation_quantizers if activation_quantizers is not None else list()
 
         def add_weights_quantizer(self, param_name: str, quantizer: BaseInferableQuantizer):
             """
@@ -81,15 +78,6 @@ if FOUND_TF:
 
             """
             self.weights_quantizers.update({param_name: quantizer})
-
-        @property
-        def is_activation_quantization(self) -> bool:
-            """
-            This function check activation quantizer exists in wrapper.
-            Returns: a boolean if activation quantizer exists
-
-            """
-            return self.num_activation_quantizers > 0
 
         @property
         def is_weights_quantization(self) -> bool:
@@ -108,22 +96,13 @@ if FOUND_TF:
             """
             return len(self.weights_quantizers)
 
-        @property
-        def num_activation_quantizers(self) -> int:
-            """
-            Returns: number of activations quantizers
-            """
-            return len(self.activation_quantizers)
-
         def get_config(self):
             """
             Returns: Configuration of KerasQuantizationWrapper.
 
             """
             base_config = super(KerasQuantizationWrapper, self).get_config()
-            config = {
-                ACTIVATION_QUANTIZERS: [keras.utils.serialize_keras_object(act) for act in self.activation_quantizers],
-                WEIGHTS_QUANTIZERS: {k: keras.utils.serialize_keras_object(v) for k, v in self.weights_quantizers.items()}}
+            config = {WEIGHTS_QUANTIZERS: {k: keras.utils.serialize_keras_object(v) for k, v in self.weights_quantizers.items()}}
             return dict(list(base_config.items()) + list(config.items()))
 
         def _set_weights_vars(self, is_training: bool = True):
@@ -143,17 +122,6 @@ if FOUND_TF:
                 self._weights_vars.append((name, weight, quantizer))
                 self._trainable_weights.append(weight) # Must when inherit from tf.keras.layers.Wrapper in tf2.10 and below
 
-        def _set_activations_vars(self):
-            """
-            This function sets activations quantizers vars to the layer
-
-            Returns: None
-            """
-            self._activation_vars = []
-            for i, quantizer in enumerate(self.activation_quantizers):
-                quantizer.initialize_quantization(None, self.layer.name + f'/out{i}', self)
-                self._activation_vars.append(quantizer)
-
         @classmethod
         def from_config(cls, config):
             """
@@ -167,14 +135,11 @@ if FOUND_TF:
             config = config.copy()
             qi_inferable_custom_objects = {subclass.__name__: subclass for subclass in
                                            get_all_subclasses(BaseKerasInferableQuantizer)}
-            activation_quantizers = [keras.utils.deserialize_keras_object(act,
-                                                                          module_objects=globals(),
-                                                                          custom_objects=None) for act in config.pop(ACTIVATION_QUANTIZERS)]
             weights_quantizers = {k: keras.utils.deserialize_keras_object(v,
                                                                           module_objects=globals(),
                                                                           custom_objects=qi_inferable_custom_objects) for k, v in config.pop(WEIGHTS_QUANTIZERS).items()}
             layer = tf.keras.layers.deserialize(config.pop(LAYER))
-            return cls(layer=layer, weights_quantizers=weights_quantizers, activation_quantizers=activation_quantizers, **config)
+            return cls(layer=layer, weights_quantizers=weights_quantizers, **config)
 
         def build(self, input_shape):
             """
@@ -194,7 +159,6 @@ if FOUND_TF:
                 trainable=False)
 
             self._set_weights_vars()
-            self._set_activations_vars()
 
         def set_quantize_weights(self, quantized_weights: dict):
             """
@@ -254,29 +218,6 @@ if FOUND_TF:
             else:
                 outputs = self.layer.call(inputs, **kwargs)
 
-            # Quantize all activations if quantizers exist.
-            if self.is_activation_quantization:
-                num_outputs = len(outputs) if isinstance(outputs, (list, tuple)) else 1
-                if self.num_activation_quantizers != num_outputs:
-                    Logger.error('Quantization wrapper output quantization error: '
-                                 f'number of outputs and quantizers mismatch ({num_outputs}!='
-                                 f'{self.num_activation_quantizers}')
-                if num_outputs == 1:
-                    outputs = [outputs]
-
-                _outputs = []
-                for _output, act_quant in zip(outputs, self.activation_quantizers):
-                    activation_quantizer_args_spec = tf_inspect.getfullargspec(act_quant.__call__).args
-                    if TRAINING in activation_quantizer_args_spec:
-                        _outputs.append(utils.smart_cond(
-                            training,
-                            _make_quantizer_fn(act_quant, _output, True),
-                            _make_quantizer_fn(act_quant, _output, False)))
-                    else:
-                        # Keras activation inferable quantizer.
-                        _outputs.append(act_quant(_output))
-                outputs = _outputs[0] if num_outputs == 1 else _outputs
-
             return outputs
 
         def convert_to_inferable_quantizers(self):
@@ -286,14 +227,6 @@ if FOUND_TF:
             Returns:
                 None
             """
-            # Activations quantizers
-            inferable_activation_quantizers = []
-            if self.is_activation_quantization:
-                for quantizer in self.activation_quantizers:
-                    if hasattr(quantizer, 'convert2inferable') and callable(quantizer.convert2inferable):
-                        inferable_activation_quantizers.append(quantizer.convert2inferable())
-                self.activation_quantizers = inferable_activation_quantizers
-
             # Weight quantizers
             inferable_weight_quantizers = {}
             if self.is_weights_quantization:
@@ -342,15 +275,13 @@ else:
     class KerasQuantizationWrapper(object):
         def __init__(self,
                      layer,
-                     weights_quantizers: Dict[str, BaseInferableQuantizer] = None,
-                     activation_quantizers: List[BaseInferableQuantizer] = None):
+                     weights_quantizers: Dict[str, BaseInferableQuantizer] = None):
             """
             Keras Quantization Wrapper takes a keras layer and quantizers and infer a quantized layer.
 
             Args:
                 layer: A keras layer.
                 weights_quantizers: A dictionary between a weight's name to its quantizer.
-                activation_quantizers: A list of activations quantization, one for each layer output.
             """
             Logger.critical('Installing tensorflow and tensorflow_model_optimization is mandatory '
                             'when using KerasQuantizationWrapper. '
