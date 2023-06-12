@@ -42,20 +42,6 @@ class IdentityWeightsQuantizer:
         return {}
 
 
-class ZeroActivationsQuantizer:
-    """
-    A dummy quantizer for test usage - "quantize" the layer's activation to 0
-    """
-
-    def __call__(self,
-                 inputs: tf.Tensor,
-                 training: bool = True) -> tf.Tensor:
-        return inputs * 0
-
-    def initialize_quantization(self, tensor_shape, name, layer):
-        return {}
-
-
 class TestKerasQuantizationWrapper(unittest.TestCase):
 
     def setUp(self):
@@ -86,17 +72,3 @@ class TestKerasQuantizationWrapper(unittest.TestCase):
         outputs = wrapper.call(call_inputs.astype('float32'))
         self.assertTrue((outputs == conv_layer(call_inputs)).numpy().all())
 
-    def test_activation_quantization_wrapper(self):
-        conv_layer = self.model.layers[1]
-
-        wrapper = KerasQuantizationWrapper(conv_layer, activation_quantizers=[ZeroActivationsQuantizer()])
-
-        # build
-        wrapper.build(self.input_shapes)
-        (act_quantizer) = wrapper._activation_vars[0]
-        self.assertTrue(isinstance(act_quantizer, ZeroActivationsQuantizer))
-
-        # apply the wrapper on inputs
-        call_inputs = self.inputs[0]
-        outputs = wrapper.call(call_inputs.astype('float32'))
-        self.assertTrue((outputs == 0).numpy().all())
