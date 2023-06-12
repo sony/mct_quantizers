@@ -243,7 +243,7 @@ if FOUND_TF:
                 layer_weights_list.append(getattr(self.layer, weight_attr)) # quantized weights
             layer_weights_list.extend(self.layer.get_weights()) # non quantized weights
             inferable_quantizers_wrapper.layer.set_weights(layer_weights_list)
-            inferable_quantizers_wrapper._set_activations_vars()
+
             # The wrapper inference is using the weights of the quantizers so it expectes to create them by running _set_weights_vars
             inferable_quantizers_wrapper._set_weights_vars(False)
             return inferable_quantizers_wrapper
