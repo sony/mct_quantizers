@@ -26,4 +26,4 @@ from mct_quantizers.common import constants
 from mct_quantizers.keras import quantizers as keras_quantizers
 from mct_quantizers.pytorch import quantizers as pytorch_quantizers
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
