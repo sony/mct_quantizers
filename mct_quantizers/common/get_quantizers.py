@@ -13,7 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 from mct_quantizers.common.base_inferable_quantizer import QuantizationTarget
-from mct_quantizers.common.constants import QUANTIZATION_TARGET, QUANTIZATION_METHOD
+from mct_quantizers.common.constants import QUANTIZATION_TARGET, QUANTIZATION_METHOD, QUANTIZER_TYPE
 from mct_quantizers.common.get_all_subclasses import get_all_subclasses
 from mct_quantizers.common.quant_info import QuantizationMethod
 from mct_quantizers.logger import Logger
@@ -37,9 +37,12 @@ def get_inferable_quantizer_class(quant_target: QuantizationTarget,
 
     """
     qat_quantizer_classes = get_all_subclasses(quantizer_base_class)
+    # TODO: Need to update condition on QUANTIZER_TYPE once changing this field to 'identifier' and creating a unique
+    #  identifier for inferable quantizers (see  https://app.clickup.com/t/860r5jh2p)
     filtered_quantizers = list(filter(lambda q_class: getattr(q_class, QUANTIZATION_TARGET) == quant_target and
                                                       getattr(q_class, QUANTIZATION_METHOD) is not None and
-                                                      quant_method in getattr(q_class, QUANTIZATION_METHOD),
+                                                      quant_method in getattr(q_class, QUANTIZATION_METHOD) and
+                                                      getattr(q_class, QUANTIZER_TYPE) is None,
                                       qat_quantizer_classes))
 
     if len(filtered_quantizers) != 1:
