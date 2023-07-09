@@ -23,9 +23,13 @@ class QuantizationTarget(Enum):
     Weights = "Weights"
 
 
+class InferableQuantizerID(Enum):
+    INFERABLE = "inferable_quantizer_id"
+
+
 def mark_quantizer(quantization_target: QuantizationTarget = None,
                    quantization_method: List[QuantizationMethod] = None,
-                   quantizer_type: Any = None):
+                   identifier: Any = None):
     """
     A function to be used as decoration for all inferable quantizers (which inherit from BaseInferableQuantizer).
     By decorating a class with this decoration, we can define required static properties of the quantizer.
@@ -35,8 +39,8 @@ def mark_quantizer(quantization_target: QuantizationTarget = None,
             use the quantizer for.
         quantization_method: A list of QuantizationMethod values to indicate all type of quantization methods that the
             quantizer supports.
-        quantizer_type: The type of the quantizer (quantization technique).
-            This can differ, depending on the purpose the quantizer is for.
+        identifier: A unique identifier for the quantizer class (either the quantization
+            type/technique or other unique ID).
 
     Returns: A function that decorates a class object.
 
@@ -53,7 +57,7 @@ def mark_quantizer(quantization_target: QuantizationTarget = None,
         """
         quantizer_class_object.quantization_target = quantization_target
         quantizer_class_object.quantization_method = quantization_method
-        quantizer_class_object.quantizer_type = quantizer_type
+        quantizer_class_object.identifier = identifier
 
         return quantizer_class_object
 

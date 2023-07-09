@@ -14,7 +14,7 @@
 # ==============================================================================
 import numpy as np
 
-from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget
+from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, InferableQuantizerID
 from mct_quantizers.common.constants import FOUND_TORCH, MULTIPLIER_N_BITS, EPS
 from mct_quantizers.common.quant_info import QuantizationMethod
 
@@ -26,7 +26,7 @@ if FOUND_TORCH:
 
     @mark_quantizer(quantization_target=QuantizationTarget.Activation,
                     quantization_method=[QuantizationMethod.LUT_POT_QUANTIZER],
-                    quantizer_type=None)
+                    identifier=InferableQuantizerID.INFERABLE)
     class ActivationLutPOTInferableQuantizer(BaseLUTSymmetricInferableQuantizer):
         """
         Class for quantizing activations using a lut power-of-two quantizer

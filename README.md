@@ -31,7 +31,7 @@ On top of `BaseInferableQuantizer` the library defines a set of framework-specif
 The [`@mark_quantizer`](mct_quantizers/common/base_inferable_quantizer.py) decorator is used to assign each quantizer with static properties that define its task compatibility. Each quantizer class should be decorated with this decorator, which defines the following properties:
  - [`QuantizationTarget`](mct_quantizers/common/base_inferable_quantizer.py): An Enum that indicates whether the quantizer is intended for weights or activations quantization.
  - [`QuantizationMethod`](mct_quantizers/common/quant_info.py): A list of quantization methods (Uniform, Symmetric, etc.).
- - `quantizer_type`: An optional property that defines the type of the quantization technique. This is a helper property that allows the creation of advanced quantizers for specific tasks.
+ - `identifier`: A unique identifier for the quantizer class. This is a helper property that allows the creation of advanced quantizers for specific tasks.
  
 ## Getting Started
 

@@ -15,7 +15,7 @@
 import numpy as np
 import warnings
 
-from mct_quantizers.common.base_inferable_quantizer import mark_quantizer
+from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, InferableQuantizerID
 from mct_quantizers.common.constants import FOUND_TORCH
 from mct_quantizers.common.quant_info import QuantizationMethod
 
@@ -25,7 +25,7 @@ if FOUND_TORCH:
 
     @mark_quantizer(quantization_target=None,
                     quantization_method=[QuantizationMethod.LUT_SYM_QUANTIZER],
-                    quantizer_type=None)
+                    identifier=InferableQuantizerID.INFERABLE)
     class BaseLUTSymmetricInferableQuantizer(BasePyTorchInferableQuantizer):
 
         def __init__(self,

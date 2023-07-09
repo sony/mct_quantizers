@@ -15,7 +15,7 @@
 
 import numpy as np
 
-from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget
+from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, InferableQuantizerID
 from mct_quantizers.common.constants import FOUND_TORCH
 from mct_quantizers.common.quant_info import QuantizationMethod
 
@@ -27,7 +27,7 @@ if FOUND_TORCH:
 
     @mark_quantizer(quantization_target=QuantizationTarget.Weights,
                     quantization_method=[QuantizationMethod.SYMMETRIC],
-                    quantizer_type=None)
+                    identifier=InferableQuantizerID.INFERABLE)
     class WeightsSymmetricInferableQuantizer(BaseSymmetricInferableQuantizer):
         """
         Class for quantizing weights using a symmetric quantizer
