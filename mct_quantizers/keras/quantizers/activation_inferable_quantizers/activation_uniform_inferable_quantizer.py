@@ -16,7 +16,7 @@ from typing import List
 
 import numpy as np
 
-from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget
+from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
 from mct_quantizers.common.constants import FOUND_TF
 from mct_quantizers.common.quant_info import QuantizationMethod
 from mct_quantizers.common.quant_utils import adjust_range_to_include_zero
@@ -30,7 +30,7 @@ if FOUND_TF:
 
     @mark_quantizer(quantization_target=QuantizationTarget.Activation,
                     quantization_method=[QuantizationMethod.UNIFORM],
-                    quantizer_type=None)
+                    identifier=QuantizerID.INFERABLE)
     class ActivationUniformInferableQuantizer(BaseKerasInferableQuantizer):
         """
         Class for quantizing activations using an uniform quantizer
@@ -106,6 +106,6 @@ if FOUND_TF:
 else:
     class ActivationUniformInferableQuantizer:  # pragma: no cover
         def __init__(self, *args, **kwargs):
-            Logger.error('Installing tensorflow and tensorflow_model_optimization is mandatory '
+            Logger.error('Installing tensorflow is mandatory '
                          'when using ActivationUniformInferableQuantizer. '
                          'Could not find Tensorflow package.')

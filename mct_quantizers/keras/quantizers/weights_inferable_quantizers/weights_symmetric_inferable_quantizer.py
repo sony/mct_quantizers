@@ -16,7 +16,7 @@ from typing import List
 
 import numpy as np
 
-from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget
+from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
 from mct_quantizers.common.constants import FOUND_TF
 from mct_quantizers.common.quant_info import QuantizationMethod
 
@@ -27,7 +27,7 @@ if FOUND_TF:
 
     @mark_quantizer(quantization_target=QuantizationTarget.Weights,
                     quantization_method=[QuantizationMethod.SYMMETRIC],
-                    quantizer_type=None)
+                    identifier=QuantizerID.INFERABLE)
     class WeightsSymmetricInferableQuantizer(WeightsUniformInferableQuantizer):
         """
         Class for quantizing weights using a symmetric quantizer
@@ -82,6 +82,6 @@ if FOUND_TF:
 else:
     class WeightsSymmetricInferableQuantizer:  # pragma: no cover
         def __init__(self, *args, **kwargs):
-            raise Exception('Installing tensorflow and tensorflow_model_optimization is mandatory '
+            raise Exception('Installing tensorflow is mandatory '
                             'when using WeightsPOTInferableQuantizer. '
                             'Could not find Tensorflow package.')

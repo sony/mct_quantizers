@@ -15,7 +15,7 @@
 
 import numpy as np
 
-from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget
+from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
 from mct_quantizers.common.constants import FOUND_TORCH, MULTIPLIER_N_BITS, EPS
 from mct_quantizers.common.quant_info import QuantizationMethod
 
@@ -28,7 +28,7 @@ if FOUND_TORCH:
 
     @mark_quantizer(quantization_target=QuantizationTarget.Weights,
                     quantization_method=[QuantizationMethod.LUT_SYM_QUANTIZER],
-                    quantizer_type=None)
+                    identifier=QuantizerID.INFERABLE)
     class WeightsLUTSymmetricInferableQuantizer(BaseLUTSymmetricInferableQuantizer):
         """
         Class for quantizing weights using a lut symmetric quantizer

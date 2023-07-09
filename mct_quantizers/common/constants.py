@@ -47,7 +47,7 @@ ENABLE_ACTIVATION_QUANTIZATION = 'enable_activation_quantization'
 
 QUANTIZATION_TARGET = 'quantization_target'
 QUANTIZATION_METHOD = 'quantization_method'
-QUANTIZER_TYPE = 'quantizer_type'
+QUANTIZER_ID = 'identifier'
 
 # In KerasQuantizationWrapper and PytorchQuantizationWrapper multiple quantizers are kept
 ACTIVATION_QUANTIZERS = "activation_quantizers"

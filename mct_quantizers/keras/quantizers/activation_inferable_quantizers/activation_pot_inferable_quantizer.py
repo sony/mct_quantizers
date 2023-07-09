@@ -16,7 +16,7 @@ from typing import List
 
 import numpy as np
 
-from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget
+from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
 from mct_quantizers.common.constants import FOUND_TF
 from mct_quantizers.common.quant_info import QuantizationMethod
 from mct_quantizers.logger import Logger
@@ -28,7 +28,7 @@ if FOUND_TF:
 
     @mark_quantizer(quantization_target=QuantizationTarget.Activation,
                     quantization_method=[QuantizationMethod.POWER_OF_TWO],
-                    quantizer_type=None)
+                    identifier=QuantizerID.INFERABLE)
     class ActivationPOTInferableQuantizer(ActivationSymmetricInferableQuantizer):
         """
         Class for quantizing activations using power-of-two quantizer
@@ -58,6 +58,6 @@ if FOUND_TF:
 else:
     class ActivationPOTInferableQuantizer:  # pragma: no cover
         def __init__(self, *args, **kwargs):
-            Logger.error('Installing tensorflow and tensorflow_model_optimization is mandatory '
+            Logger.error('Installing tensorflow is mandatory '
                          'when using ActivationPOTInferableQuantizer. '
                          'Could not find Tensorflow package.')

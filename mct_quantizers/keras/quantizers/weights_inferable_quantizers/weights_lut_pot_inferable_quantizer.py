@@ -16,7 +16,7 @@ from typing import List
 
 import numpy as np
 
-from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget
+from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
 from mct_quantizers.common.constants import FOUND_TF, MULTIPLIER_N_BITS, EPS
 from mct_quantizers.common.quant_info import QuantizationMethod
 
@@ -28,7 +28,7 @@ if FOUND_TF:
 
     @mark_quantizer(quantization_target=QuantizationTarget.Weights,
                     quantization_method=[QuantizationMethod.LUT_POT_QUANTIZER],
-                    quantizer_type=None)
+                    identifier=QuantizerID.INFERABLE)
     class WeightsLUTPOTInferableQuantizer(WeightsLUTSymmetricInferableQuantizer):
         """
         Class for quantizing weights using a lut power-of-two quantizer
@@ -73,6 +73,6 @@ if FOUND_TF:
 else:
     class WeightsLUTPOTInferableQuantizer:  # pragma: no cover
         def __init__(self, *args, **kwargs):
-            raise Exception('Installing tensorflow and tensorflow_model_optimization is mandatory '
+            raise Exception('Installing tensorflow is mandatory '
                             'when using WeightsLUTPOTInferableQuantizer. '
                             'Could not find Tensorflow package.')

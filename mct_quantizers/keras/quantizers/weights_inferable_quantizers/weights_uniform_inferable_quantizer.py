@@ -16,7 +16,7 @@ from typing import List
 
 import numpy as np
 
-from mct_quantizers.common.base_inferable_quantizer import QuantizationTarget, mark_quantizer
+from mct_quantizers.common.base_inferable_quantizer import QuantizationTarget, mark_quantizer, QuantizerID
 from mct_quantizers.common.constants import FOUND_TF
 from mct_quantizers.common.quant_info import QuantizationMethod
 from mct_quantizers.common.quant_utils import adjust_range_to_include_zero
@@ -30,7 +30,7 @@ if FOUND_TF:
 
     @mark_quantizer(quantization_target=QuantizationTarget.Weights,
                     quantization_method=[QuantizationMethod.UNIFORM],
-                    quantizer_type=None)
+                    identifier=QuantizerID.INFERABLE)
     class WeightsUniformInferableQuantizer(BaseKerasInferableQuantizer):
         """
         Class for quantizing weights using a uniform quantizer
@@ -161,6 +161,6 @@ if FOUND_TF:
 else:
     class WeightsUniformInferableQuantizer:  # pragma: no cover
         def __init__(self, *args, **kwargs):
-            raise Exception('Installing tensorflow and tensorflow_model_optimization is mandatory '
+            raise Exception('Installing tensorflow is mandatory '
                             'when using WeightsUniformInferableQuantizer. '
                             'Could not find Tensorflow package.')
