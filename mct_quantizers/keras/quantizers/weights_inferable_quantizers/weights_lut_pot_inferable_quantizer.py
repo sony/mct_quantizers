@@ -73,6 +73,6 @@ if FOUND_TF:
 else:
     class WeightsLUTPOTInferableQuantizer:  # pragma: no cover
         def __init__(self, *args, **kwargs):
-            raise Exception('Installing tensorflow and tensorflow_model_optimization is mandatory '
+            raise Exception('Installing tensorflow is mandatory '
                             'when using WeightsLUTPOTInferableQuantizer. '
                             'Could not find Tensorflow package.')

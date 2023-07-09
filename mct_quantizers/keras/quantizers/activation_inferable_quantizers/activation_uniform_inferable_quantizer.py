@@ -106,6 +106,6 @@ if FOUND_TF:
 else:
     class ActivationUniformInferableQuantizer:  # pragma: no cover
         def __init__(self, *args, **kwargs):
-            Logger.error('Installing tensorflow and tensorflow_model_optimization is mandatory '
+            Logger.error('Installing tensorflow is mandatory '
                          'when using ActivationUniformInferableQuantizer. '
                          'Could not find Tensorflow package.')

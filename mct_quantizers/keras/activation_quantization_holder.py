@@ -21,8 +21,8 @@ from mct_quantizers.logger import Logger
 
 if FOUND_TF:
     import tensorflow as tf
-    from keras.utils import tf_inspect
-    from tensorflow_model_optimization.python.core.keras import utils
+    from tensorflow.python.util import tf_inspect
+    from keras.utils.control_flow_util import smart_cond
     from mct_quantizers.keras.quantizers import BaseKerasInferableQuantizer
 
     keras = tf.keras
@@ -126,7 +126,7 @@ if FOUND_TF:
 
             activation_quantizer_args_spec = tf_inspect.getfullargspec(self.activation_holder_quantizer.__call__).args
             if TRAINING in activation_quantizer_args_spec:
-                return utils.smart_cond(
+                return smart_cond(
                     training,
                     _make_quantizer_fn(self.activation_holder_quantizer, inputs, True),
                     _make_quantizer_fn(self.activation_holder_quantizer, inputs, False))
@@ -149,6 +149,6 @@ if FOUND_TF:
 else:
     class KerasActivationQuantizationHolder:  # pragma: no cover
         def __init__(self, *args, **kwargs):
-            Logger.error('Installing tensorflow and tensorflow_model_optimization is mandatory '
+            Logger.error('Installing tensorflow is mandatory '
                          'when using ActivationQuantizationHolder. '
                          'Could not find Tensorflow package.')

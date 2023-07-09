@@ -49,7 +49,7 @@ if FOUND_TF:
 else:
     class BaseKerasInferableQuantizer:  # pragma: no cover
         def __init__(self, *args, **kwargs):
-            raise Exception('Installing tensorflow and tensorflow_model_optimization is mandatory '
+            raise Exception('Installing tensorflow is mandatory '
                             'when using BaseKerasInferableQuantizer. '
                             'Could not find Tensorflow package.')
 

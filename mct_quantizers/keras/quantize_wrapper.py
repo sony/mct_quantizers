@@ -22,7 +22,8 @@ from mct_quantizers.common.get_all_subclasses import get_all_subclasses
 if FOUND_TF:
     import tensorflow as tf
     from tensorflow.python.util import tf_inspect
-    from tensorflow_model_optimization.python.core.keras import utils
+    from keras.utils.control_flow_util import smart_cond
+
     from mct_quantizers.keras.quantizers import BaseKerasInferableQuantizer
 
     keras = tf.keras
@@ -200,7 +201,7 @@ if FOUND_TF:
 
                 weights_quantizer_args_spec = tf_inspect.getfullargspec(quantizer.__call__).args
                 if TRAINING in weights_quantizer_args_spec:
-                    quantized_weight = utils.smart_cond(
+                    quantized_weight = smart_cond(
                         training,
                         _make_quantizer_fn(quantizer, unquantized_weight, True),
                         _make_quantizer_fn(quantizer, unquantized_weight, False))
@@ -283,6 +284,6 @@ else:
                 layer: A keras layer.
                 weights_quantizers: A dictionary between a weight's name to its quantizer.
             """
-            Logger.critical('Installing tensorflow and tensorflow_model_optimization is mandatory '
+            Logger.critical('Installing tensorflow is mandatory '
                             'when using KerasQuantizationWrapper. '
                             'Could not find Tensorflow package.')  # pragma: no cover
