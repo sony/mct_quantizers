@@ -1,9 +1,10 @@
 import importlib
 import unittest
 
-found_tf = importlib.util.find_spec("tensorflow") is not None and importlib.util.find_spec(
-    "tensorflow_model_optimization") is not None
-found_pytorch = importlib.util.find_spec("torch")
+from mct_quantizers.common.constants import TORCH, TENSORFLOW
+
+found_tf = importlib.util.find_spec(TENSORFLOW) is not None
+found_pytorch = importlib.util.find_spec(TORCH)
 
 if __name__ == '__main__':
     # -----------------  Load all the test cases
