@@ -17,7 +17,7 @@ from typing import List
 
 import numpy as np
 
-from mct_quantizers.common.base_inferable_quantizer import QuantizationTarget, mark_quantizer, InferableQuantizerID
+from mct_quantizers.common.base_inferable_quantizer import QuantizationTarget, mark_quantizer, QuantizerID
 from mct_quantizers.common.constants import FOUND_TF, MULTIPLIER_N_BITS, EPS
 from mct_quantizers.common.quant_info import QuantizationMethod
 
@@ -30,7 +30,7 @@ if FOUND_TF:
 
     @mark_quantizer(quantization_target=QuantizationTarget.Weights,
                     quantization_method=[QuantizationMethod.LUT_SYM_QUANTIZER],
-                    identifier=InferableQuantizerID.INFERABLE)
+                    identifier=QuantizerID.INFERABLE)
     class WeightsLUTSymmetricInferableQuantizer(BaseKerasInferableQuantizer):
         """
         Class for quantizing weights using a lut symmetric quantizer

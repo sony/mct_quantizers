@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-from mct_quantizers.common.base_inferable_quantizer import QuantizationTarget, InferableQuantizerID
+from mct_quantizers.common.base_inferable_quantizer import QuantizationTarget, QuantizerID
 from mct_quantizers.common.constants import QUANTIZATION_TARGET, QUANTIZATION_METHOD, QUANTIZER_ID
 from mct_quantizers.common.get_all_subclasses import get_all_subclasses
 from mct_quantizers.common.quant_info import QuantizationMethod

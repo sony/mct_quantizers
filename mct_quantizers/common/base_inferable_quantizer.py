@@ -23,7 +23,7 @@ class QuantizationTarget(Enum):
     Weights = "Weights"
 
 
-class InferableQuantizerID(Enum):
+class QuantizerID(Enum):
     INFERABLE = "inferable_quantizer_id"
 
 

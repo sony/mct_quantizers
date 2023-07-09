@@ -15,7 +15,7 @@
 
 import numpy as np
 
-from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, InferableQuantizerID
+from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
 from mct_quantizers.common.constants import FOUND_TORCH
 from mct_quantizers.common.quant_info import QuantizationMethod
 
@@ -26,7 +26,7 @@ if FOUND_TORCH:
 
     @mark_quantizer(quantization_target=QuantizationTarget.Weights,
                     quantization_method=[QuantizationMethod.POWER_OF_TWO],
-                    identifier=InferableQuantizerID.INFERABLE)
+                    identifier=QuantizerID.INFERABLE)
     class WeightsPOTInferableQuantizer(WeightsSymmetricInferableQuantizer):
         """
         Class for quantizing weights using power-of-two quantizer
