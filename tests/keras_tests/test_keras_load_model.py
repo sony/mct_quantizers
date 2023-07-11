@@ -17,8 +17,8 @@ import tempfile
 import unittest
 
 import numpy as np
-from keras.layers import Conv2D
 from tensorflow import keras
+from tensorflow.keras.layers import Conv2D
 
 from mct_quantizers.keras.activation_quantization_holder import KerasActivationQuantizationHolder
 from mct_quantizers.keras.load_model import keras_load_quantized_model
