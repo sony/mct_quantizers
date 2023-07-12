@@ -22,7 +22,7 @@ from mct_quantizers.common.get_all_subclasses import get_all_subclasses
 if FOUND_TF:
     import tensorflow as tf
     from tensorflow.python.util import tf_inspect
-    from keras.utils.control_flow_util import smart_cond
+    from tensorflow.python.keras.utils.control_flow_util import smart_cond
 
     from mct_quantizers.keras.quantizers import BaseKerasInferableQuantizer
 
