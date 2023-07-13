@@ -30,7 +30,7 @@ if FOUND_TORCH:
                     identifier=QuantizerID.INFERABLE)
     class WeightsUniformInferableQuantizer(BaseUniformInferableQuantizer):
         """
-        Class for quantizing weights using a uniform quantizer
+        Class for quantizing weights using unsigned uniform quantizer.
         """
 
         def __init__(self,

@@ -30,7 +30,7 @@ if FOUND_TF:
                     identifier=QuantizerID.INFERABLE)
     class WeightsSymmetricInferableQuantizer(WeightsUniformInferableQuantizer):
         """
-        Class for quantizing weights using a symmetric quantizer
+        Class for quantizing weights using unsigned symmetric quantizer.
         """
         def __init__(self,
                      num_bits: int,

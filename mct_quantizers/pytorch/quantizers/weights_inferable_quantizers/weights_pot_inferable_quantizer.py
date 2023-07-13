@@ -29,7 +29,7 @@ if FOUND_TORCH:
                     identifier=QuantizerID.INFERABLE)
     class WeightsPOTInferableQuantizer(WeightsSymmetricInferableQuantizer):
         """
-        Class for quantizing weights using power-of-two quantizer
+        Class for quantizing weights using unsigned power-of-two quantizer.
         """
 
         def __init__(self,
