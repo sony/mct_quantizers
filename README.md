@@ -56,9 +56,8 @@ pip install mct-quantizers-nightly
 
 To use MCT Quantizers, you need to have one of the supported frameworks, Tensorflow or PyTorch, installed.
 
-For use with Tensorflow, please install the following packages:
-[tensorflow](https://www.tensorflow.org/install), 
-[tensorflow-model-optimization](https://www.tensorflow.org/model_optimization/guide/install)
+For use with Tensorflow, please install the following package:
+[tensorflow](https://www.tensorflow.org/install),
 
 For use with PyTorch, please install the following package:
 [torch](https://pytorch.org/)
