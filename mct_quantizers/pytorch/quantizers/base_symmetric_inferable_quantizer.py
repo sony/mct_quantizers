@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+from typing import List
+
 import numpy as np
 
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizerID
 from mct_quantizers.common.constants import FOUND_TORCH
 from mct_quantizers.common.quant_info import QuantizationMethod
-
 
 if FOUND_TORCH:
     from mct_quantizers.pytorch.quantizers.base_pytorch_inferable_quantizer import BasePyTorchInferableQuantizer
@@ -29,8 +30,9 @@ if FOUND_TORCH:
 
         def __init__(self,
                      num_bits: int,
-                     threshold: np.ndarray,
-                     signed: bool):
+                     threshold: List[float],
+                     signed: bool,
+                     use_custom_impl=False):
             """
             Initialize the quantizer with the specified parameters.
 
@@ -40,24 +42,22 @@ if FOUND_TORCH:
                 signed: whether or not to use signed quantization
             """
 
-            super(BaseSymmetricInferableQuantizer, self).__init__()
+            super(BaseSymmetricInferableQuantizer, self).__init__(use_custom_impl)
 
-            assert isinstance(threshold,
-                              np.ndarray), f'Threshold is expected to be numpy array, but is of type {type(threshold)}'
-            assert threshold.ndim == 1, f'Threshold is expected to be flatten, but of shape {threshold.shape}'
+            assert isinstance(threshold, list), f'Threshold is expected to be a list, but is of type {type(threshold)}'
 
             self.signed = signed
-            self.threshold = threshold
+            self.threshold_np = np.asarray(threshold)
             self.num_bits = num_bits
 
             if signed:
                 self.min_quantized_domain = -2 ** (num_bits - 1)
                 self.max_quantized_domain = 2 ** (num_bits - 1) - 1
-                self.scales = threshold / 2 ** (num_bits - 1)
+                self.scales = self.threshold_np / 2 ** (num_bits - 1)
             else:
                 self.min_quantized_domain = 0
                 self.max_quantized_domain = (2 ** num_bits) - 1
-                self.scales = threshold / 2 ** num_bits
+                self.scales = self.threshold_np / 2 ** num_bits
 
 
 

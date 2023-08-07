@@ -28,7 +28,7 @@ class TestPytorchActivationQuantizationHolderInference(unittest.TestCase):
 
     def test_activation_quantization_holder_inference(self):
         num_bits = 3
-        thresholds = np.array([4])
+        thresholds = [4]
         signed = True
 
         quantizer = ActivationSymmetricInferableQuantizer(num_bits=num_bits,
@@ -42,7 +42,7 @@ class TestPytorchActivationQuantizationHolderInference(unittest.TestCase):
         quantized_tensor = model(input_tensor)
 
         self.assertTrue(model.activation_holder_quantizer.num_bits == num_bits)
-        self.assertTrue(model.activation_holder_quantizer.threshold == thresholds)
+        self.assertTrue(model.activation_holder_quantizer.threshold_np == thresholds)
         self.assertTrue(model.activation_holder_quantizer.signed == signed)
 
 
@@ -57,7 +57,7 @@ class TestPytorchActivationQuantizationHolderInference(unittest.TestCase):
 
     def test_activation_quantization_holder_save_and_load(self):
         num_bits = 3
-        thresholds = np.array([4])
+        thresholds = [4]
         signed = True
 
         quantizer = ActivationPOTInferableQuantizer(num_bits=num_bits,

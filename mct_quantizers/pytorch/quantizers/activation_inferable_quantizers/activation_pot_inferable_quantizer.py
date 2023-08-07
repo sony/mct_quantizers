@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+from typing import Any, List
 
 import numpy as np
 
@@ -19,10 +20,18 @@ from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, Quant
 from mct_quantizers.common.constants import FOUND_TORCH
 from mct_quantizers.common.quant_info import QuantizationMethod
 
-
 if FOUND_TORCH:
-    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import \
-        ActivationSymmetricInferableQuantizer
+    import torch
+    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import ActivationSymmetricInferableQuantizer, quantize_sym_activations_numpy, quantize_sym_activations_torch
+    from onnxruntime_extensions import onnx_op, PyCustomOpDef
+
+    @onnx_op(op_type="ActivationPOTQuantizer",
+             inputs=[PyCustomOpDef.dt_float, PyCustomOpDef.dt_float,
+                     PyCustomOpDef.dt_bool, PyCustomOpDef.dt_int64],
+             outputs=[PyCustomOpDef.dt_float])
+    def activation_pot_ort(x, t, s, nbits):
+        return quantize_sym_activations_numpy(x, t, s, nbits)
+
 
     @mark_quantizer(quantization_target=QuantizationTarget.Activation,
                     quantization_method=[QuantizationMethod.POWER_OF_TWO],
@@ -34,8 +43,9 @@ if FOUND_TORCH:
 
         def __init__(self,
                      num_bits: int,
-                     threshold: np.ndarray,
-                     signed: bool):
+                     threshold: List[float],
+                     signed: bool,
+                     use_custom_impl: bool = False):
             """
             Initialize the quantizer with the specified parameters.
 
@@ -47,11 +57,38 @@ if FOUND_TORCH:
             # target of Activation quantization
             super(ActivationPOTInferableQuantizer, self).__init__(num_bits=num_bits,
                                                                   signed=signed,
-                                                                  threshold=threshold)
+                                                                  threshold=threshold,
+                                                                  use_custom_impl=use_custom_impl)
 
-            is_threshold_pot = np.all(np.round(np.log2(threshold.flatten()))==np.log2(threshold.flatten()))
+            is_threshold_pot = np.all(
+                np.round(np.log2(self.threshold_np.flatten())) == np.log2(self.threshold_np.flatten()))
             assert is_threshold_pot, f'Expected threshold to be power of 2 but is {threshold}'
 
+        def __call__(self, inputs):
+            if self.use_custom_impl and torch.jit.is_tracing():
+                return ActivationPOTF.apply(inputs,
+                                            self.threshold_np,
+                                            self.signed,
+                                            self.num_bits)
+            return super(ActivationPOTInferableQuantizer, self).__call__(inputs)
+
+
+    class ActivationPOTF(torch.autograd.Function):
+
+        @staticmethod
+        def forward(ctx, input_tensor, threshold, signed, num_bits):
+            return quantize_sym_activations_torch(input_tensor, threshold, signed, num_bits)
+
+        @staticmethod
+        def symbolic(g, input_tensor, threshold, signed, num_bits):
+            return g.op("ai.onnx.contrib::ActivationPOTQuantizer", input_tensor,
+                        g.op('Constant', value_t=torch.tensor(threshold, dtype=torch.float32)),
+                        g.op('Constant', value_t=torch.tensor(signed, dtype=torch.bool)),
+                        g.op('Constant', value_t=torch.tensor(num_bits, dtype=torch.int64))).setType(
+                input_tensor.type())
+
+        def backward(ctx: Any, *grad_outputs: Any) -> Any:
+            raise NotImplementedError()
 
 else:
     class ActivationPOTInferableQuantizer:  # pragma: no cover

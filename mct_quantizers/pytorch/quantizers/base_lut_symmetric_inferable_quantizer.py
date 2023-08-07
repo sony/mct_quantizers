@@ -12,16 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-import numpy as np
 import warnings
+
+import numpy as np
 
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizerID
 from mct_quantizers.common.constants import FOUND_TORCH
 from mct_quantizers.common.quant_info import QuantizationMethod
 
-
 if FOUND_TORCH:
     from mct_quantizers.pytorch.quantizers.base_pytorch_inferable_quantizer import BasePyTorchInferableQuantizer
+
 
     @mark_quantizer(quantization_target=None,
                     quantization_method=[QuantizationMethod.LUT_SYM_QUANTIZER],

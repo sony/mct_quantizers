@@ -32,7 +32,7 @@ class TestPytorchWeightsIllegalInferableQuantizers(unittest.TestCase):
         with self.assertRaises(Exception) as e:
             WeightsSymmetricInferableQuantizer(num_bits=8,
                                                per_channel=True,
-                                               threshold=np.asarray([1]))
+                                               threshold=[1])
         self.assertEqual('Channel axis is missing in per channel quantization', str(e.exception))
 
     def test_illegal_threshold_not_pot(self):
@@ -40,7 +40,7 @@ class TestPytorchWeightsIllegalInferableQuantizers(unittest.TestCase):
             WeightsPOTInferableQuantizer(num_bits=8,
                                          per_channel=False,
                                          # Not POT threshold
-                                         threshold=np.asarray([3]))
+                                         threshold=[3])
         self.assertEqual('Expected threshold to be power of 2 but is [3]', str(e.exception))
 
     def test_illegal_threshold_length_per_tensor_pot_quantizer(self):
@@ -48,7 +48,7 @@ class TestPytorchWeightsIllegalInferableQuantizers(unittest.TestCase):
             WeightsPOTInferableQuantizer(num_bits=8,
                                          per_channel=False,
                                          # More than one threshold in per-tensor quantization
-                                         threshold=np.asarray([2, 3]))
+                                         threshold=[2, 3])
         self.assertEqual('In per-tensor quantization threshold should be of length 1 but is 2', str(e.exception))
 
     def test_zero_not_in_range_uniform_quantizer(self):

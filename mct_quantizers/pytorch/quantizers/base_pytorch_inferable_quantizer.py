@@ -22,11 +22,12 @@ if FOUND_TORCH:
 
 
     class BasePyTorchInferableQuantizer(BaseInferableQuantizer):
-        def __init__(self):
+        def __init__(self, use_custom_impl=False):
             """
             This class is a base quantizer for PyTorch quantizers for inference only.
             """
             super(BasePyTorchInferableQuantizer, self).__init__()
+            self.use_custom_impl = use_custom_impl
 
         @abstractmethod
         def __call__(self, inputs: torch.Tensor):

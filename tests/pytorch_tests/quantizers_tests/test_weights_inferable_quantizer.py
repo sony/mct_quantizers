@@ -30,7 +30,7 @@ class TestPytorchWeightsInferableQuantizers(unittest.TestCase):
 
     def test_symmetric_weights_quantizer_per_tensor(self):
         num_bits = 3
-        thresholds = np.asarray([4])
+        thresholds = [4]
         quantizer = WeightsSymmetricInferableQuantizer(num_bits=num_bits,
                                                        per_channel=False,
                                                        threshold=thresholds)
@@ -62,7 +62,7 @@ class TestPytorchWeightsInferableQuantizers(unittest.TestCase):
         self.assertTrue(torch.all(manually_quantized_tensor == quantized_tensor))
 
     def test_symmetric_weights_quantizer_per_channel(self):
-        thresholds = np.asarray([3, 6, 2])
+        thresholds = [3, 6, 2]
         num_bits = 2
         quantizer = WeightsSymmetricInferableQuantizer(num_bits=num_bits,
                                                        per_channel=True,
@@ -100,7 +100,7 @@ class TestPytorchWeightsInferableQuantizers(unittest.TestCase):
         self.assertTrue(torch.all(manually_quantized_tensor == quantized_tensor))
 
     def test_pot_weights_quantizer_per_channel(self):
-        thresholds = np.asarray([2, 4, 1])
+        thresholds = [2, 4, 1]
         num_bits = 3
         quantizer = WeightsPOTInferableQuantizer(num_bits=num_bits,
                                                  per_channel=True,
@@ -139,7 +139,7 @@ class TestPytorchWeightsInferableQuantizers(unittest.TestCase):
         self.assertTrue(torch.all(manually_quantized_tensor == fake_quantized_tensor))
 
     def test_pot_weights_quantizer_per_tensor(self):
-        thresholds = np.asarray([1])
+        thresholds = [1]
         num_bits = 2
         quantizer = WeightsPOTInferableQuantizer(num_bits=num_bits,
                                                  per_channel=False,

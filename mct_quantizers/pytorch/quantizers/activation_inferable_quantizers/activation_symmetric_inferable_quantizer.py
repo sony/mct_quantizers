@@ -12,16 +12,61 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+from typing import Any, List
+
 import numpy as np
 
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
 from mct_quantizers.common.constants import FOUND_TORCH
 from mct_quantizers.common.quant_info import QuantizationMethod
 
-
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.base_symmetric_inferable_quantizer import BaseSymmetricInferableQuantizer
+
+    from onnxruntime_extensions import onnx_op, PyCustomOpDef
+
+
+    @onnx_op(op_type="ActivationSymmetricQuantizer",
+             inputs=[PyCustomOpDef.dt_float, PyCustomOpDef.dt_float,
+                     PyCustomOpDef.dt_bool, PyCustomOpDef.dt_int64],
+             outputs=[PyCustomOpDef.dt_float])
+    def activation_sym_ort(input_tensor: np.ndarray,
+                           threshold: float,
+                           signed: bool,
+                           num_bits: int):
+        return quantize_sym_activations_numpy(input_tensor, threshold, signed, num_bits)
+
+
+    def quantize_sym_activations_numpy(input_tensor: np.ndarray,
+                                       threshold: float,
+                                       signed: bool,
+                                       num_bits: int):
+        if signed:
+            scale = threshold / (2 ** (num_bits - 1))
+            min, max = -threshold, threshold - scale
+        else:
+            scale = threshold / (2 ** num_bits)
+            min, max = 0, threshold - scale
+
+        quantized = np.round(np.clip(input_tensor, min, max) / scale) * scale
+        return quantized
+
+
+    def quantize_sym_activations_torch(input_tensor: torch.Tensor,
+                                       threshold: float,
+                                       signed: bool,
+                                       num_bits: int):
+        if signed:
+            scale = threshold / (2 ** (num_bits - 1))
+            min, max = -threshold, threshold - scale
+        else:
+            scale = threshold / (2 ** num_bits)
+            min, max = 0, threshold - scale
+
+        quantized = torch.round(torch.clip(input_tensor, min, max) / scale) * scale
+        return quantized
+
 
     @mark_quantizer(quantization_target=QuantizationTarget.Activation,
                     quantization_method=[QuantizationMethod.SYMMETRIC],
@@ -33,8 +78,9 @@ if FOUND_TORCH:
 
         def __init__(self,
                      num_bits: int,
-                     threshold: np.ndarray,
-                     signed: bool):
+                     threshold: List[float],
+                     signed: bool,
+                     use_custom_impl=False):
             """
             Initialize the quantizer with the specified parameters.
 
@@ -48,6 +94,11 @@ if FOUND_TORCH:
                 num_bits=num_bits,
                 threshold=threshold,
                 signed=signed)
+
+            self.use_custom_impl = use_custom_impl
+
+            assert self.threshold_np.shape[0] == 1
+            self.threshold_np = self.threshold_np[0]
 
             # Activation supports only per-tensor quantization
             assert len(
@@ -67,11 +118,36 @@ if FOUND_TORCH:
             Returns:
                 quantized tensor.
             """
-            return torch.fake_quantize_per_tensor_affine(inputs,
-                                                         scale=self.scales,
-                                                         zero_point=self.zero_points,
-                                                         quant_min=self.min_quantized_domain,
-                                                         quant_max=self.max_quantized_domain)
+            if self.use_custom_impl and torch.jit.is_tracing():
+                return ActivationSymF.apply(inputs,
+                                            self.threshold_np,
+                                            self.signed,
+                                            self.num_bits)
+            else:
+                with torch.no_grad():
+                    return torch.fake_quantize_per_tensor_affine(inputs,
+                                                                 scale=self.scales,
+                                                                 zero_point=self.zero_points,
+                                                                 quant_min=self.min_quantized_domain,
+                                                                 quant_max=self.max_quantized_domain)
+
+
+    class ActivationSymF(torch.autograd.Function):
+
+        @staticmethod
+        def forward(ctx, input_tensor, threshold, signed, num_bits):
+            return quantize_sym_activations_torch(input_tensor, threshold, signed, num_bits)
+
+        @staticmethod
+        def symbolic(g, input_tensor, threshold, signed, num_bits):
+            return g.op("ai.onnx.contrib::ActivationSymmetricQuantizer", input_tensor,
+                        g.op('Constant', value_t=torch.tensor(threshold, dtype=torch.float32)),
+                        g.op('Constant', value_t=torch.tensor(signed, dtype=torch.bool)),
+                        g.op('Constant', value_t=torch.tensor(num_bits, dtype=torch.int64))).setType(
+                input_tensor.type())
+
+        def backward(ctx: Any, *grad_outputs: Any) -> Any:
+            raise NotImplementedError()
 
 else:
     class ActivationSymmetricInferableQuantizer:  # pragma: no cover

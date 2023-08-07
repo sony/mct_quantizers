@@ -26,4 +26,6 @@ from mct_quantizers.common import constants
 from mct_quantizers.keras import quantizers as keras_quantizers
 from mct_quantizers.pytorch import quantizers as pytorch_quantizers
 
+from mct_quantizers.pytorch.onnxruntime_session_options import get_ort_session_options
+
 __version__ = "1.2.0"

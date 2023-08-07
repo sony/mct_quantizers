@@ -64,7 +64,7 @@ class TestPytorchLoadModel(unittest.TestCase):
 
     def test_save_and_load_activation_pot(self):
         num_bits = 3
-        thresholds = np.asarray([4.])
+        thresholds = [4.]
         signed = True
         quantizer = ActivationPOTInferableQuantizer(num_bits=num_bits,
                                                     threshold=thresholds,
@@ -74,7 +74,7 @@ class TestPytorchLoadModel(unittest.TestCase):
 
     def test_save_and_load_activation_symmetric(self):
         num_bits = 3
-        thresholds = np.asarray([4.])
+        thresholds = [4.]
         signed = True
         quantizer = ActivationSymmetricInferableQuantizer(num_bits=num_bits,
                                                           threshold=thresholds,
@@ -84,8 +84,8 @@ class TestPytorchLoadModel(unittest.TestCase):
 
     def test_save_and_load_activation_uniform(self):
         num_bits = 3
-        min_range = np.asarray([1.])
-        max_range = np.asarray([4.])
+        min_range = [1.]
+        max_range = [4.]
         quantizer = ActivationUniformInferableQuantizer(num_bits=num_bits,
                                                         min_range=min_range,
                                                         max_range=max_range)
@@ -112,7 +112,7 @@ class TestPytorchLoadModel(unittest.TestCase):
         self._one_layer_model_save_and_load(layer_with_quantizer)
 
     def test_save_and_load_weights_pot(self):
-        thresholds = np.asarray([4., 0.5, 2.])
+        thresholds = [4., 0.5, 2.]
         num_bits = 2
         quantizer = WeightsPOTInferableQuantizer(num_bits=num_bits,
                                                  per_channel=True,
@@ -123,7 +123,7 @@ class TestPytorchLoadModel(unittest.TestCase):
         self._one_layer_model_save_and_load(layer_with_quantizer)
 
     def test_save_and_load_weights_symmetric(self):
-        thresholds = np.asarray([3., 6., 2.])
+        thresholds = [3., 6., 2.]
         num_bits = 2
         quantizer = WeightsSymmetricInferableQuantizer(num_bits=num_bits,
                                                        per_channel=True,
