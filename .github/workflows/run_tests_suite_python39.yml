@@ -24,6 +24,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install tensorflow==2.12.*
-          pip install torch==1.13.* onnx onnxruntime onnx-extensions
+          pip install torch==1.13.* onnx onnxruntime onnxruntime-extensions
       - name: Run unittests
         run: python -m unittest discover -s tests -v
