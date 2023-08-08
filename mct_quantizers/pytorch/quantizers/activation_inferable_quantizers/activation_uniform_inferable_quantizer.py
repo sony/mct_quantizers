@@ -17,16 +17,42 @@ from typing import Any
 import numpy as np
 
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
-from mct_quantizers.common.constants import FOUND_TORCH
+from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS
 from mct_quantizers.common.quant_info import QuantizationMethod
 from mct_quantizers.common.quant_utils import adjust_range_to_include_zero
-from mct_quantizers.pytorch.quantizer_utils import fix_range_to_include_zero
 
-if FOUND_TORCH:
-    import torch
-    from mct_quantizers.pytorch.quantizers.base_uniform_inferable_quantizer import BaseUniformInferableQuantizer
-
+if FOUND_ONNXRUNTIME_EXTENSIONS:
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
+
+    def quantize_uniform_activations_numpy(tensor_data: np.ndarray,
+                                           range_min: float,
+                                           range_max: float,
+                                           n_bits: int) -> np.ndarray:
+        """
+        Quantize a tensor according to given range (min, max) and number of bits.
+
+        Args:
+            tensor_data: Tensor values to quantize.
+            range_min: minimum bound of the range for quantization (or array of min values per channel).
+            range_max: maximum bound of the range for quantization (or array of max values per channel).
+            n_bits: Number of bits to quantize the tensor.
+
+        Returns:
+            Quantized data.
+        """
+
+        # adjusts the quantization rage so the quantization grid include zero.
+        a, b = adjust_range_to_include_zero(range_min, range_max, n_bits)
+
+        # Compute the step size of quantized values.
+        delta = (b - a) / (2 ** n_bits - 1)
+
+        # Clip data in range
+        clipped_tensor = np.clip(tensor_data, a_min=a, a_max=b)
+
+        # Quantize the data between min/max of quantization range.
+        q = delta * np.round((clipped_tensor - a) / delta) + a
+        return q
 
     # Add onnx op function to use during onnxruntime ActivationUniformQuantizer op inference
     @onnx_op(op_type="ActivationUniformQuantizer",
@@ -43,6 +69,12 @@ if FOUND_TORCH:
                                                   min_range,
                                                   max_range,
                                                   num_bits)
+
+
+if FOUND_TORCH:
+    import torch
+    from mct_quantizers.pytorch.quantizers.base_uniform_inferable_quantizer import BaseUniformInferableQuantizer
+    from mct_quantizers.pytorch.quantizer_utils import fix_range_to_include_zero
 
 
     def quantize_uniform_activations_torch(tensor_data: torch.Tensor,
@@ -76,37 +108,6 @@ if FOUND_TORCH:
 
         # Quantize the data between min/max of quantization range.
         q = delta * torch.round((clipped_tensor - a) / delta) + a
-        return q
-
-
-    def quantize_uniform_activations_numpy(tensor_data: np.ndarray,
-                                           range_min: float,
-                                           range_max: float,
-                                           n_bits: int) -> np.ndarray:
-        """
-        Quantize a tensor according to given range (min, max) and number of bits.
-
-        Args:
-            tensor_data: Tensor values to quantize.
-            range_min: minimum bound of the range for quantization (or array of min values per channel).
-            range_max: maximum bound of the range for quantization (or array of max values per channel).
-            n_bits: Number of bits to quantize the tensor.
-
-        Returns:
-            Quantized data.
-        """
-
-        # adjusts the quantization rage so the quantization grid include zero.
-        a, b = adjust_range_to_include_zero(range_min, range_max, n_bits)
-
-        # Compute the step size of quantized values.
-        delta = (b - a) / (2 ** n_bits - 1)
-
-        # Clip data in range
-        clipped_tensor = np.clip(tensor_data, a_min=a, a_max=b)
-
-        # Quantize the data between min/max of quantization range.
-        q = delta * np.round((clipped_tensor - a) / delta) + a
         return q
 
 

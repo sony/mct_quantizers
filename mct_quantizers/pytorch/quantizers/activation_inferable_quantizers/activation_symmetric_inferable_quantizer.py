@@ -17,12 +17,11 @@ from typing import Any, List
 import numpy as np
 
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
-from mct_quantizers.common.constants import FOUND_TORCH
+from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS
 from mct_quantizers.common.quant_info import QuantizationMethod
 
-if FOUND_TORCH:
-    import torch
-    from mct_quantizers.pytorch.quantizers.base_symmetric_inferable_quantizer import BaseSymmetricInferableQuantizer
+
+if FOUND_ONNXRUNTIME_EXTENSIONS:
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
 
     # Add onnx op function to use during onnxruntime ActivationSymmetricQuantizer op inference
@@ -69,6 +68,9 @@ if FOUND_TORCH:
         quantized = np.round(np.clip(input_tensor, min, max) / scale) * scale
         return quantized
 
+if FOUND_TORCH:
+    import torch
+    from mct_quantizers.pytorch.quantizers.base_symmetric_inferable_quantizer import BaseSymmetricInferableQuantizer
 
     def quantize_sym_activations_torch(input_tensor: torch.Tensor,
                                        threshold: float,

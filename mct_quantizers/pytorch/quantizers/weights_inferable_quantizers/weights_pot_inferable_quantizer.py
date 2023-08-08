@@ -15,16 +15,13 @@
 from typing import Any
 
 import numpy as np
-from onnxruntime_extensions import onnx_op, PyCustomOpDef
 
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
-from mct_quantizers.common.constants import FOUND_TORCH
+from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS
 from mct_quantizers.common.quant_info import QuantizationMethod
 
-if FOUND_TORCH:
-    import torch
-    from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_symmetric_inferable_quantizer import \
-        WeightsSymmetricInferableQuantizer, quantize_sym_weights_numpy, quantize_sym_weights_torch
+if FOUND_ONNXRUNTIME_EXTENSIONS:
+    from onnxruntime_extensions import onnx_op, PyCustomOpDef
 
     # Add onnx op function to use during onnxruntime WeightsPOTQuantizer op inference
     @onnx_op(op_type="WeightsPOTQuantizer",
@@ -45,6 +42,10 @@ if FOUND_TORCH:
                                    per_channel,
                                    channel_axis)
 
+if FOUND_TORCH:
+    import torch
+    from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_symmetric_inferable_quantizer import \
+        WeightsSymmetricInferableQuantizer, quantize_sym_weights_numpy, quantize_sym_weights_torch
 
     @mark_quantizer(quantization_target=QuantizationTarget.Weights,
                     quantization_method=[QuantizationMethod.POWER_OF_TWO],

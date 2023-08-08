@@ -17,14 +17,11 @@ from typing import Any, List
 import numpy as np
 
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
-from mct_quantizers.common.constants import FOUND_TORCH
+from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS
 from mct_quantizers.common.quant_info import QuantizationMethod
 
-if FOUND_TORCH:
-    import torch
-    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import ActivationSymmetricInferableQuantizer, quantize_sym_activations_numpy, quantize_sym_activations_torch
+if FOUND_ONNXRUNTIME_EXTENSIONS:
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
-
     # Add onnx op function to use during onnxruntime ActivationPOTQuantizer op inference
     @onnx_op(op_type="ActivationPOTQuantizer",
              inputs=[PyCustomOpDef.dt_float,
@@ -41,6 +38,9 @@ if FOUND_TORCH:
                                               signed,
                                               nbits)
 
+if FOUND_TORCH:
+    import torch
+    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import ActivationSymmetricInferableQuantizer, quantize_sym_activations_numpy, quantize_sym_activations_torch
 
     @mark_quantizer(quantization_target=QuantizationTarget.Activation,
                     quantization_method=[QuantizationMethod.POWER_OF_TWO],
