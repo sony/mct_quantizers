@@ -30,8 +30,7 @@ if FOUND_TORCH:
         def __init__(self,
                      num_bits: int,
                      min_range: np.ndarray,
-                     max_range: np.ndarray,
-                     use_custom_impl: bool = False):
+                     max_range: np.ndarray):
             """
             Initialize the quantizer with the specified parameters.
 
@@ -41,7 +40,7 @@ if FOUND_TORCH:
                 max_range: max quantization range for quantizing
             """
 
-            super(BaseUniformInferableQuantizer, self).__init__(use_custom_impl)
+            super(BaseUniformInferableQuantizer, self).__init__()
             self.num_bits = num_bits
             self.min_range = min_range
             self.max_range = max_range

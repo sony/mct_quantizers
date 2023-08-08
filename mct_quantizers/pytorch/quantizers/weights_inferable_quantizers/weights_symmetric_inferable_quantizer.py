@@ -134,8 +134,7 @@ if FOUND_TORCH:
                      num_bits: int,
                      threshold: np.ndarray,
                      per_channel: bool,
-                     channel_axis: int = None,
-                     use_custom_impl: bool = False
+                     channel_axis: int = None
                      ):
             """
             Initialize the quantizer with the specified parameters.
@@ -149,8 +148,7 @@ if FOUND_TORCH:
 
             super(WeightsSymmetricInferableQuantizer, self).__init__(threshold=threshold,
                                                                      num_bits=num_bits,
-                                                                     signed=True,
-                                                                     use_custom_impl=use_custom_impl)
+                                                                     signed=True)
 
             if per_channel:
                 assert channel_axis is not None, f'Channel axis is missing in per channel quantization'
@@ -179,7 +177,7 @@ if FOUND_TORCH:
                 quantized tensor.
             """
 
-            if self.use_custom_impl and torch.jit.is_tracing():
+            if self._use_custom_impl and torch.jit.is_tracing():
                 return WeightsSymmetricF.apply(inputs,
                                                self.num_bits,
                                                self.threshold_np,

@@ -74,8 +74,9 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
                                                                           per_channel=per_channel,
                                                                           threshold=thresholds,
                                                                           channel_axis=channel_axis,
-                                                                          use_custom_impl=True
                                                                           )
+        quantizer.enable_custom_impl()
+
 
         layer_with_quantizer = PytorchQuantizationWrapper(torch.nn.Conv2d(3, 4, 5),
                                                           {'weight': quantizer}).to(self.device)
@@ -110,8 +111,8 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
                                                                     per_channel=per_channel,
                                                                     threshold=thresholds,
                                                                     channel_axis=channel_axis,
-                                                                    use_custom_impl=True
                                                                     )
+        quantizer.enable_custom_impl()
 
         layer_with_quantizer = PytorchQuantizationWrapper(torch.nn.Conv2d(3, 4, 3),
                                                           {'weight': quantizer}).to(self.device)
@@ -147,8 +148,8 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
                                                                         min_range=min_range,
                                                                         max_range=max_range,
                                                                         per_channel=per_channel,
-                                                                        channel_axis=channel_axis,
-                                                                        use_custom_impl=True)
+                                                                        channel_axis=channel_axis)
+        quantizer.enable_custom_impl()
 
         layer_with_quantizer = PytorchQuantizationWrapper(torch.nn.Conv2d(3, 4, 3),
                                                           {'weight': quantizer}).to(self.device)
@@ -188,9 +189,10 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
         quantizer = pytorch_quantizers.WeightsSymmetricInferableQuantizer(num_bits=num_bits,
                                                                           per_channel=per_channel,
                                                                           threshold=thresholds,
-                                                                          channel_axis=channel_axis,
-                                                                          use_custom_impl=True
+                                                                          channel_axis=channel_axis
                                                                           )
+        quantizer.enable_custom_impl()
+
 
         layer_with_quantizer = PytorchQuantizationWrapper(torch.nn.Conv2d(3, 4, 5),
                                                           {'weight': quantizer}).to(self.device)
@@ -224,9 +226,9 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
         quantizer = pytorch_quantizers.WeightsPOTInferableQuantizer(num_bits=num_bits,
                                                                     per_channel=per_channel,
                                                                     threshold=thresholds,
-                                                                    channel_axis=channel_axis,
-                                                                    use_custom_impl=True
+                                                                    channel_axis=channel_axis
                                                                     )
+        quantizer.enable_custom_impl()
 
         layer_with_quantizer = PytorchQuantizationWrapper(torch.nn.Conv2d(3, 4, 3),
                                                           {'weight': quantizer}).to(self.device)
@@ -262,8 +264,9 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
                                                                         min_range=min_range,
                                                                         max_range=max_range,
                                                                         per_channel=per_channel,
-                                                                        channel_axis=channel_axis,
-                                                                        use_custom_impl=True)
+                                                                        channel_axis=channel_axis)
+        quantizer.enable_custom_impl()
+
 
         layer_with_quantizer = PytorchQuantizationWrapper(torch.nn.Conv2d(3, 4, 3),
                                                           {'weight': quantizer}).to(self.device)

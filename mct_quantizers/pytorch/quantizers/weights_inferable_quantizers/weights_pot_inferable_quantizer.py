@@ -22,6 +22,7 @@ from mct_quantizers.common.quant_info import QuantizationMethod
 
 if FOUND_ONNXRUNTIME_EXTENSIONS:
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
+    from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_symmetric_inferable_quantizer import quantize_sym_weights_numpy
 
     # Add onnx op function to use during onnxruntime WeightsPOTQuantizer op inference
     @onnx_op(op_type="WeightsPOTQuantizer",
@@ -45,7 +46,7 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_symmetric_inferable_quantizer import \
-        WeightsSymmetricInferableQuantizer, quantize_sym_weights_numpy, quantize_sym_weights_torch
+        WeightsSymmetricInferableQuantizer, quantize_sym_weights_torch
 
     @mark_quantizer(quantization_target=QuantizationTarget.Weights,
                     quantization_method=[QuantizationMethod.POWER_OF_TWO],
@@ -60,7 +61,6 @@ if FOUND_TORCH:
                      threshold: np.ndarray,
                      per_channel: bool,
                      channel_axis: int = None,
-                     use_custom_impl: bool = False
                      ):
 
             """
@@ -76,8 +76,7 @@ if FOUND_TORCH:
             super(WeightsPOTInferableQuantizer, self).__init__(num_bits=num_bits,
                                                                threshold=threshold,
                                                                per_channel=per_channel,
-                                                               channel_axis=channel_axis,
-                                                               use_custom_impl=use_custom_impl)
+                                                               channel_axis=channel_axis)
             self.num_bits = num_bits
             self.threshold = threshold
             self.per_channel = per_channel
@@ -98,7 +97,7 @@ if FOUND_TORCH:
                 quantized tensor.
             """
 
-            if self.use_custom_impl and torch.jit.is_tracing():
+            if self._use_custom_impl and torch.jit.is_tracing():
                 return WeightsPOTF.apply(inputs,
                                          self.num_bits,
                                          self.threshold_np,

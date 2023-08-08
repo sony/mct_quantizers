@@ -31,8 +31,7 @@ if FOUND_TORCH:
         def __init__(self,
                      num_bits: int,
                      threshold: List[float],
-                     signed: bool,
-                     use_custom_impl=False):
+                     signed: bool):
             """
             Initialize the quantizer with the specified parameters.
 
@@ -42,7 +41,7 @@ if FOUND_TORCH:
                 signed: whether or not to use signed quantization
             """
 
-            super(BaseSymmetricInferableQuantizer, self).__init__(use_custom_impl)
+            super(BaseSymmetricInferableQuantizer, self).__init__()
 
             assert isinstance(threshold, list), f'Threshold is expected to be a list, but is of type {type(threshold)}'
 

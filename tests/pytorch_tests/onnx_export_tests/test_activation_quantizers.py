@@ -70,8 +70,8 @@ class TestONNXExportActivationQuantizers(unittest.TestCase):
         signed = False
         quantizer = pytorch_quantizers.ActivationSymmetricInferableQuantizer(num_bits=num_bits,
                                                                              threshold=thresholds,
-                                                                             signed=signed,
-                                                                             use_custom_impl=True)
+                                                                             signed=signed)
+        quantizer.enable_custom_impl()
         layer_with_quantizer = PytorchActivationQuantizationHolder(quantizer)
 
         _, onnx_file_path = tempfile.mkstemp('.onnx')
@@ -99,9 +99,11 @@ class TestONNXExportActivationQuantizers(unittest.TestCase):
         signed = True
         quantizer = pytorch_quantizers.ActivationPOTInferableQuantizer(num_bits=num_bits,
                                                     threshold=thresholds,
-                                                    signed=signed,
-                                                    use_custom_impl=True)
+                                                    signed=signed)
+        quantizer.enable_custom_impl()
+
         layer_with_quantizer = PytorchActivationQuantizationHolder(quantizer)
+
         _, onnx_file_path = tempfile.mkstemp('.onnx')
         self._export_model(layer_with_quantizer,
                            onnx_file_path)
@@ -126,8 +128,9 @@ class TestONNXExportActivationQuantizers(unittest.TestCase):
 
         quantizer = pytorch_quantizers.ActivationUniformInferableQuantizer(num_bits=num_bits,
                                                                            min_range=min_range,
-                                                                           max_range=max_range,
-                                                                           use_custom_impl=True)
+                                                                           max_range=max_range)
+        quantizer.enable_custom_impl()
+
         layer_with_quantizer = PytorchActivationQuantizationHolder(quantizer)
         _, onnx_file_path = tempfile.mkstemp('.onnx')
         self._export_model(layer_with_quantizer,

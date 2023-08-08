@@ -144,8 +144,7 @@ if FOUND_TORCH:
                      min_range: List[float],
                      max_range: List[float],
                      per_channel: bool,
-                     channel_axis: int = None,
-                     use_custom_impl: bool = False
+                     channel_axis: int = None
                      ):
             """
             Initialize the quantizer with the specified parameters.
@@ -159,8 +158,7 @@ if FOUND_TORCH:
             """
             super(WeightsUniformInferableQuantizer, self).__init__(num_bits=num_bits,
                                                                    min_range=min_range,
-                                                                   max_range=max_range,
-                                                                   use_custom_impl=use_custom_impl)
+                                                                   max_range=max_range)
 
             # Align mix/max numpy arrays so they are torch Tensors on the working device
             min_range = to_torch_tensor(np.asarray(min_range)).to(get_working_device())
@@ -194,7 +192,7 @@ if FOUND_TORCH:
             Returns:
                 quantized weights
             """
-            if self.use_custom_impl and torch.jit.is_tracing():
+            if self._use_custom_impl and torch.jit.is_tracing():
                 return WeightsUniformF.apply(inputs,
                                              self.num_bits,
                                              self.adjusted_min_range_np,

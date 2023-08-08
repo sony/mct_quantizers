@@ -110,8 +110,7 @@ if FOUND_TORCH:
         def __init__(self,
                      num_bits: int,
                      threshold: List[float],
-                     signed: bool,
-                     use_custom_impl=False):
+                     signed: bool):
             """
             Initialize the quantizer with the specified parameters.
 
@@ -125,8 +124,6 @@ if FOUND_TORCH:
                 num_bits=num_bits,
                 threshold=threshold,
                 signed=signed)
-
-            self.use_custom_impl = use_custom_impl
 
             assert self.threshold_np.shape[0] == 1
             self.threshold_np = self.threshold_np[0]
@@ -149,7 +146,7 @@ if FOUND_TORCH:
             Returns:
                 quantized tensor.
             """
-            if self.use_custom_impl and torch.jit.is_tracing():
+            if self._use_custom_impl and torch.jit.is_tracing():
                 return ActivationSymF.apply(inputs,
                                             self.threshold_np,
                                             self.signed,

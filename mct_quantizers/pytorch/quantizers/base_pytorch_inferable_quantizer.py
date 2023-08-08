@@ -22,12 +22,17 @@ if FOUND_TORCH:
 
 
     class BasePyTorchInferableQuantizer(BaseInferableQuantizer):
-        def __init__(self, use_custom_impl=False):
+        def __init__(self):
             """
             This class is a base quantizer for PyTorch quantizers for inference only.
             """
             super(BasePyTorchInferableQuantizer, self).__init__()
-            self.use_custom_impl = use_custom_impl
+            # By default the custom forward implementation is disabled. If someone wants to enable it
+            # enable_custom_impl should be invoked.
+            self._use_custom_impl = False
+
+        def enable_custom_impl(self):
+            self._use_custom_impl = True
 
         @abstractmethod
         def __call__(self, inputs: torch.Tensor):

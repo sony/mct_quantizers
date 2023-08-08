@@ -21,6 +21,7 @@ from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTEN
 from mct_quantizers.common.quant_info import QuantizationMethod
 
 if FOUND_ONNXRUNTIME_EXTENSIONS:
+    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import quantize_sym_activations_numpy
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
     # Add onnx op function to use during onnxruntime ActivationPOTQuantizer op inference
     @onnx_op(op_type="ActivationPOTQuantizer",
@@ -40,7 +41,9 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
 
 if FOUND_TORCH:
     import torch
-    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import ActivationSymmetricInferableQuantizer, quantize_sym_activations_numpy, quantize_sym_activations_torch
+    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import \
+    ActivationSymmetricInferableQuantizer, quantize_sym_activations_torch, quantize_sym_activations_numpy
+
 
     @mark_quantizer(quantization_target=QuantizationTarget.Activation,
                     quantization_method=[QuantizationMethod.POWER_OF_TWO],
@@ -53,8 +56,7 @@ if FOUND_TORCH:
         def __init__(self,
                      num_bits: int,
                      threshold: List[float],
-                     signed: bool,
-                     use_custom_impl: bool = False):
+                     signed: bool):
             """
             Initialize the quantizer with the specified parameters.
 
@@ -66,15 +68,14 @@ if FOUND_TORCH:
             # target of Activation quantization
             super(ActivationPOTInferableQuantizer, self).__init__(num_bits=num_bits,
                                                                   signed=signed,
-                                                                  threshold=threshold,
-                                                                  use_custom_impl=use_custom_impl)
+                                                                  threshold=threshold)
 
             is_threshold_pot = np.all(
                 np.round(np.log2(self.threshold_np.flatten())) == np.log2(self.threshold_np.flatten()))
             assert is_threshold_pot, f'Expected threshold to be power of 2 but is {threshold}'
 
         def __call__(self, inputs):
-            if self.use_custom_impl and torch.jit.is_tracing():
+            if self._use_custom_impl and torch.jit.is_tracing():
                 return ActivationPOTF.apply(inputs,
                                             self.threshold_np,
                                             self.signed,

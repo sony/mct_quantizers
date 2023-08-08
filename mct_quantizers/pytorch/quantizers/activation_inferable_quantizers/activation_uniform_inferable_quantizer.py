@@ -122,8 +122,7 @@ if FOUND_TORCH:
         def __init__(self,
                      num_bits: int,
                      min_range: np.ndarray,
-                     max_range: np.ndarray,
-                     use_custom_impl: bool = False
+                     max_range: np.ndarray
                      ):
             """
             Initialize the quantizer with the specified parameters.
@@ -135,8 +134,7 @@ if FOUND_TORCH:
             """
             super(ActivationUniformInferableQuantizer, self).__init__(num_bits=num_bits,
                                                                       min_range=min_range,
-                                                                      max_range=max_range,
-                                                                      use_custom_impl=use_custom_impl)
+                                                                      max_range=max_range)
 
             assert isinstance(min_range,list), f'min_range is expected to be a list, but is of type {type(min_range)}'
             assert isinstance(max_range,list), f'max_range is expected to be a list, but is of type {type(max_range)}'
@@ -172,7 +170,7 @@ if FOUND_TORCH:
             Returns:
                 quantized tensor.
             """
-            if self.use_custom_impl and torch.jit.is_tracing():
+            if self._use_custom_impl and torch.jit.is_tracing():
                 return ActivationUniformF.apply(inputs, self.min_range, self.max_range, self.num_bits)
             else:
                 with torch.no_grad():
