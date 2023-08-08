@@ -12,22 +12,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+import os
 import unittest
-import tempfile
 import tensorflow as tf
-import numpy as np
-
-from mct_quantizers import KerasQuantizationWrapper
-from mct_quantizers.keras.quantizers import WeightsPOTInferableQuantizer
 from keras.layers import Conv2D, DepthwiseConv2D, Conv2DTranspose, Dense
 
-from tests.keras_tests.test_keras_quantization_wrapper import WEIGHT
+from mct_quantizers import KerasQuantizationWrapper, keras_load_quantized_model
+from mct_quantizers.common.constants import WEIGHTS_QUANTIZERS
+from mct_quantizers.keras.quantizers import WeightsPOTInferableQuantizer
 
-KERAS_WEIGHTS_CHANNEL_AXIS_MAPPING = {Conv2D: 3,
-                                      DepthwiseConv2D: 2,
-                                      Dense: 1,
-                                      Conv2DTranspose: 2}
+LAYER2NAME = {Conv2D: 'conv', DepthwiseConv2D: 'depthwise', Conv2DTranspose: 'convtrans', Dense: 'dense'}
 
+QUANTIZER2NAME = {WeightsPOTInferableQuantizer: 'pot'}
+
+QUANTIZER2LAYER2ARGS = {WeightsPOTInferableQuantizer: {Conv2D:
+                                                           {'num_bits': 4,
+                                                            'threshold': [2.0, 0.5, 4.0],
+                                                            'per_channel': True,
+                                                            'input_rank': 4,
+                                                            'channel_axis': 3
+                                                            },
+                                                       DepthwiseConv2D:
+                                                           {'num_bits': 4,
+                                                            'threshold': [2.0, 0.5, 4.0],
+                                                            'per_channel': True,
+                                                            'input_rank': 4,
+                                                            'channel_axis': 2
+                                                            },
+                                                       Conv2DTranspose:
+                                                           {'num_bits': 4,
+                                                            'threshold': [2.0, 0.5, 4.0],
+                                                            'per_channel': True,
+                                                            'input_rank': 4,
+                                                            'channel_axis': 2
+                                                            },
+                                                       Dense:
+                                                           {'num_bits': 4,
+                                                            'threshold': [2.0, 0.5, 4.0],
+                                                            'per_channel': True,
+                                                            'input_rank': 2,
+                                                            'channel_axis': 1
+                                                            },
+                                                       }
+                        }
 
 def _build_model_with_quantize_wrapper(quant_weights_layer, input_shape, model_name):
     inputs = tf.keras.layers.Input(shape=input_shape)
@@ -35,36 +62,12 @@ def _build_model_with_quantize_wrapper(quant_weights_layer, input_shape, model_n
     x = tf.keras.layers.ReLU()(x)
     return tf.keras.Model(inputs=inputs, outputs=x, name=model_name)
 
-# def conv_test_model(input_shapes, model_name):
-#     inputs = tf.keras.layers.Input(shape=input_shapes)
-#     x = tf.keras.layers.Conv2D(filters=3, kernel_size=4)(inputs)
-#     x = tf.keras.layers.ReLU()(x)
-#     return tf.keras.Model(inputs=inputs, outputs=x, name=model_name)
-
-
-# def depthwise_conv_test_model(input_shapes, model_name):
-#     inputs = tf.keras.layers.Input(shape=input_shapes)
-#     x = tf.keras.layers.DepthwiseConv2D(kernel_size=4)(inputs)
-#     x = tf.keras.layers.ReLU()(x)
-#     return tf.keras.Model(inputs=inputs, outputs=x, name=model_name)
-#
-
-# def _wrap_model_with_weights_quantizer(layer_type, weights_quantizer_class, quantizer_params_generator):
-#     wrap_layer = KerasQuantizationWrapper(layer)
-#     quantizer_params = quantizer_params_generator(layer)
-#     weights_quantizer = weights_quantizer_class(**quantizer_params)
-#     weight_name = DEPTHWISE_WEIGHT if isinstance(layer, DepthwiseConv2D) else WEIGHT
-#     wrap_layer.add_weights_quantizer(weight_name, weights_quantizer)
-#     wrap_layer.build(self.input_shapes)
-#
-#
-#     return wrap_layer
-
 
 class BaseQuantizerBuildAndSaveTest(unittest.TestCase):
-    VERSION = "Not Initialized"
+    VERSION = None
 
     def build_and_save_model(self, quantizer, quantizer_params, layer, model_name, input_shape, weight_name):
+        assert BaseQuantizerBuildAndSaveTest.VERSION is not None
 
         weights_quantizer = quantizer(**quantizer_params)
 
@@ -83,23 +86,24 @@ class BaseQuantizerBuildAndSaveTest(unittest.TestCase):
         tf.keras.models.save_model(model, file_path)
 
 
-class WeightsPOTQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest):
+class BaseQuantizerLoadAndCompareTest(unittest.TestCase):
+    SAVED_VERSION = None
 
-    def _quantizer_params_generator(self, threshold, per_channel, input_rank, channel_axis):
-        return {'num_bits': 4,
-                'per_channel': per_channel,
-                'threshold': threshold,
-                'input_rank': input_rank,
-                'channel_axis': channel_axis}
+    def load_and_compare_model(self, quantizer_type, layer_type, weight_name):
+        assert BaseQuantizerLoadAndCompareTest.SAVED_VERSION is not None
 
-    def test_conv_pot_quantizer(self):
+        model_path = (f"{BaseQuantizerLoadAndCompareTest.SAVED_VERSION}_"
+                      f"{LAYER2NAME[layer_type]}_"
+                      f"{QUANTIZER2NAME[quantizer_type]}.h5")
 
-        self.build_and_save_model(quantizer=WeightsPOTInferableQuantizer,
-                                  quantizer_params=self._quantizer_params_generator(threshold=[2.0, 0.5, 4.0],
-                                                                                    per_channel=True,
-                                                                                    input_rank=4,
-                                                                                    channel_axis=3),
-                                  layer=tf.keras.layers.Conv2D(filters=3, kernel_size=4),
-                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_conv_pot",
-                                  weight_name=WEIGHT,
-                                  input_shape=(1, 8, 8, 3))
+        loaded_model = keras_load_quantized_model(model_path)
+        os.remove(model_path)
+
+        tested_layer = [_l for _l in loaded_model.layers if isinstance(_l, KerasQuantizationWrapper) and
+                        isinstance(_l.layer, layer_type)]
+
+        self.assertEqual(len(tested_layer), 1, "Expecting exactly 1 layer of the tested layer type.")
+        tested_layer = tested_layer[0]
+
+        self.assertEqual(tested_layer.get_config()[WEIGHTS_QUANTIZERS][weight_name]['config'],
+                         QUANTIZER2LAYER2ARGS[quantizer_type][layer_type])
