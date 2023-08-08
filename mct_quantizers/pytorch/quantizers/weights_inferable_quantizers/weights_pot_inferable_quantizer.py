@@ -26,7 +26,7 @@ if FOUND_TORCH:
     from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_symmetric_inferable_quantizer import \
         WeightsSymmetricInferableQuantizer, quantize_sym_weights_numpy, quantize_sym_weights_torch
 
-
+    # Add onnx op function to use during onnxruntime WeightsPOTQuantizer op inference
     @onnx_op(op_type="WeightsPOTQuantizer",
              inputs=[PyCustomOpDef.dt_float,
                      PyCustomOpDef.dt_int64,
@@ -34,8 +34,16 @@ if FOUND_TORCH:
                      PyCustomOpDef.dt_bool,
                      PyCustomOpDef.dt_int64],
              outputs=[PyCustomOpDef.dt_float])
-    def weight_pot_ort(x, nbits, t, pc, axis):
-        return quantize_sym_weights_numpy(x, nbits, t, pc, axis)
+    def weight_pot_ort(input_tensor: np.ndarray,
+                                   num_bits: int,
+                                   threshold: float,
+                                   per_channel: bool,
+                                   channel_axis: int):
+        return quantize_sym_weights_numpy(input_tensor,
+                                   num_bits,
+                                   threshold,
+                                   per_channel,
+                                   channel_axis)
 
 
     @mark_quantizer(quantization_target=QuantizationTarget.Weights,
@@ -52,7 +60,6 @@ if FOUND_TORCH:
                      per_channel: bool,
                      channel_axis: int = None,
                      use_custom_impl: bool = False
-
                      ):
 
             """
@@ -101,12 +108,47 @@ if FOUND_TORCH:
 
 
     class WeightsPOTF(torch.autograd.Function):
+        """
+        Custom autograd function for POT weights quantizer.
+        It provides a way to define a custom forward and symbolic operation
+        and currently does not implement a backward operation.
+        """
+
         @staticmethod
         def forward(ctx, input_tensor, num_bits, threshold, per_channel, channel_axis):
+            """
+             Forward computation function. This method performs the forward computation using
+             the given quantize_sym_weights_torch function.
+
+             Args:
+                 ctx: An object that can be used to stash information for backward function.
+                 input_tensor: The input tensor to be quantized.
+                 num_bits: The number of bits to represent the quantized tensor.
+                 threshold: The quantization threshold.
+                 per_channel: whether to use per-channel quantization
+                 channel_axis: Axis of input to apply per-channel quantization on.
+
+             Returns:
+                 The quantized tensor.
+             """
             return quantize_sym_weights_torch(input_tensor, num_bits, threshold, per_channel, channel_axis)
 
         @staticmethod
         def symbolic(g, input_tensor, num_bits, threshold, per_channel, channel_axis):
+            """
+            Symbolic method that defines the custom operation for ONNX export.
+
+            Args:
+                g: A graph object that represents the ONNX computation graph.
+                input_tensor: The input tensor to be quantized.
+                num_bits: The number of bits to represent the quantized value.
+                threshold: The quantization threshold.
+                per_channel: whether to use per-channel quantization
+                channel_axis: Axis of input to apply per-channel quantization on.
+
+            Returns:
+                The node in the ONNX graph representing the output of this operation.
+            """
             return g.op("ai.onnx.contrib::WeightsPOTQuantizer", input_tensor,
                         g.op('Constant', value_t=torch.tensor(num_bits, dtype=torch.int64)),
                         g.op('Constant', value_t=torch.tensor(threshold, dtype=torch.float32)),
@@ -115,6 +157,14 @@ if FOUND_TORCH:
                 input_tensor.type())
 
         def backward(ctx: Any, *grad_outputs: Any) -> Any:
+            """
+            Backward computation function. Raises a NotImplementedError
+            since backward is not needed for this op.
+
+            Args:
+                ctx (Any): A context object from the forward pass.
+                grad_outputs (Any): Gradients w.r.t. the output tensor.
+            """
             raise NotImplementedError()
 
 else:
