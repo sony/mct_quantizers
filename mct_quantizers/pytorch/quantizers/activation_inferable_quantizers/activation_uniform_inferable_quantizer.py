@@ -28,7 +28,7 @@ if FOUND_TORCH:
 
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
 
-
+    # Add onnx op function to use during onnxruntime ActivationUniformQuantizer op inference
     @onnx_op(op_type="ActivationUniformQuantizer",
              inputs=[PyCustomOpDef.dt_float,
                      PyCustomOpDef.dt_float,
@@ -39,13 +39,28 @@ if FOUND_TORCH:
                                min_range: float,
                                max_range: float,
                                num_bits: int):
-        return quantize_uniform_activations_numpy(input_tensor, min_range, max_range, num_bits)
+        return quantize_uniform_activations_numpy(input_tensor,
+                                                  min_range,
+                                                  max_range,
+                                                  num_bits)
 
 
     def quantize_uniform_activations_torch(tensor_data: torch.Tensor,
                                            range_min: float,
                                            range_max: float,
                                            n_bits: int) -> np.ndarray:
+        """
+       Quantizes the input tensor uniformly using PyTorch.
+
+       Args:
+           tensor_data (torch.Tensor): The input tensor to be quantized.
+           range_min (float): The quantization min range.
+           range_max (float): The quantization max range.
+           n_bits (int): Number of bits to represent the quantized value.
+
+       Returns:
+           torch.Tensor: Uniformly quantized tensor.
+       """
 
         range_min = torch.tensor([range_min])
         range_max = torch.tensor([range_max])
@@ -122,13 +137,8 @@ if FOUND_TORCH:
                                                                       max_range=max_range,
                                                                       use_custom_impl=use_custom_impl)
 
-            assert isinstance(min_range,
-                              list), f'min_range is expected to be a list, but is of type {type(min_range)}'
-            assert isinstance(max_range,
-                              list), f'max_range is expected to be a list, but is of type {type(max_range)}'
-            # TODO: fix error msgs
-            assert len(min_range) == 1, f'min_range is expected to be flatten, but of shape {min_range.shape}'
-            assert len(max_range) == 1, f'max_range is expected to be flatten, but of shape {min_range.shape}'
+            assert isinstance(min_range,list), f'min_range is expected to be a list, but is of type {type(min_range)}'
+            assert isinstance(max_range,list), f'max_range is expected to be a list, but is of type {type(max_range)}'
 
             assert len(
                 min_range) == 1, f'For activation, quantization per channel is not supported and min_range should be ' \
@@ -173,13 +183,45 @@ if FOUND_TORCH:
 
 
     class ActivationUniformF(torch.autograd.Function):
+        """
+        Custom autograd function for uniform activations quantizer.
+        It provides a way to define a custom forward and symbolic operation
+        and currently does not implement a backward operation.
+        """
 
         @staticmethod
         def forward(ctx, input_tensor, min_range, max_range, num_bits):
+            """
+             Forward computation function. This method performs the forward computation using
+             the given quantize_uniform_activations_torch function.
+
+             Args:
+                 ctx: An object that can be used to stash information for backward function.
+                 input_tensor: The input tensor to be quantized.
+                 min_range: The quantization min range.
+                 max_range: The quantization max range.
+                 num_bits: The number of bits to represent the quantized tensor.
+
+             Returns:
+                 The quantized tensor.
+             """
             return quantize_uniform_activations_torch(input_tensor, min_range, max_range, num_bits)
 
         @staticmethod
         def symbolic(g, input_tensor, min_range, max_range, num_bits):
+            """
+            Symbolic method that defines the custom operation for ONNX export.
+
+            Args:
+                g: A graph object that represents the ONNX computation graph.
+                input_tensor: The input tensor to be quantized.
+                min_range: The quantization min range.
+                max_range: The quantization max range.
+                num_bits: The number of bits to represent the quantized value.
+
+            Returns:
+                The node in the ONNX graph representing the output of this operation.
+            """
             return g.op("ai.onnx.contrib::ActivationUniformQuantizer", input_tensor,
                         g.op('Constant', value_t=torch.tensor(min_range, dtype=torch.float32)),
                         g.op('Constant', value_t=torch.tensor(max_range, dtype=torch.float32)),
@@ -187,6 +229,14 @@ if FOUND_TORCH:
                 input_tensor.type())
 
         def backward(ctx: Any, *grad_outputs: Any) -> Any:
+            """
+            Backward computation function. Raises a NotImplementedError
+            since backward is not needed for this op.
+
+            Args:
+                ctx (Any): A context object from the forward pass.
+                grad_outputs (Any): Gradients w.r.t. the output tensor.
+            """
             raise NotImplementedError()
 
 else:

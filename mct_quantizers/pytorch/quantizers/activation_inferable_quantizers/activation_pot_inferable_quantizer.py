@@ -25,12 +25,21 @@ if FOUND_TORCH:
     from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import ActivationSymmetricInferableQuantizer, quantize_sym_activations_numpy, quantize_sym_activations_torch
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
 
+    # Add onnx op function to use during onnxruntime ActivationPOTQuantizer op inference
     @onnx_op(op_type="ActivationPOTQuantizer",
-             inputs=[PyCustomOpDef.dt_float, PyCustomOpDef.dt_float,
-                     PyCustomOpDef.dt_bool, PyCustomOpDef.dt_int64],
+             inputs=[PyCustomOpDef.dt_float,
+                     PyCustomOpDef.dt_float,
+                     PyCustomOpDef.dt_bool,
+                     PyCustomOpDef.dt_int64],
              outputs=[PyCustomOpDef.dt_float])
-    def activation_pot_ort(x, t, s, nbits):
-        return quantize_sym_activations_numpy(x, t, s, nbits)
+    def activation_pot_ort(input_tensor,
+                           threshold,
+                           signed,
+                           nbits):
+        return quantize_sym_activations_numpy(input_tensor,
+                                              threshold,
+                                              signed,
+                                              nbits)
 
 
     @mark_quantizer(quantization_target=QuantizationTarget.Activation,
@@ -74,13 +83,45 @@ if FOUND_TORCH:
 
 
     class ActivationPOTF(torch.autograd.Function):
+        """
+        Custom autograd function for POT activations quantizer.
+        It provides a way to define a custom forward and symbolic operation
+        and currently does not implement a backward operation.
+        """
 
         @staticmethod
         def forward(ctx, input_tensor, threshold, signed, num_bits):
+            """
+             Forward computation function. This method performs the forward computation using
+             the given quantize_sym_activations_torch function.
+
+             Args:
+                 ctx: An object that can be used to stash information for backward function.
+                 input_tensor: The input tensor to be quantized.
+                 threshold: The quantization threshold.
+                 signed: A flag that indicates if the quantization is signed or unsigned.
+                 num_bits: The number of bits to represent the quantized tensor.
+
+             Returns:
+                 The quantized tensor.
+             """
             return quantize_sym_activations_torch(input_tensor, threshold, signed, num_bits)
 
         @staticmethod
         def symbolic(g, input_tensor, threshold, signed, num_bits):
+            """
+            Symbolic method that defines the custom operation for ONNX export.
+
+            Args:
+                g: A graph object that represents the ONNX computation graph.
+                input_tensor: The input tensor to be quantized.
+                threshold: The quantization threshold.
+                signed: A flag that indicates if the quantization is signed or unsigned.
+                num_bits: The number of bits to represent the quantized value.
+
+            Returns:
+                The node in the ONNX graph representing the output of this operation.
+            """
             return g.op("ai.onnx.contrib::ActivationPOTQuantizer", input_tensor,
                         g.op('Constant', value_t=torch.tensor(threshold, dtype=torch.float32)),
                         g.op('Constant', value_t=torch.tensor(signed, dtype=torch.bool)),
@@ -88,6 +129,14 @@ if FOUND_TORCH:
                 input_tensor.type())
 
         def backward(ctx: Any, *grad_outputs: Any) -> Any:
+            """
+            Backward computation function. Raises a NotImplementedError
+            since backward is not needed for this op.
+
+            Args:
+                ctx (Any): A context object from the forward pass.
+                grad_outputs (Any): Gradients w.r.t. the output tensor.
+            """
             raise NotImplementedError()
 
 else:
