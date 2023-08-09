@@ -30,4 +30,9 @@ if __name__ == '__main__':
 
     keras_save_models_suite = unittest.TestSuite(suiteList)
 
-    unittest.TextTestRunner(verbosity=0).run(keras_save_models_suite)
+    test_result = unittest.TextTestRunner(verbosity=0).run(keras_save_models_suite)
+
+    # Exit with a non-zero code if tests failed
+    if not test_result.wasSuccessful():
+        print(f"Encountered an error during save model tests with version {mct_quantizers_version}.")
+        sys.exit(1)

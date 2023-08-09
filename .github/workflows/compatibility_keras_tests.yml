@@ -1,9 +1,7 @@
 name: Run Keras Weights Quantizers Compatibility Tests
 
 on:
-  workflow_dispatch: # Allow manual triggers
-    schedule:
-      - cron: 0 0 * * *
+  workflow_call:
     inputs:
       save_version:
         description: 'MCT Quantizers version to save models'
