@@ -26,49 +26,11 @@ class WeightsPOTQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest):
     def setUp(self):
         self.quantizer = WeightsPOTInferableQuantizer
 
-    def test_conv_pot_quantizer(self):
-        layer = tf.keras.layers.Conv2D
-        self.build_and_save_model(quantizer=self.quantizer,
-                                  quantizer_params=QUANTIZER2LAYER2ARGS[self.quantizer][layer],
-                                  layer=layer(filters=3, kernel_size=4),
-                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
-                                             f"{LAYER2NAME[layer]}_"
-                                             f"{QUANTIZER2NAME[self.quantizer]}",
-                                  weight_name=WEIGHT,
-                                  input_shape=(8, 8, 3))
-
-    def test_depthwise_pot_quantizer(self):
-        layer = tf.keras.layers.DepthwiseConv2D
-        self.build_and_save_model(quantizer=self.quantizer,
-                                  quantizer_params=QUANTIZER2LAYER2ARGS[self.quantizer][layer],
-                                  layer=layer(kernel_size=4),
-                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
-                                             f"{LAYER2NAME[layer]}_"
-                                             f"{QUANTIZER2NAME[self.quantizer]}",
-                                  weight_name=DEPTHWISE_WEIGHT,
-                                  input_shape=(8, 8, 3))
-
-    def test_convtrans_pot_quantizer(self):
-        layer = tf.keras.layers.Conv2DTranspose
-        self.build_and_save_model(quantizer=self.quantizer,
-                                  quantizer_params=QUANTIZER2LAYER2ARGS[self.quantizer][layer],
-                                  layer=layer(filters=3, kernel_size=4),
-                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
-                                             f"{LAYER2NAME[layer]}_"
-                                             f"{QUANTIZER2NAME[self.quantizer]}",
-                                  weight_name=WEIGHT,
-                                  input_shape=(8, 8, 3))
-
-    def test_dense_pot_quantizer(self):
-        layer = tf.keras.layers.Dense
-        self.build_and_save_model(quantizer=self.quantizer,
-                                  quantizer_params=QUANTIZER2LAYER2ARGS[self.quantizer][layer],
-                                  layer=layer(units=3),
-                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
-                                             f"{LAYER2NAME[layer]}_"
-                                             f"{QUANTIZER2NAME[self.quantizer]}",
-                                  weight_name=WEIGHT,
-                                  input_shape=(8, 8, 3))
+    def test_weights_pot_quantizer(self):
+        self.conv_test(self.quantizer)
+        self.depthwise_test(self.quantizer)
+        self.convtrans_test(self.quantizer)
+        self.dense_test(self.quantizer)
 
 
 class WeightsSymmetricQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest):
@@ -76,49 +38,11 @@ class WeightsSymmetricQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest):
     def setUp(self):
         self.quantizer = WeightsSymmetricInferableQuantizer
 
-    def test_conv_sym_quantizer(self):
-        layer = tf.keras.layers.Conv2D
-        self.build_and_save_model(quantizer=self.quantizer,
-                                  quantizer_params=QUANTIZER2LAYER2ARGS[self.quantizer][layer],
-                                  layer=layer(filters=3, kernel_size=4),
-                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
-                                             f"{LAYER2NAME[layer]}_"
-                                             f"{QUANTIZER2NAME[self.quantizer]}",
-                                  weight_name=WEIGHT,
-                                  input_shape=(8, 8, 3))
-
-    def test_depthwise_sym_quantizer(self):
-        layer = tf.keras.layers.DepthwiseConv2D
-        self.build_and_save_model(quantizer=self.quantizer,
-                                  quantizer_params=QUANTIZER2LAYER2ARGS[self.quantizer][layer],
-                                  layer=layer(kernel_size=4),
-                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
-                                             f"{LAYER2NAME[layer]}_"
-                                             f"{QUANTIZER2NAME[self.quantizer]}",
-                                  weight_name=DEPTHWISE_WEIGHT,
-                                  input_shape=(8, 8, 3))
-
-    def test_convtrans_sym_quantizer(self):
-        layer = tf.keras.layers.Conv2DTranspose
-        self.build_and_save_model(quantizer=self.quantizer,
-                                  quantizer_params=QUANTIZER2LAYER2ARGS[self.quantizer][layer],
-                                  layer=layer(filters=3, kernel_size=4),
-                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
-                                             f"{LAYER2NAME[layer]}_"
-                                             f"{QUANTIZER2NAME[self.quantizer]}",
-                                  weight_name=WEIGHT,
-                                  input_shape=(8, 8, 3))
-
-    def test_dense_sym_quantizer(self):
-        layer = tf.keras.layers.Dense
-        self.build_and_save_model(quantizer=self.quantizer,
-                                  quantizer_params=QUANTIZER2LAYER2ARGS[self.quantizer][layer],
-                                  layer=layer(units=3),
-                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
-                                             f"{LAYER2NAME[layer]}_"
-                                             f"{QUANTIZER2NAME[self.quantizer]}",
-                                  weight_name=WEIGHT,
-                                  input_shape=(8, 8, 3))
+    def test_weights_symmetric_quantizer(self):
+        self.conv_test(quantizer=self.quantizer)
+        self.depthwise_test(quantizer=self.quantizer)
+        self.convtrans_test(quantizer=self.quantizer)
+        self.dense_test(quantizer=self.quantizer)
 
 
 class WeightsUniformQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest):
@@ -126,46 +50,8 @@ class WeightsUniformQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest):
     def setUp(self):
         self.quantizer = WeightsUniformInferableQuantizer
 
-    def test_conv_sym_quantizer(self):
-        layer = tf.keras.layers.Conv2D
-        self.build_and_save_model(quantizer=self.quantizer,
-                                  quantizer_params=QUANTIZER2LAYER2ARGS[self.quantizer][layer],
-                                  layer=layer(filters=3, kernel_size=4),
-                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
-                                             f"{LAYER2NAME[layer]}_"
-                                             f"{QUANTIZER2NAME[self.quantizer]}",
-                                  weight_name=WEIGHT,
-                                  input_shape=(8, 8, 3))
-
-    def test_depthwise_sym_quantizer(self):
-        layer = tf.keras.layers.DepthwiseConv2D
-        self.build_and_save_model(quantizer=self.quantizer,
-                                  quantizer_params=QUANTIZER2LAYER2ARGS[self.quantizer][layer],
-                                  layer=layer(kernel_size=4),
-                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
-                                             f"{LAYER2NAME[layer]}_"
-                                             f"{QUANTIZER2NAME[self.quantizer]}",
-                                  weight_name=DEPTHWISE_WEIGHT,
-                                  input_shape=(8, 8, 3))
-
-    def test_convtrans_sym_quantizer(self):
-        layer = tf.keras.layers.Conv2DTranspose
-        self.build_and_save_model(quantizer=self.quantizer,
-                                  quantizer_params=QUANTIZER2LAYER2ARGS[self.quantizer][layer],
-                                  layer=layer(filters=3, kernel_size=4),
-                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
-                                             f"{LAYER2NAME[layer]}_"
-                                             f"{QUANTIZER2NAME[self.quantizer]}",
-                                  weight_name=WEIGHT,
-                                  input_shape=(8, 8, 3))
-
-    def test_dense_sym_quantizer(self):
-        layer = tf.keras.layers.Dense
-        self.build_and_save_model(quantizer=self.quantizer,
-                                  quantizer_params=QUANTIZER2LAYER2ARGS[self.quantizer][layer],
-                                  layer=layer(units=3),
-                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
-                                             f"{LAYER2NAME[layer]}_"
-                                             f"{QUANTIZER2NAME[self.quantizer]}",
-                                  weight_name=WEIGHT,
-                                  input_shape=(8, 8, 3))
+    def test_weights_uniform_quantizer(self):
+        self.conv_test(self.quantizer)
+        self.depthwise_test(self.quantizer)
+        self.convtrans_test(self.quantizer)
+        self.dense_test(self.quantizer)

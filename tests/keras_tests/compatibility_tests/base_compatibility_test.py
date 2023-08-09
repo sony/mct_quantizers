@@ -21,6 +21,7 @@ from mct_quantizers import KerasQuantizationWrapper, keras_load_quantized_model
 from mct_quantizers.common.constants import WEIGHTS_QUANTIZERS
 from mct_quantizers.keras.quantizers import WeightsPOTInferableQuantizer, WeightsSymmetricInferableQuantizer, \
     WeightsUniformInferableQuantizer
+from tests.keras_tests.test_keras_quantization_wrapper import WEIGHT, DEPTHWISE_WEIGHT
 
 LAYER2NAME = {Conv2D: 'conv', DepthwiseConv2D: 'depthwise', Conv2DTranspose: 'convtrans', Dense: 'dense'}
 
@@ -123,6 +124,50 @@ class BaseQuantizerBuildAndSaveTest(unittest.TestCase):
         file_path = f'{model_name}.h5'
         tf.keras.models.save_model(model, file_path)
 
+    def conv_test(self, quantizer):
+        layer = tf.keras.layers.Conv2D
+        self.build_and_save_model(quantizer=quantizer,
+                                  quantizer_params=QUANTIZER2LAYER2ARGS[quantizer][layer],
+                                  layer=layer(filters=3, kernel_size=4),
+                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
+                                             f"{LAYER2NAME[layer]}_"
+                                             f"{QUANTIZER2NAME[quantizer]}",
+                                  weight_name=WEIGHT,
+                                  input_shape=(8, 8, 3))
+
+    def depthwise_test(self, quantizer):
+        layer = tf.keras.layers.DepthwiseConv2D
+        self.build_and_save_model(quantizer=quantizer,
+                                  quantizer_params=QUANTIZER2LAYER2ARGS[quantizer][layer],
+                                  layer=layer(kernel_size=4),
+                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
+                                             f"{LAYER2NAME[layer]}_"
+                                             f"{QUANTIZER2NAME[quantizer]}",
+                                  weight_name=DEPTHWISE_WEIGHT,
+                                  input_shape=(8, 8, 3))
+
+    def convtrans_test(self, quantizer):
+        layer = tf.keras.layers.Conv2DTranspose
+        self.build_and_save_model(quantizer=quantizer,
+                                  quantizer_params=QUANTIZER2LAYER2ARGS[quantizer][layer],
+                                  layer=layer(filters=3, kernel_size=4),
+                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
+                                             f"{LAYER2NAME[layer]}_"
+                                             f"{QUANTIZER2NAME[quantizer]}",
+                                  weight_name=WEIGHT,
+                                  input_shape=(8, 8, 3))
+
+    def dense_test(self, quantizer):
+        layer = tf.keras.layers.Dense
+        self.build_and_save_model(quantizer=quantizer,
+                                  quantizer_params=QUANTIZER2LAYER2ARGS[quantizer][layer],
+                                  layer=layer(units=3),
+                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
+                                             f"{LAYER2NAME[layer]}_"
+                                             f"{QUANTIZER2NAME[quantizer]}",
+                                  weight_name=WEIGHT,
+                                  input_shape=(8, 8, 3))
+
 
 class BaseQuantizerLoadAndCompareTest(unittest.TestCase):
     SAVED_VERSION = None
@@ -145,3 +190,27 @@ class BaseQuantizerLoadAndCompareTest(unittest.TestCase):
 
         self.assertEqual(tested_layer.get_config()[WEIGHTS_QUANTIZERS][weight_name]['config'],
                          QUANTIZER2LAYER2ARGS[quantizer_type][layer_type])
+
+    def conv_test(self, quantizer_type):
+        layer = tf.keras.layers.Conv2D
+        self.load_and_compare_model(quantizer_type=quantizer_type,
+                                    layer_type=layer,
+                                    weight_name=WEIGHT)
+
+    def depthwise_test(self, quantizer_type):
+        layer = tf.keras.layers.DepthwiseConv2D
+        self.load_and_compare_model(quantizer_type=quantizer_type,
+                                    layer_type=layer,
+                                    weight_name=DEPTHWISE_WEIGHT)
+
+    def convtrans_test(self, quantizer_type):
+        layer = tf.keras.layers.Conv2DTranspose
+        self.load_and_compare_model(quantizer_type=quantizer_type,
+                                    layer_type=layer,
+                                    weight_name=WEIGHT)
+
+    def dense_test(self, quantizer_type):
+        layer = tf.keras.layers.Dense
+        self.load_and_compare_model(quantizer_type=quantizer_type,
+                                    layer_type=layer,
+                                    weight_name=WEIGHT)
