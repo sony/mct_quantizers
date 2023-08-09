@@ -1,14 +1,12 @@
-name: Run Keras Compatibility Tests
+name: Run Keras Weights Quantizers Compatibility Tests
 
 on:
-  workflow_call:
+  workflow_dispatch: # Allow manual triggers
+    schedule:
+      - cron: 0 0 * * *
     inputs:
-      save-version:
+      save_version:
         description: 'MCT Quantizers version to save models'
-        required: true
-        type: string
-      load-version:
-        description: 'MCT Quantizers version to load models'
         required: true
         type: string
 
@@ -17,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Install Python 3
         uses: actions/setup-python@v1
         with:
@@ -24,17 +24,27 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install -r requirements.txt
           pip install tensorflow==2.12.*
-      - name: Install checkout to save model tests version
+      - name: Checkout to MCT Quantizers requested tag for saving test models
         run: |
-          git checkout tags/${{ inputs.save-version }}
+          git checkout tags/${{  inputs.save_version  }}
       - name: Run save model tests
         run: |
-          python tests/keras_tests/compatibility_tests/compatibility_save_model_test_suite.py ${{ inputs.save-version }}
-      - name: Install checkout to load model tests version
+          cd tests
+          echo "Current directory: $PWD"
+          export PYTHONPATH="$PWD:${PYTHONPATH}"
+          echo "Updated PYTHONPATH: $PYTHONPATH"
+          cd ..
+          python tests/keras_tests/compatibility_tests/compatibility_save_model_test_suite.py ${{  inputs.save_version  }}
+      - name: Checkout to MCT Quantizers latest version
         run: |
-          git checkout tags/${{ inputs.load-version }}
-      - name: Run load model tests
+          git checkout main
+      - name: Run load model tests with latest version
         run: |
-          python tests/keras_tests/compatibility_tests/compatibility_load_model_test_suite.py ${{ inputs.save-version }}
-      
+          cd tests
+          echo "Current directory: $PWD"
+          export PYTHONPATH="$PWD:${PYTHONPATH}"
+          echo "Updated PYTHONPATH: $PYTHONPATH"
+          cd ..
+          python tests/keras_tests/compatibility_tests/compatibility_load_model_test_suite.py ${{  inputs.save_version  }}
