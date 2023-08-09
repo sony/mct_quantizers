@@ -55,9 +55,11 @@ if FOUND_TF:
 
         if custom_objects is not None:
             qi_custom_objects.update(custom_objects)
-        return tf.keras.models.load_model(filepath,
-                                          custom_objects=qi_custom_objects, compile=compile,
-                                          options=options)
+        # in keras format (v3) passing option is an error
+        kwargs = {}
+        if options is not None:
+            kwargs['options'] = options
+        return tf.keras.models.load_model(filepath, custom_objects=qi_custom_objects, compile=compile, **kwargs)
 else:
     def keras_load_quantized_model(filepath, custom_objects=None, compile=True, options=None):
         """
