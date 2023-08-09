@@ -14,7 +14,8 @@
 # ==============================================================================
 import tensorflow as tf
 
-from mct_quantizers.keras.quantizers import WeightsPOTInferableQuantizer, WeightsSymmetricInferableQuantizer
+from mct_quantizers.keras.quantizers import WeightsPOTInferableQuantizer, WeightsSymmetricInferableQuantizer, \
+    WeightsUniformInferableQuantizer
 from tests.keras_tests.compatibility_tests.base_compatibility_test import BaseQuantizerLoadAndCompareTest
 from tests.keras_tests.test_keras_quantization_wrapper import WEIGHT, DEPTHWISE_WEIGHT
 
@@ -53,6 +54,36 @@ class WeightsSymmetricQuantizerLoadAndCompareTest(BaseQuantizerLoadAndCompareTes
 
     def setUp(self):
         self.quantizer_type = WeightsSymmetricInferableQuantizer
+
+    def test_conv_sym_quantizer(self):
+        layer = tf.keras.layers.Conv2D
+        self.load_and_compare_model(quantizer_type=self.quantizer_type,
+                                    layer_type=layer,
+                                    weight_name=WEIGHT)
+
+    def test_depthwise_sym_quantizer(self):
+        layer = tf.keras.layers.DepthwiseConv2D
+        self.load_and_compare_model(quantizer_type=self.quantizer_type,
+                                    layer_type=layer,
+                                    weight_name=DEPTHWISE_WEIGHT)
+
+    def test_convtrans_sym_quantizer(self):
+        layer = tf.keras.layers.Conv2DTranspose
+        self.load_and_compare_model(quantizer_type=self.quantizer_type,
+                                    layer_type=layer,
+                                    weight_name=WEIGHT)
+
+    def test_dense_sym_quantizer(self):
+        layer = tf.keras.layers.Dense
+        self.load_and_compare_model(quantizer_type=self.quantizer_type,
+                                    layer_type=layer,
+                                    weight_name=WEIGHT)
+
+
+class WeightsUniformQuantizerLoadAndCompareTest(BaseQuantizerLoadAndCompareTest):
+
+    def setUp(self):
+        self.quantizer_type = WeightsUniformInferableQuantizer
 
     def test_conv_sym_quantizer(self):
         layer = tf.keras.layers.Conv2D

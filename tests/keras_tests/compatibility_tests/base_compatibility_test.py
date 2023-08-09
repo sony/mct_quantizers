@@ -19,12 +19,14 @@ from keras.layers import Conv2D, DepthwiseConv2D, Conv2DTranspose, Dense
 
 from mct_quantizers import KerasQuantizationWrapper, keras_load_quantized_model
 from mct_quantizers.common.constants import WEIGHTS_QUANTIZERS
-from mct_quantizers.keras.quantizers import WeightsPOTInferableQuantizer, WeightsSymmetricInferableQuantizer
+from mct_quantizers.keras.quantizers import WeightsPOTInferableQuantizer, WeightsSymmetricInferableQuantizer, \
+    WeightsUniformInferableQuantizer
 
 LAYER2NAME = {Conv2D: 'conv', DepthwiseConv2D: 'depthwise', Conv2DTranspose: 'convtrans', Dense: 'dense'}
 
 QUANTIZER2NAME = {WeightsPOTInferableQuantizer: 'pot',
-                  WeightsSymmetricInferableQuantizer: 'sym'}
+                  WeightsSymmetricInferableQuantizer: 'sym',
+                  WeightsUniformInferableQuantizer: 'unf'}
 
 QUANTIZER2LAYER2ARGS = {**dict.fromkeys([WeightsPOTInferableQuantizer, WeightsSymmetricInferableQuantizer],
                                         {Conv2D:
@@ -55,7 +57,40 @@ QUANTIZER2LAYER2ARGS = {**dict.fromkeys([WeightsPOTInferableQuantizer, WeightsSy
                                               'input_rank': 2,
                                               'channel_axis': 1
                                               },
-                                         })
+                                         }),
+                        WeightsUniformInferableQuantizer: {Conv2D:
+                                                               {'num_bits': 4,
+                                                                'min_range': [-1.0, 0.5, -0.5],
+                                                                'max_range': [3.2, 1.4, 0.1],
+                                                                'per_channel': True,
+                                                                'input_rank': 4,
+                                                                'channel_axis': 3
+                                                                },
+                                                           DepthwiseConv2D:
+                                                               {'num_bits': 4,
+                                                                'min_range': [-1.0, 0.5, -0.5],
+                                                                'max_range': [3.2, 1.4, 0.1],
+                                                                'per_channel': True,
+                                                                'input_rank': 4,
+                                                                'channel_axis': 2
+                                                                },
+                                                           Conv2DTranspose:
+                                                               {'num_bits': 4,
+                                                                'min_range': [-1.0, 0.5, -0.5],
+                                                                'max_range': [3.2, 1.4, 0.1],
+                                                                'per_channel': True,
+                                                                'input_rank': 4,
+                                                                'channel_axis': 2
+                                                                },
+                                                           Dense:
+                                                               {'num_bits': 4,
+                                                                'min_range': [-1.0, 0.5, -0.5],
+                                                                'max_range': [3.2, 1.4, 0.1],
+                                                                'per_channel': True,
+                                                                'input_rank': 2,
+                                                                'channel_axis': 1
+                                                                },
+                                                           }
                         }
 
 
