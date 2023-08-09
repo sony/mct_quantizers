@@ -17,7 +17,8 @@ import unittest
 import sys
 
 from tests.keras_tests.compatibility_tests.base_compatibility_test import BaseQuantizerLoadAndCompareTest
-from tests.keras_tests.compatibility_tests.compatibility_load_model_test import WeightsPOTQuantizerLoadAndCompareTest
+from tests.keras_tests.compatibility_tests.compatibility_load_model_test import WeightsPOTQuantizerLoadAndCompareTest, \
+    WeightsSymmetricQuantizerLoadAndCompareTest
 
 if __name__ == '__main__':
     mct_quantizers_version = sys.argv[1]
@@ -27,6 +28,7 @@ if __name__ == '__main__':
     BaseQuantizerLoadAndCompareTest.SAVED_VERSION = mct_quantizers_version
 
     suiteList.append(test_loader.loadTestsFromTestCase(WeightsPOTQuantizerLoadAndCompareTest))
+    suiteList.append(test_loader.loadTestsFromTestCase(WeightsSymmetricQuantizerLoadAndCompareTest))
 
     keras_load_models_suite = unittest.TestSuite(suiteList)
 

@@ -19,42 +19,45 @@ from keras.layers import Conv2D, DepthwiseConv2D, Conv2DTranspose, Dense
 
 from mct_quantizers import KerasQuantizationWrapper, keras_load_quantized_model
 from mct_quantizers.common.constants import WEIGHTS_QUANTIZERS
-from mct_quantizers.keras.quantizers import WeightsPOTInferableQuantizer
+from mct_quantizers.keras.quantizers import WeightsPOTInferableQuantizer, WeightsSymmetricInferableQuantizer
 
 LAYER2NAME = {Conv2D: 'conv', DepthwiseConv2D: 'depthwise', Conv2DTranspose: 'convtrans', Dense: 'dense'}
 
-QUANTIZER2NAME = {WeightsPOTInferableQuantizer: 'pot'}
+QUANTIZER2NAME = {WeightsPOTInferableQuantizer: 'pot',
+                  WeightsSymmetricInferableQuantizer: 'sym'}
 
-QUANTIZER2LAYER2ARGS = {WeightsPOTInferableQuantizer: {Conv2D:
-                                                           {'num_bits': 4,
-                                                            'threshold': [2.0, 0.5, 4.0],
-                                                            'per_channel': True,
-                                                            'input_rank': 4,
-                                                            'channel_axis': 3
-                                                            },
-                                                       DepthwiseConv2D:
-                                                           {'num_bits': 4,
-                                                            'threshold': [2.0, 0.5, 4.0],
-                                                            'per_channel': True,
-                                                            'input_rank': 4,
-                                                            'channel_axis': 2
-                                                            },
-                                                       Conv2DTranspose:
-                                                           {'num_bits': 4,
-                                                            'threshold': [2.0, 0.5, 4.0],
-                                                            'per_channel': True,
-                                                            'input_rank': 4,
-                                                            'channel_axis': 2
-                                                            },
-                                                       Dense:
-                                                           {'num_bits': 4,
-                                                            'threshold': [2.0, 0.5, 4.0],
-                                                            'per_channel': True,
-                                                            'input_rank': 2,
-                                                            'channel_axis': 1
-                                                            },
-                                                       }
+QUANTIZER2LAYER2ARGS = {**dict.fromkeys([WeightsPOTInferableQuantizer, WeightsSymmetricInferableQuantizer],
+                                        {Conv2D:
+                                             {'num_bits': 4,
+                                              'threshold': [2.0, 0.5, 4.0],
+                                              'per_channel': True,
+                                              'input_rank': 4,
+                                              'channel_axis': 3
+                                              },
+                                         DepthwiseConv2D:
+                                             {'num_bits': 4,
+                                              'threshold': [2.0, 0.5, 4.0],
+                                              'per_channel': True,
+                                              'input_rank': 4,
+                                              'channel_axis': 2
+                                              },
+                                         Conv2DTranspose:
+                                             {'num_bits': 4,
+                                              'threshold': [2.0, 0.5, 4.0],
+                                              'per_channel': True,
+                                              'input_rank': 4,
+                                              'channel_axis': 2
+                                              },
+                                         Dense:
+                                             {'num_bits': 4,
+                                              'threshold': [2.0, 0.5, 4.0],
+                                              'per_channel': True,
+                                              'input_rank': 2,
+                                              'channel_axis': 1
+                                              },
+                                         })
                         }
+
 
 def _build_model_with_quantize_wrapper(quant_weights_layer, input_shape, model_name):
     inputs = tf.keras.layers.Input(shape=input_shape)
