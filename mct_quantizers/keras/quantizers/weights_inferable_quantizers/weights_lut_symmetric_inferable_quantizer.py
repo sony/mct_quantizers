@@ -18,7 +18,7 @@ from typing import List
 import numpy as np
 
 from mct_quantizers.common.base_inferable_quantizer import QuantizationTarget, mark_quantizer, QuantizerID
-from mct_quantizers.common.constants import FOUND_TF, MULTIPLIER_N_BITS, EPS
+from mct_quantizers.common.constants import FOUND_TF, LUT_VALUES_BITWIDTH, EPS
 from mct_quantizers.common.quant_info import QuantizationMethod
 
 
@@ -38,24 +38,24 @@ if FOUND_TF:
 
         def __init__(self,
                      num_bits: int,
-                     cluster_centers: List[float],
+                     lut_values: List[float],
                      threshold: List[float],
                      per_channel: bool,
                      channel_axis: int = None,
                      input_rank: int = None,
-                     multiplier_n_bits: int = MULTIPLIER_N_BITS,
+                     lut_values_bitwidth: int = LUT_VALUES_BITWIDTH,
                      eps: float = EPS):
             """
             Initialize the quantizer with the specified parameters.
 
             Args:
                 num_bits: number of bits to use for quantization
-                cluster_centers: the cluster centers to assign the weights
+                lut_values: the values in the look-up table to assign the weights to
                 threshold: threshold for quantizing weights
                 per_channel: whether to use per-channel quantization
                 channel_axis: axis along which to apply per-channel quantization
                 input_rank: number of dimensions of input tensor the quantizer quantizes
-                multiplier_n_bits: Number of bits that determines the quantization range
+                lut_values_bitwidth: Number of bits that determines the quantization range
                 eps: Small value for numerical stability in division
             """
 
@@ -68,8 +68,8 @@ if FOUND_TF:
 
             self.threshold = threshold
             self._np_threshold = np.asarray(threshold)
-            self.cluster_centers = cluster_centers
-            self._np_cluster_centers = np.asarray(cluster_centers, dtype=np.float32)
+            self.lut_values = lut_values
+            self._np_lut_values = np.asarray(lut_values, dtype=np.float32)
 
             if per_channel:
                 assert input_rank is not None, f'Input rank is missing in per channel quantization'
@@ -80,27 +80,27 @@ if FOUND_TF:
                 assert len(threshold) == 1, f'In per-tensor quantization threshold should be of length 1 but is' \
                                             f' {len(threshold)}'
 
-            assert len(np.unique(self._np_cluster_centers)) <= 2 ** num_bits, \
-                f'Expected num of cluster centers to be less or equal than {2 ** num_bits} ' \
-                f'but got {len(self._np_cluster_centers)}'
+            assert len(np.unique(self._np_lut_values)) <= 2 ** num_bits, \
+                f'Expected num of lut values to be less or equal than {2 ** num_bits} ' \
+                f'but got {len(self._np_lut_values)}'
 
-            assert not np.any(self._np_cluster_centers - self._np_cluster_centers.astype(int)), f'Expected cluster centers to be integers'
+            assert not np.any(self._np_lut_values - self._np_lut_values.astype(int)), f'Expected lut values to be integers'
 
             # Weight quantization is signed, hence the quantization range is
-            # [-2**(multiplier_n_bits - 1), 2**(multiplier_n_bits - 1) - 1]
-            assert np.all((-1 * (2 ** (multiplier_n_bits - 1)) <= self._np_cluster_centers) &
-                          (self._np_cluster_centers <= (2 ** (multiplier_n_bits - 1) - 1))), \
-                f'Expected cluster centers in the quantization range'
+            # [-2**(lut_values_bitwidth - 1), 2**(lut_values_bitwidth - 1) - 1]
+            assert np.all((-1 * (2 ** (lut_values_bitwidth - 1)) <= self._np_lut_values) &
+                          (self._np_lut_values <= (2 ** (lut_values_bitwidth - 1) - 1))), \
+                f'Expected lut values in the quantization range'
 
-            # num_bits must be less than multiplier_n_bits
-            assert num_bits <= multiplier_n_bits, f'Look-Up-Table bit configuration has {num_bits} bits. It must be ' \
-                                                  f'less then {multiplier_n_bits}'
-            if num_bits == multiplier_n_bits:
+            # num_bits must be less than lut_values_bitwidth
+            assert num_bits <= lut_values_bitwidth, f'Look-Up-Table bit configuration has {num_bits} bits. It must be ' \
+                                                  f'less then {lut_values_bitwidth}'
+            if num_bits == lut_values_bitwidth:
                 warnings.warn("Num of bits equal to multiplier n bits, Please be aware LUT quantizier may be "
                               "inefficient in that case, consider using SymmetricInferableQuantizer instead")
 
             self.num_bits = num_bits
-            self.multiplier_n_bits = multiplier_n_bits
+            self.lut_values_bitwidth = lut_values_bitwidth
             self.eps = eps
             self.per_channel = per_channel
             self.channel_axis = channel_axis
@@ -142,10 +142,10 @@ if FOUND_TF:
 
                 # Quantize the input tensor using per-channel quantization
                 q_tensor = lut_quantizer(inputs,
-                                         cluster_centers=self._np_cluster_centers,
+                                         lut_values=self._np_lut_values,
                                          signed=True,
                                          threshold=self._np_threshold,
-                                         multiplier_n_bits=self.multiplier_n_bits,
+                                         lut_values_bitwidth=self.lut_values_bitwidth,
                                          eps=self.eps)
                 if self.perm_vec:
                     # Transpose the quantized tensor back to its original shape
@@ -156,10 +156,10 @@ if FOUND_TF:
                 return q_tensor
             else:
                 return lut_quantizer(inputs,
-                                     cluster_centers=self._np_cluster_centers,
+                                     lut_values=self._np_lut_values,
                                      signed=True,
                                      threshold=self._np_threshold,
-                                     multiplier_n_bits=self.multiplier_n_bits,
+                                     lut_values_bitwidth=self.lut_values_bitwidth,
                                      eps=self.eps)
 
         def get_config(self):
@@ -167,17 +167,27 @@ if FOUND_TF:
             Return a dictionary with the configuration of the quantizer.
 
             Returns:
-                Dictionary with the following keys: 'per_channel', 'num_bits', 'cluster_centers', 'threshold',
-                 'channel_axis', 'input_rank', 'multiplier_n_bits', 'eps'
+                Dictionary with the following keys: 'per_channel', 'num_bits', 'lut_values', 'threshold',
+                 'channel_axis', 'input_rank', 'lut_values_bitwidth', 'eps'
             """
             return {'per_channel': self.per_channel,
                     'num_bits': self.num_bits,
-                    'cluster_centers': self.cluster_centers,
+                    'lut_values': self.lut_values,
                     'threshold': self.threshold,
                     'channel_axis': self.channel_axis,
                     'input_rank': self.input_rank,
-                    'multiplier_n_bits': self.multiplier_n_bits,
+                    'lut_values_bitwidth': self.lut_values_bitwidth,
                     'eps': self.eps}
+
+        @property
+        def signed(self) -> bool:
+            """
+            Property to indicates that symmetric weights quantization is always signed.
+
+            Returns: True by definition.
+
+            """
+            return True
 
 else:
     class WeightsLUTSymmetricInferableQuantizer:  # pragma: no cover

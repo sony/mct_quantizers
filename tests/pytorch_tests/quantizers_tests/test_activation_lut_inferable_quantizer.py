@@ -25,17 +25,17 @@ from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activatio
 class TestKerasActivationLutPotQuantizer(unittest.TestCase):
 
     def test_lut_pot_signed_quantizer(self):
-        cluster_centers = np.asarray([-25, 25])
+        lut_values = np.asarray([-25, 25])
         thresholds = np.asarray([4.])
         num_bits = 3
         signed = True
-        multiplier_n_bits = 8
+        lut_values_bitwidth = 8
 
         quantizer = ActivationLutPOTInferableQuantizer(num_bits=num_bits,
-                                                       cluster_centers=cluster_centers,
+                                                       lut_values=lut_values,
                                                        signed=signed,
-                                                       multiplier_n_bits=
-                                                       multiplier_n_bits,
+                                                       lut_values_bitwidth=
+                                                       lut_values_bitwidth,
                                                        threshold=thresholds)
 
         # Initialize a random input to quantize between -50 to 50.
@@ -45,7 +45,7 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
         # Using a signed quantization, so we expect all values to be between -abs(max(threshold))
         # and abs(max(threshold))
         max_threshold = np.max(np.abs(thresholds))
-        delta_threshold = 1 / (2 ** (multiplier_n_bits - int(signed)))
+        delta_threshold = 1 / (2 ** (lut_values_bitwidth - int(signed)))
 
         fake_quantized_tensor = fake_quantized_tensor.detach().cpu().numpy()
 
@@ -60,7 +60,7 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
                                   f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                                   f'{len(np.unique(fake_quantized_tensor))} unique values')
 
-        quant_tensor_values = cluster_centers / (2 ** (multiplier_n_bits - int(signed))) * thresholds
+        quant_tensor_values = lut_values / (2 ** (lut_values_bitwidth - int(signed))) * thresholds
         self.assertTrue(len(np.unique(fake_quantized_tensor)) <= 2 ** num_bits,
                                   f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                                   f'{len(np.unique(fake_quantized_tensor))} unique values')
@@ -68,17 +68,17 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
                                          == np.sort(quant_tensor_values)))
 
         # Check quantized tensor assigned correctly
-        clip_max = 2 ** (multiplier_n_bits - 1) - 1
-        clip_min = -2 ** (multiplier_n_bits - 1)
+        clip_max = 2 ** (lut_values_bitwidth - 1) - 1
+        clip_min = -2 ** (lut_values_bitwidth - 1)
 
-        tensor = torch.clip((input_tensor / thresholds) * (2 ** (multiplier_n_bits - int(signed))),
+        tensor = torch.clip((input_tensor / thresholds) * (2 ** (lut_values_bitwidth - int(signed))),
                             min=clip_min, max=clip_max)
         tensor = tensor.unsqueeze(-1)
-        expanded_cluster_centers = cluster_centers.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
-        cluster_assignments = torch.argmin(torch.abs(tensor - expanded_cluster_centers), dim=-1)
-        centers = cluster_centers.flatten()[cluster_assignments]
+        expanded_lut_values = lut_values.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
+        lut_values_assignments = torch.argmin(torch.abs(tensor - expanded_lut_values), dim=-1)
+        centers = lut_values.flatten()[lut_values_assignments]
 
-        self.assertTrue(np.all(centers / (2 ** (multiplier_n_bits - int(signed))) * thresholds ==
+        self.assertTrue(np.all(centers / (2 ** (lut_values_bitwidth - int(signed))) * thresholds ==
                                          fake_quantized_tensor), "Quantized tensor values weren't assigned correctly")
 
         # Assert some values are negative (signed quantization)
@@ -86,17 +86,17 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
                                   f'Expected some values to be negative but quantized tensor is {fake_quantized_tensor}')
 
     def test_lut_pot_unsigned_quantizer(self):
-        cluster_centers = np.asarray([25, 45])
+        lut_values = np.asarray([25, 45])
         thresholds = np.asarray([4.])
         num_bits = 3
         signed = False
-        multiplier_n_bits = 7
+        lut_values_bitwidth = 7
 
         quantizer = ActivationLutPOTInferableQuantizer(num_bits=num_bits,
-                                                       cluster_centers=cluster_centers,
+                                                       lut_values=lut_values,
                                                        signed=signed,
-                                                       multiplier_n_bits=
-                                                       multiplier_n_bits,
+                                                       lut_values_bitwidth=
+                                                       lut_values_bitwidth,
                                                        threshold=thresholds)
 
         # Initialize a random input to quantize between -50 to 50.
@@ -106,7 +106,7 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
         # Using a unsigned quantization, so we expect all values to be between 0
         # and max(threshold)
         max_threshold = np.max(np.abs(thresholds))
-        delta_threshold = 1 / (2 ** (multiplier_n_bits - int(signed)))
+        delta_threshold = 1 / (2 ** (lut_values_bitwidth - int(signed)))
 
         fake_quantized_tensor = fake_quantized_tensor.detach().cpu().numpy()
 
@@ -120,7 +120,7 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
                                   f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                                   f'{len(np.unique(fake_quantized_tensor))} unique values')
 
-        quant_tensor_values = cluster_centers / (2 ** (multiplier_n_bits - int(signed))) * thresholds
+        quant_tensor_values = lut_values / (2 ** (lut_values_bitwidth - int(signed))) * thresholds
         self.assertTrue(len(np.unique(fake_quantized_tensor)) <= 2 ** num_bits,
                                   f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                                   f'{len(np.unique(fake_quantized_tensor))} unique values')
@@ -128,17 +128,17 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
         self.assertTrue(np.all(np.unique(fake_quantized_tensor) == np.sort(quant_tensor_values)))
 
         # Check quantized tensor assigned correctly
-        clip_max = 2 ** multiplier_n_bits - 1
+        clip_max = 2 ** lut_values_bitwidth - 1
         clip_min = 0
 
-        tensor = torch.clip((input_tensor / thresholds) * (2 ** (multiplier_n_bits - int(signed))),
+        tensor = torch.clip((input_tensor / thresholds) * (2 ** (lut_values_bitwidth - int(signed))),
                             min=clip_min, max=clip_max)
         tensor = tensor.unsqueeze(-1)
-        expanded_cluster_centers = cluster_centers.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
-        cluster_assignments = torch.argmin(torch.abs(tensor - expanded_cluster_centers), dim=-1)
-        centers = cluster_centers.flatten()[cluster_assignments]
+        expanded_lut_values = lut_values.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
+        lut_values_assignments = torch.argmin(torch.abs(tensor - expanded_lut_values), dim=-1)
+        centers = lut_values.flatten()[lut_values_assignments]
 
-        self.assertTrue(np.all(centers / (2 ** (multiplier_n_bits - int(signed))) * thresholds ==
+        self.assertTrue(np.all(centers / (2 ** (lut_values_bitwidth - int(signed))) * thresholds ==
                                          fake_quantized_tensor), "Quantized tensor values weren't assigned correctly")
 
         # Assert all values are non-negative (unsigned quantization)

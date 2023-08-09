@@ -23,28 +23,28 @@ from mct_quantizers.keras.quantizers.weights_inferable_quantizers.weights_lut_sy
 
 class TestKerasWeightsLutQuantizers(unittest.TestCase):
 
-    def _weights_lut_quantizer_test(self, inferable_quantizer, num_bits, threshold, cluster_centers,
-                                    per_channel, channel_axis, input_rank, multiplier_n_bits, eps):
+    def _weights_lut_quantizer_test(self, inferable_quantizer, num_bits, threshold, lut_values,
+                                    per_channel, channel_axis, input_rank, lut_values_bitwidth, eps):
         quantizer = inferable_quantizer(num_bits=num_bits,
                                         per_channel=per_channel,
-                                        cluster_centers=cluster_centers,
+                                        lut_values=lut_values,
                                         threshold=threshold,
                                         channel_axis=channel_axis,
                                         input_rank=input_rank,
-                                        multiplier_n_bits=multiplier_n_bits,
+                                        lut_values_bitwidth=lut_values_bitwidth,
                                         eps=eps)
 
-        cluster_centers = np.asarray(cluster_centers, dtype=np.float32)
+        lut_values = np.asarray(lut_values, dtype=np.float32)
 
         # check config
         quantizer_config = quantizer.get_config()
         self.assertTrue(quantizer_config['num_bits'] == num_bits)
         self.assertTrue(np.all(quantizer_config['threshold'] == np.asarray(threshold)))
-        self.assertTrue(np.all(quantizer_config['cluster_centers'] == cluster_centers))
+        self.assertTrue(np.all(quantizer_config['lut_values'] == lut_values))
         self.assertTrue(quantizer_config['per_channel'] == per_channel)
         self.assertTrue(quantizer_config['channel_axis'] == channel_axis)
         self.assertTrue(quantizer_config['input_rank'] == input_rank)
-        self.assertTrue(quantizer_config['multiplier_n_bits'] == multiplier_n_bits)
+        self.assertTrue(quantizer_config['lut_values_bitwidth'] == lut_values_bitwidth)
         self.assertTrue(quantizer_config['eps'] == eps)
 
         # test permute
@@ -73,7 +73,7 @@ class TestKerasWeightsLutQuantizers(unittest.TestCase):
         # and abs(max(threshold))
 
         max_threshold = np.max(np.abs(threshold))
-        delta_threshold = 1 / (2 ** (multiplier_n_bits - 1))
+        delta_threshold = 1 / (2 ** (lut_values_bitwidth - 1))
 
         self.assertTrue(np.max(
             quantized_tensor) <= max_threshold - delta_threshold, f'Quantized values should not contain values greater '
@@ -87,13 +87,13 @@ class TestKerasWeightsLutQuantizers(unittest.TestCase):
                         f'{len(np.unique(quantized_tensor))} unique values')
 
         # Check quantized tensor assigned correctly
-        clip_max = 2 ** (multiplier_n_bits - 1) - 1
-        clip_min = -2 ** (multiplier_n_bits - 1)
+        clip_max = 2 ** (lut_values_bitwidth - 1) - 1
+        clip_min = -2 ** (lut_values_bitwidth - 1)
 
         if per_channel:
             for i in range(len(threshold)):
                 channel_slice_i = quantized_tensor[:, :, :, i]
-                channel_quant_tensor_values = cluster_centers / (2 ** (multiplier_n_bits - 1)) * threshold[i]
+                channel_quant_tensor_values = lut_values / (2 ** (lut_values_bitwidth - 1)) * threshold[i]
                 self.assertTrue(len(np.unique(channel_slice_i)) <= 2 ** num_bits,
                                 f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                                 f'{len(np.unique(channel_slice_i))} unique values')
@@ -103,14 +103,14 @@ class TestKerasWeightsLutQuantizers(unittest.TestCase):
                 tensor = tf.clip_by_value((input_tensor / (threshold[i] + eps)) * (2 ** (num_bits - 1)),
                                           clip_value_max=clip_max, clip_value_min=clip_min)
                 tensor = tf.expand_dims(tf.transpose(tensor, perm=perm_vec)[:, :, :, i], -1)
-                expanded_cluster_centers = cluster_centers.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
-                cluster_assignments = tf.argmin(tf.abs(tensor - expanded_cluster_centers), axis=-1)
-                centers = tf.gather(cluster_centers.flatten(), cluster_assignments)
+                expanded_lut_values = lut_values.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
+                lut_values_assignments = tf.argmin(tf.abs(tensor - expanded_lut_values), axis=-1)
+                centers = tf.gather(lut_values.flatten(), lut_values_assignments)
 
-                self.assertTrue(np.all(centers / (2 ** (multiplier_n_bits - 1)) * threshold[i] == channel_slice_i),
+                self.assertTrue(np.all(centers / (2 ** (lut_values_bitwidth - 1)) * threshold[i] == channel_slice_i),
                                 "Quantized tensor values weren't assigned correctly")
         else:
-            quant_tensor_values = cluster_centers / (2 ** (multiplier_n_bits - 1)) * threshold
+            quant_tensor_values = lut_values / (2 ** (lut_values_bitwidth - 1)) * threshold
             self.assertTrue(len(np.unique(quantized_tensor)) <= 2 ** num_bits,
                             f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                             f'{len(np.unique(quantized_tensor))} unique values')
@@ -120,11 +120,11 @@ class TestKerasWeightsLutQuantizers(unittest.TestCase):
             tensor = tf.clip_by_value((input_tensor / (threshold[0] + eps)) * (2 ** (num_bits - 1)),
                                       clip_value_max=clip_max, clip_value_min=clip_min)
             tensor = tf.expand_dims(tensor, -1)
-            expanded_cluster_centers = cluster_centers.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
-            cluster_assignments = tf.argmin(tf.abs(tensor - expanded_cluster_centers), axis=-1)
-            centers = tf.gather(cluster_centers.flatten(), cluster_assignments)
+            expanded_lut_values = lut_values.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
+            lut_values_assignments = tf.argmin(tf.abs(tensor - expanded_lut_values), axis=-1)
+            centers = tf.gather(lut_values.flatten(), lut_values_assignments)
 
-            self.assertTrue(np.all(centers / (2 ** (multiplier_n_bits - 1)) * threshold[0] == quantized_tensor),
+            self.assertTrue(np.all(centers / (2 ** (lut_values_bitwidth - 1)) * threshold[0] == quantized_tensor),
                             "Quantized tensor values weren't assigned correctly")
 
         # Assert some values are negative (signed quantization)
@@ -133,7 +133,7 @@ class TestKerasWeightsLutQuantizers(unittest.TestCase):
 
     def test_weights_symmetric_lut_quantizer(self):
         inferable_quantizer = WeightsLUTSymmetricInferableQuantizer
-        cluster_centers = [-25, 25]
+        lut_values = [-25, 25]
         per_channel = True
         input_rank = 4
         num_bits = 8
@@ -141,21 +141,21 @@ class TestKerasWeightsLutQuantizers(unittest.TestCase):
         # test per channel
         threshold = [3., 8., 7.]
         channel_axis = 3
-        multiplier_n_bits = 8
+        lut_values_bitwidth = 8
         eps = 1e-8
         self._weights_lut_quantizer_test(inferable_quantizer=inferable_quantizer, num_bits=num_bits,
-                                         threshold=threshold, cluster_centers=cluster_centers,
+                                         threshold=threshold, lut_values=lut_values,
                                          per_channel=per_channel, channel_axis=channel_axis,
-                                         input_rank=input_rank, multiplier_n_bits=multiplier_n_bits,
+                                         input_rank=input_rank, lut_values_bitwidth=lut_values_bitwidth,
                                          eps=eps)
 
         # test per channel and channel axis is not last
         threshold = [3., 8., 7.]
         channel_axis = 1
         self._weights_lut_quantizer_test(inferable_quantizer=inferable_quantizer, num_bits=num_bits,
-                                         threshold=threshold, cluster_centers=cluster_centers,
+                                         threshold=threshold, lut_values=lut_values,
                                          per_channel=per_channel, channel_axis=channel_axis,
-                                         input_rank=input_rank, multiplier_n_bits=multiplier_n_bits,
+                                         input_rank=input_rank, lut_values_bitwidth=lut_values_bitwidth,
                                          eps=eps)
 
         # test per tensor
@@ -163,15 +163,15 @@ class TestKerasWeightsLutQuantizers(unittest.TestCase):
         channel_axis = None
         per_channel = False
         self._weights_lut_quantizer_test(inferable_quantizer=inferable_quantizer, num_bits=num_bits,
-                                         threshold=threshold, cluster_centers=cluster_centers,
+                                         threshold=threshold, lut_values=lut_values,
                                          per_channel=per_channel, channel_axis=channel_axis,
-                                         input_rank=input_rank, multiplier_n_bits=multiplier_n_bits,
+                                         input_rank=input_rank, lut_values_bitwidth=lut_values_bitwidth,
                                          eps=eps)
 
     def test_weights_pot_lut_quantizer(self):
         inferable_quantizer = WeightsLUTSymmetricInferableQuantizer
 
-        cluster_centers = [-25, 25]
+        lut_values = [-25, 25]
         input_rank = 4
         num_bits = 8
 
@@ -179,21 +179,21 @@ class TestKerasWeightsLutQuantizers(unittest.TestCase):
         per_channel = True
         threshold = [2., 8., 32.]
         channel_axis = 3
-        multiplier_n_bits = 8
+        lut_values_bitwidth = 8
         eps = 1e-8
         self._weights_lut_quantizer_test(inferable_quantizer=inferable_quantizer, num_bits=num_bits,
-                                         threshold=threshold, cluster_centers=cluster_centers,
+                                         threshold=threshold, lut_values=lut_values,
                                          per_channel=per_channel, channel_axis=channel_axis,
-                                         input_rank=input_rank, multiplier_n_bits=multiplier_n_bits,
+                                         input_rank=input_rank, lut_values_bitwidth=lut_values_bitwidth,
                                          eps=eps)
 
         # test per channel and channel axis is not last
         threshold = [2., 8., 32.]
         channel_axis = 1
         self._weights_lut_quantizer_test(inferable_quantizer=inferable_quantizer, num_bits=num_bits,
-                                         threshold=threshold, cluster_centers=cluster_centers,
+                                         threshold=threshold, lut_values=lut_values,
                                          per_channel=per_channel, channel_axis=channel_axis,
-                                         input_rank=input_rank, multiplier_n_bits=multiplier_n_bits,
+                                         input_rank=input_rank, lut_values_bitwidth=lut_values_bitwidth,
                                          eps=eps)
 
         # test per tensor
@@ -201,7 +201,7 @@ class TestKerasWeightsLutQuantizers(unittest.TestCase):
         channel_axis = None
         per_channel = False
         self._weights_lut_quantizer_test(inferable_quantizer=inferable_quantizer, num_bits=num_bits,
-                                         threshold=threshold, cluster_centers=cluster_centers,
+                                         threshold=threshold, lut_values=lut_values,
                                          per_channel=per_channel, channel_axis=channel_axis,
-                                         input_rank=input_rank, multiplier_n_bits=multiplier_n_bits,
+                                         input_rank=input_rank, lut_values_bitwidth=lut_values_bitwidth,
                                          eps=eps)

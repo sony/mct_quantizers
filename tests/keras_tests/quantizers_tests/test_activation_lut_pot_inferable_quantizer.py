@@ -24,19 +24,19 @@ from mct_quantizers.keras.quantizers.activation_inferable_quantizers.activation_
 class TestKerasActivationLutPotQuantizer(unittest.TestCase):
 
     def test_lut_pot_signed_quantizer(self):
-        cluster_centers = np.asarray([-25, 25])
+        lut_values = np.asarray([-25, 25])
         thresholds = [4.]
         num_bits = 3
         signed = True
-        multiplier_n_bits = 8
+        lut_values_bitwidth = 8
         eps = 1e-8
 
         quantizer = ActivationLutPOTInferableQuantizer(num_bits=num_bits,
-                                                       cluster_centers=cluster_centers,
+                                                       lut_values=lut_values,
                                                        signed=signed,
                                                        threshold=thresholds,
-                                                       multiplier_n_bits=
-                                                       multiplier_n_bits,
+                                                       lut_values_bitwidth=
+                                                       lut_values_bitwidth,
                                                        eps=eps)
 
         thresholds = np.asarray(thresholds)
@@ -44,10 +44,10 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
         # check config
         quantizer_config = quantizer.get_config()
         self.assertTrue(quantizer_config['num_bits'] == num_bits)
-        self.assertTrue(np.all(quantizer_config['cluster_centers'] == cluster_centers))
+        self.assertTrue(np.all(quantizer_config['lut_values'] == lut_values))
         self.assertTrue(quantizer_config['threshold'] == thresholds)
         self.assertTrue(quantizer_config['signed'] == signed)
-        self.assertTrue(quantizer_config['multiplier_n_bits'] == multiplier_n_bits)
+        self.assertTrue(quantizer_config['lut_values_bitwidth'] == lut_values_bitwidth)
         self.assertTrue(quantizer_config['eps'] == eps)
 
         # Initialize a random input to quantize between -50 to 50.
@@ -58,7 +58,7 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
         # and abs(max(threshold))
 
         max_threshold = np.max(np.abs(thresholds))
-        delta_threshold = 1 / (2 ** (multiplier_n_bits - 1))
+        delta_threshold = 1 / (2 ** (lut_values_bitwidth - 1))
 
         self.assertTrue(np.max(
             quantized_tensor) <= max_threshold - delta_threshold, f'Quantized values should not contain values greater '
@@ -72,10 +72,10 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
                         f'{len(np.unique(quantized_tensor))} unique values')
 
         # Check quantized tensor assigned correctly
-        clip_max = 2 ** (multiplier_n_bits - 1) - 1
-        clip_min = -2 ** (multiplier_n_bits - 1)
+        clip_max = 2 ** (lut_values_bitwidth - 1) - 1
+        clip_min = -2 ** (lut_values_bitwidth - 1)
 
-        quant_tensor_values = (cluster_centers / (2 ** (multiplier_n_bits - int(signed)))) * thresholds
+        quant_tensor_values = (lut_values / (2 ** (lut_values_bitwidth - int(signed)))) * thresholds
 
         self.assertTrue(np.all(np.unique(quantized_tensor) == np.sort(quant_tensor_values)))
 
@@ -83,11 +83,11 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
         tensor = tf.clip_by_value((input_tensor / (thresholds + eps)) * (2 ** (num_bits - 1)),
                                   clip_value_max=clip_max, clip_value_min=clip_min)
         tensor = tf.expand_dims(tensor, -1)
-        expanded_cluster_centers = cluster_centers.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
-        cluster_assignments = tf.argmin(tf.abs(tensor - expanded_cluster_centers), axis=-1)
-        centers = tf.gather(cluster_centers.flatten(), cluster_assignments)
+        expanded_lut_values = lut_values.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
+        lut_values_assignments = tf.argmin(tf.abs(tensor - expanded_lut_values), axis=-1)
+        centers = tf.gather(lut_values.flatten(), lut_values_assignments)
 
-        self.assertTrue(np.all(centers / (2 ** (multiplier_n_bits - 1)) * thresholds == quantized_tensor),
+        self.assertTrue(np.all(centers / (2 ** (lut_values_bitwidth - 1)) * thresholds == quantized_tensor),
                         "Quantized tensor values weren't assigned correctly")
 
         # Assert some values are negative (signed quantization)
@@ -95,29 +95,29 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
                         f'Expected some values to be negative but quantized tensor is {quantized_tensor}')
 
     def test_lut_pot_unsigned_quantizer(self):
-        cluster_centers = np.asarray([25, 85])
+        lut_values = np.asarray([25, 85])
         thresholds = [2.]
         num_bits = 3
         signed = False
-        multiplier_n_bits = 8
+        lut_values_bitwidth = 8
         eps = 1e-8
 
         quantizer = ActivationLutPOTInferableQuantizer(num_bits=num_bits,
-                                                       cluster_centers=cluster_centers,
+                                                       lut_values=lut_values,
                                                        signed=signed,
                                                        threshold=thresholds,
-                                                       multiplier_n_bits=
-                                                       multiplier_n_bits,
+                                                       lut_values_bitwidth=
+                                                       lut_values_bitwidth,
                                                        eps=eps)
         thresholds = np.asarray(thresholds)
 
         # check config
         quantizer_config = quantizer.get_config()
         self.assertTrue(quantizer_config['num_bits'] == num_bits)
-        self.assertTrue(np.all(quantizer_config['cluster_centers'] == cluster_centers))
+        self.assertTrue(np.all(quantizer_config['lut_values'] == lut_values))
         self.assertTrue(quantizer_config['threshold'] == thresholds)
         self.assertTrue(quantizer_config['signed'] == signed)
-        self.assertTrue(quantizer_config['multiplier_n_bits'] == multiplier_n_bits)
+        self.assertTrue(quantizer_config['lut_values_bitwidth'] == lut_values_bitwidth)
         self.assertTrue(quantizer_config['eps'] == eps)
 
         # Initialize a random input to quantize between -50 to 50.
@@ -128,7 +128,7 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
         # and abs(max(threshold))
 
         max_threshold = np.max(np.abs(thresholds))
-        delta_threshold = 1 / (2 ** multiplier_n_bits)
+        delta_threshold = 1 / (2 ** lut_values_bitwidth)
 
         self.assertTrue(np.max(
             quantized_tensor) <= max_threshold - delta_threshold, f'Quantized values should not contain values greater '
@@ -141,23 +141,23 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
                                   f'{len(np.unique(quantized_tensor))} unique values')
 
         # Check quantized tensor assigned correctly
-        clip_max = 2 ** multiplier_n_bits - 1
+        clip_max = 2 ** lut_values_bitwidth - 1
         clip_min = 0
 
-        quant_tensor_values = (cluster_centers / (2 ** multiplier_n_bits)) * thresholds
+        quant_tensor_values = (lut_values / (2 ** lut_values_bitwidth)) * thresholds
 
         self.assertTrue(np.all(np.unique(quantized_tensor) == np.sort(quant_tensor_values)))
 
         # Check quantized tensor assigned correctly
-        tensor = tf.clip_by_value((input_tensor / (thresholds + eps)) * (2 ** multiplier_n_bits),
+        tensor = tf.clip_by_value((input_tensor / (thresholds + eps)) * (2 ** lut_values_bitwidth),
                                   clip_value_max=clip_max, clip_value_min=clip_min)
         tensor = tf.expand_dims(tensor, -1)
 
-        expanded_cluster_centers = cluster_centers.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
-        cluster_assignments = tf.argmin(tf.abs(tensor - expanded_cluster_centers), axis=-1)
-        centers = tf.gather(cluster_centers.flatten(), cluster_assignments)
+        expanded_lut_values = lut_values.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
+        lut_values_assignments = tf.argmin(tf.abs(tensor - expanded_lut_values), axis=-1)
+        centers = tf.gather(lut_values.flatten(), lut_values_assignments)
 
-        self.assertTrue(np.all(centers / (2 ** multiplier_n_bits) * thresholds == quantized_tensor),
+        self.assertTrue(np.all(centers / (2 ** lut_values_bitwidth) * thresholds == quantized_tensor),
                                   "Quantized tensor values weren't assigned correctly")
 
         # Assert all values are non-negative (unsigned quantization)

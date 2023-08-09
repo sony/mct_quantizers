@@ -33,7 +33,7 @@ if FOUND_TF:
                     identifier=QuantizerID.INFERABLE)
     class WeightsUniformInferableQuantizer(BaseKerasInferableQuantizer):
         """
-        Class for quantizing weights using unsigned uniform quantizer
+        Class for quantizing weights using a uniform quantizer
         """
         def __init__(self,
                      num_bits: int,

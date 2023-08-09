@@ -90,19 +90,19 @@ class TestKerasLoadModel(unittest.TestCase):
         self._one_layer_model_save_and_load(layer_with_quantizer)
 
     def test_save_and_load_activation_lut_pot(self):
-        cluster_centers = [-25, 25]
+        lut_values = [-25, 25]
         thresholds = [4.]
         num_bits = 3
         signed = True
-        multiplier_n_bits = 8
+        lut_values_bitwidth = 8
         eps = 1e-8
 
         quantizer = ActivationLutPOTInferableQuantizer(num_bits=num_bits,
-                                                       cluster_centers=cluster_centers,
+                                                       lut_values=lut_values,
                                                        signed=signed,
                                                        threshold=thresholds,
-                                                       multiplier_n_bits=
-                                                       multiplier_n_bits,
+                                                       lut_values_bitwidth=
+                                                       lut_values_bitwidth,
                                                        eps=eps)
 
         layer_with_quantizer = KerasActivationQuantizationHolder(quantizer)
@@ -147,21 +147,21 @@ class TestKerasLoadModel(unittest.TestCase):
         self._one_layer_model_save_and_load(layer_with_quantizer)
 
     def test_save_and_load_weights_lut_symmetric(self):
-        cluster_centers = [-25, 25]
+        lut_values = [-25, 25]
         per_channel = True
         input_rank = 4
         num_bits = 8
         threshold = [3., 8., 7.]
         channel_axis = 3
-        multiplier_n_bits = 8
+        lut_values_bitwidth = 8
         eps = 1e-8
         quantizer = WeightsLUTSymmetricInferableQuantizer(num_bits=num_bits,
-                                                          cluster_centers=cluster_centers,
+                                                          lut_values=lut_values,
                                                           threshold=threshold,
                                                           per_channel=per_channel,
                                                           channel_axis=channel_axis,
                                                           input_rank=input_rank,
-                                                          multiplier_n_bits=multiplier_n_bits,
+                                                          lut_values_bitwidth=lut_values_bitwidth,
                                                           eps=eps)
         layer_with_quantizer = KerasQuantizationWrapper(Conv2D(3,3),
                                                         {'kernel': quantizer})
@@ -169,21 +169,21 @@ class TestKerasLoadModel(unittest.TestCase):
 
 
     def test_save_and_load_weights_lut_pot(self):
-        cluster_centers = [-25, 25]
+        lut_values = [-25, 25]
         per_channel = True
         input_rank = 4
         num_bits = 8
         threshold = [1., 8., 4.]
         channel_axis = 3
-        multiplier_n_bits = 8
+        lut_values_bitwidth = 8
         eps = 1e-8
         quantizer = WeightsLUTPOTInferableQuantizer(num_bits=num_bits,
-                                                    cluster_centers=cluster_centers,
+                                                    lut_values=lut_values,
                                                     threshold=threshold,
                                                     per_channel=per_channel,
                                                     channel_axis=channel_axis,
                                                     input_rank=input_rank,
-                                                    multiplier_n_bits=multiplier_n_bits,
+                                                    lut_values_bitwidth=lut_values_bitwidth,
                                                     eps=eps)
         layer_with_quantizer = KerasQuantizationWrapper(Conv2D(3, 3),
                                                         {'kernel': quantizer})
