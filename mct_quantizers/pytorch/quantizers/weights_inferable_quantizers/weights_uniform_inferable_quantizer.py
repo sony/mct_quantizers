@@ -22,11 +22,14 @@ from mct_quantizers.common.quant_info import QuantizationMethod
 from mct_quantizers.common.quant_utils import adjust_range_to_include_zero
 from mct_quantizers.logger import Logger
 
+
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.base_uniform_inferable_quantizer import BaseUniformInferableQuantizer
     from mct_quantizers.pytorch.quantizer_utils import fix_range_to_include_zero, get_working_device, to_torch_tensor
     from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
+    from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.base_weight_quantizer_autograd_function import \
+        BaseWeightQuantizerAutogradFunction
 
 
     def quantize_uniform_weights_torch(input_tensor: torch.Tensor,
@@ -159,7 +162,7 @@ if FOUND_TORCH:
                                                          quant_max=self.max_quantized_domain)
 
 
-    class WeightsUniformF(torch.autograd.Function):
+    class WeightsUniformF(BaseWeightQuantizerAutogradFunction):
         """
         Custom autograd function for uniform weights quantizer.
         It provides a way to define a custom forward and symbolic operation
@@ -209,20 +212,11 @@ if FOUND_TORCH:
                         g.op('Constant', value_t=torch.tensor(max_range, dtype=torch.float32)),
                         num_bits_i=num_bits,
                         per_channel_i=int(per_channel),
-                        channel_axis_i=channel_axis
+                        channel_axis_i=channel_axis,
+                        signed_i=WeightsUniformF.is_signed()
                         ).setType(
                 input_tensor.type())
 
-        def backward(ctx: Any, *grad_outputs: Any) -> Any:
-            """
-            Backward computation function. Raises a NotImplementedError
-            since backward is not needed for this op.
-
-            Args:
-                ctx (Any): A context object from the forward pass.
-                grad_outputs (Any): Gradients w.r.t. the output tensor.
-            """
-            raise NotImplementedError()
 
 else:
     class WeightsUniformInferableQuantizer:  # pragma: no cover

@@ -20,11 +20,14 @@ from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, Quant
 from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS
 from mct_quantizers.common.quant_info import QuantizationMethod
 
+
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_symmetric_inferable_quantizer import \
         WeightsSymmetricInferableQuantizer, quantize_sym_weights_torch
     from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
+    from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.base_weight_quantizer_autograd_function import \
+        BaseWeightQuantizerAutogradFunction
 
 
     @mark_quantizer(quantization_target=QuantizationTarget.Weights,
@@ -86,7 +89,7 @@ if FOUND_TORCH:
             return super(WeightsPOTInferableQuantizer, self).__call__(inputs)
 
 
-    class WeightsPOTF(torch.autograd.Function):
+    class WeightsPOTF(BaseWeightQuantizerAutogradFunction):
         """
         Custom autograd function for POT weights quantizer.
         It provides a way to define a custom forward and symbolic operation
@@ -132,20 +135,11 @@ if FOUND_TORCH:
                         g.op('Constant', value_t=torch.tensor(threshold, dtype=torch.float32)),
                         num_bits_i=num_bits,
                         per_channel_i=int(per_channel),
-                        channel_axis_i=channel_axis
+                        channel_axis_i=channel_axis,
+                        signed_i=int(WeightsPOTF.is_signed())
                         ).setType(
                 input_tensor.type())
 
-        def backward(ctx: Any, *grad_outputs: Any) -> Any:
-            """
-            Backward computation function. Raises a NotImplementedError
-            since backward is not needed for this op.
-
-            Args:
-                ctx (Any): A context object from the forward pass.
-                grad_outputs (Any): Gradients w.r.t. the output tensor.
-            """
-            raise NotImplementedError()
 
 else:
     class WeightsPOTInferableQuantizer:  # pragma: no cover

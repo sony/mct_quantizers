@@ -25,6 +25,8 @@ if FOUND_TORCH:
     from mct_quantizers.pytorch.quantizers.base_symmetric_inferable_quantizer import BaseSymmetricInferableQuantizer
     from mct_quantizers.pytorch.quantizer_utils import to_torch_tensor, get_working_device
     from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
+    from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.base_weight_quantizer_autograd_function import \
+        BaseWeightQuantizerAutogradFunction
 
 
     def quantize_sym_weights_torch(input_tensor: torch.Tensor,
@@ -145,7 +147,7 @@ if FOUND_TORCH:
                                                          quant_max=self.max_quantized_domain)
 
 
-    class WeightsSymmetricF(torch.autograd.Function):
+    class WeightsSymmetricF(BaseWeightQuantizerAutogradFunction):
         """
         Custom autograd function for symmetric weights quantizer.
         It provides a way to define a custom forward and symbolic operation
@@ -191,20 +193,11 @@ if FOUND_TORCH:
                         g.op('Constant', value_t=torch.tensor(threshold, dtype=torch.float32)),
                         num_bits_i=num_bits,
                         per_channel_i=int(per_channel),
-                        channel_axis_i=channel_axis
+                        channel_axis_i=channel_axis,
+                        signed_i=int(WeightsSymmetricF.is_signed())
                         ).setType(
                 input_tensor.type())
 
-        def backward(ctx: Any, *grad_outputs: Any) -> Any:
-            """
-            Backward computation function. Raises a NotImplementedError
-            since backward is not needed for this op.
-
-            Args:
-                ctx (Any): A context object from the forward pass.
-                grad_outputs (Any): Gradients w.r.t. the output tensor.
-            """
-            raise NotImplementedError()
 
 
 else:

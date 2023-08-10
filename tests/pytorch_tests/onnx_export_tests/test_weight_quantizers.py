@@ -69,6 +69,8 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
         assert np.all(thresholds==onnx_threshold), f'Expected threshold in quantizer to be {thresholds} but found {onnx_threshold}'
         assert onnx_channel_axis == channel_axis, f'Expected threshold in quantizer to be {channel_axis} but found ' \
                                              f'{onnx_channel_axis}'
+        onnx_signed = node_qparams['signed']
+        assert onnx_signed == True, f'Expected signed in weight quantizer to be True but is {onnx_signed}'
 
 
     def test_onnx_weight_pot(self):
@@ -108,6 +110,9 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
         assert np.all(thresholds==onnx_threshold), f'Expected threshold in quantizer to be {thresholds} but found {onnx_threshold}'
         assert onnx_channel_axis == channel_axis, f'Expected threshold in quantizer to be {channel_axis} but found ' \
                                              f'{onnx_channel_axis}'
+
+        onnx_signed = node_qparams['signed']
+        assert onnx_signed == True, f'Expected signed in weight quantizer to be True but is {onnx_signed}'
 
 
     def test_onnx_weight_uniform(self):
@@ -149,11 +154,8 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
         assert np.all(max_range==onnx_max_range), f'Expected max_range in quantizer to be {max_range} but found {onnx_max_range}'
         assert onnx_channel_axis == channel_axis, f'Expected channel_axis in quantizer to be {channel_axis} but found {onnx_channel_axis}'
 
-
-
-
-
-
+        onnx_signed = node_qparams['signed']
+        assert onnx_signed == True, f'Expected signed in weight quantizer to be True but is {onnx_signed}'
 
     def test_onnx_weight_symmetric_per_tensor(self):
         thresholds = [3.]
@@ -194,6 +196,8 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
         assert np.all(thresholds==onnx_threshold), f'Expected threshold in quantizer to be {thresholds} but found {onnx_threshold}'
         assert onnx_channel_axis == channel_axis, f'Expected threshold in quantizer to be {channel_axis} but found ' \
                                              f'{onnx_channel_axis}'
+        onnx_signed = node_qparams['signed']
+        assert onnx_signed == True, f'Expected signed in weight quantizer to be True but is {onnx_signed}'
 
 
     def test_onnx_weight_pot_per_tensor(self):
@@ -227,14 +231,13 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
         onnx_per_channel = node_qparams['per_channel']
         onnx_channel_axis = node_qparams['channel_axis']
 
-
-
-
         assert onnx_nbits == num_bits, f'Expected num_bits in quantizer to be {num_bits} but found {onnx_nbits}'
         assert onnx_per_channel == per_channel, f'Expected per_channel in quantizer to be {per_channel} but found {onnx_per_channel}'
         assert np.all(thresholds==onnx_threshold), f'Expected threshold in quantizer to be {thresholds} but found {onnx_threshold}'
         assert onnx_channel_axis == channel_axis, f'Expected threshold in quantizer to be {channel_axis} but found ' \
                                              f'{onnx_channel_axis}'
+        onnx_signed = node_qparams['signed']
+        assert onnx_signed == True, f'Expected signed in weight quantizer to be True but is {onnx_signed}'
 
 
     def test_onnx_weight_uniform_per_tensor(self):
@@ -277,6 +280,8 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
         assert np.all(np.zeros(shape=(1,))==onnx_min_range), f'Expected min_range in quantizer to be zeros after range adjustment but found {onnx_min_range}'
         assert np.all(max_range==onnx_max_range), f'Expected max_range in quantizer to be {max_range} but found {onnx_max_range}'
         assert onnx_channel_axis == channel_axis, f'Expected channel_axis in quantizer to be {channel_axis} but found {onnx_channel_axis}'
+        onnx_signed = node_qparams['signed']
+        assert onnx_signed == True, f'Expected signed in weight quantizer to be True but is {onnx_signed}'
 
 
 
