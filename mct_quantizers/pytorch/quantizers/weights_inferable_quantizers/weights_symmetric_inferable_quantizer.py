@@ -30,7 +30,7 @@ if FOUND_TORCH:
                     identifier=QuantizerID.INFERABLE)
     class WeightsSymmetricInferableQuantizer(BaseSymmetricInferableQuantizer):
         """
-        Class for quantizing weights using unsigned symmetric quantizer.
+        Class for quantizing weights using a symmetric quantizer.
         """
 
         def __init__(self,

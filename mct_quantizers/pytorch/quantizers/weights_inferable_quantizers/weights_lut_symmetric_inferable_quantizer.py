@@ -16,7 +16,7 @@
 import numpy as np
 
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
-from mct_quantizers.common.constants import FOUND_TORCH, MULTIPLIER_N_BITS, EPS
+from mct_quantizers.common.constants import FOUND_TORCH, LUT_VALUES_BITWIDTH, EPS
 from mct_quantizers.common.quant_info import QuantizationMethod
 
 
@@ -36,30 +36,30 @@ if FOUND_TORCH:
 
         def __init__(self,
                      num_bits: int,
-                     cluster_centers: np.ndarray,
+                     lut_values: np.ndarray,
                      threshold: np.ndarray,
                      per_channel: bool,
                      channel_axis: int = None,
-                     multiplier_n_bits: int = MULTIPLIER_N_BITS,
+                     lut_values_bitwidth: int = LUT_VALUES_BITWIDTH,
                      eps: float = EPS):
             """
             Initialize the quantizer with the specified parameters.
 
             Args:
                 num_bits: number of bits to use for quantization
-                cluster_centers: the cluster centers to assign the weights
+                lut_values: the values in the look-up table to assign the weights to
                 threshold: threshold for quantizing weights
                 per_channel: whether to use per-channel quantization
                 channel_axis: Axis of input to apply per-channel quantization on
-                multiplier_n_bits: Number of bits that determines the quantization range
+                lut_values_bitwidth: Number of bits that determines the quantization range
                 eps: Small value for numerical stability in division
             """
 
             super(WeightsLUTSymmetricInferableQuantizer, self).__init__(threshold=threshold,
                                                                         num_bits=num_bits,
-                                                                        cluster_centers=cluster_centers,
+                                                                        lut_values=lut_values,
                                                                         signed=True,
-                                                                        multiplier_n_bits=multiplier_n_bits,
+                                                                        lut_values_bitwidth=lut_values_bitwidth,
                                                                         eps=eps)
 
             if per_channel:
@@ -76,7 +76,7 @@ if FOUND_TORCH:
             self.channel_axis = channel_axis
 
             self.threshold = to_torch_tensor(self.threshold).to(get_working_device())
-            self.cluster_centers = to_torch_tensor(self.cluster_centers).to(get_working_device())
+            self.lut_values = to_torch_tensor(self.lut_values).to(get_working_device())
 
         def __call__(self, inputs: torch.Tensor) -> torch.Tensor:
             """
@@ -89,8 +89,8 @@ if FOUND_TORCH:
                 quantized tensor.
             """
             inputs.requires_grad = False
-            return lut_quantizer(inputs, cluster_centers=self.cluster_centers, signed=True,
-                                 threshold=self.threshold, multiplier_n_bits=self.multiplier_n_bits, eps=self.eps)
+            return lut_quantizer(inputs, lut_values=self.lut_values, signed=True,
+                                 threshold=self.threshold, lut_values_bitwidth=self.lut_values_bitwidth, eps=self.eps)
 
 
 else:

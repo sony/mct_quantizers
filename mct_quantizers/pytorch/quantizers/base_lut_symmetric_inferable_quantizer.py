@@ -30,20 +30,20 @@ if FOUND_TORCH:
 
         def __init__(self,
                      num_bits: int,
-                     cluster_centers: np.ndarray,
+                     lut_values: np.ndarray,
                      threshold: np.ndarray,
                      signed: bool,
-                     multiplier_n_bits: int,
+                     lut_values_bitwidth: int,
                      eps: float):
             """
             Initialize the quantizer with the specified parameters.
 
             Args:
                 num_bits: number of bits to use for quantization
-                cluster_centers: the cluster centers to assign the values
+                lut_values: the values in the look-up table to assign the weights to
                 threshold: threshold for quantizing values
                 signed: whether or not to use signed quantization
-                multiplier_n_bits: Number of bits that determines the quantization range
+                lut_values_bitwidth: Number of bits that determines the quantization range
                 eps: Small value for numerical stability in division
             """
 
@@ -53,37 +53,37 @@ if FOUND_TORCH:
                               np.ndarray), f'Threshold is expected to be numpy array, but is of type {type(threshold)}'
             assert threshold.ndim == 1, f'Threshold is expected to be flatten, but of shape {threshold.shape}'
 
-            assert len(np.unique(cluster_centers)) <= 2 ** num_bits, \
-                f'Expected num of cluster centers to be less or equal than {2 ** num_bits} ' \
-                f'but got {len(cluster_centers)}'
+            assert len(np.unique(lut_values)) <= 2 ** num_bits, \
+                f'Expected num of lut values to be less or equal than {2 ** num_bits} ' \
+                f'but got {len(lut_values)}'
 
-            assert not np.any(cluster_centers - cluster_centers.astype(int)), f'Expected cluster centers to be integers'
+            assert not np.any(lut_values - lut_values.astype(int)), f'Expected lut values to be integers'
 
             if signed:
-                assert np.all((-1 * (2 ** (multiplier_n_bits - int(signed))) <= cluster_centers) &
-                              (cluster_centers <= (2 ** (multiplier_n_bits - int(signed)) - 1))), \
-                    f'Expected cluster centers in the quantization range'
+                assert np.all((-1 * (2 ** (lut_values_bitwidth - int(signed))) <= lut_values) &
+                              (lut_values <= (2 ** (lut_values_bitwidth - int(signed)) - 1))), \
+                    f'Expected lut values in the quantization range'
             else:
-                assert np.all(cluster_centers <= (2 ** multiplier_n_bits)), f'Expected cluster centers in the ' \
+                assert np.all(lut_values <= (2 ** lut_values_bitwidth)), f'Expected lut values in the ' \
                                                                             f'quantization range'
 
-            # If unsigned activation quantization, all cluster_centers must be positive
+            # If unsigned activation quantization, all lut_values must be positive
             if not signed:
-                assert np.all(cluster_centers >= 0), f'Expected unsigned cluster centers in unsigned activation ' \
+                assert np.all(lut_values >= 0), f'Expected unsigned lut values in unsigned activation ' \
                                                           f'quantization'
 
-            # num_bits must be less than multiplier_n_bits
-            assert num_bits <= multiplier_n_bits, f'Look-Up-Table bit configuration has {num_bits} bits. It must be ' \
-                                                  f'less then {multiplier_n_bits}'
-            if num_bits == multiplier_n_bits:
+            # num_bits must be less than lut_values_bitwidth
+            assert num_bits <= lut_values_bitwidth, f'Look-Up-Table bit configuration has {num_bits} bits. It must be ' \
+                                                  f'less then {lut_values_bitwidth}'
+            if num_bits == lut_values_bitwidth:
                 warnings.warn("Num of bits equal to multiplier n bits, Please be aware LUT quantizier may be "
                               "inefficient in that case, consider using SymmetricInferableQuantizer instead")
 
             self.signed = signed
             self.threshold = threshold
-            self.cluster_centers = cluster_centers
+            self.lut_values = lut_values
             self.num_bits = num_bits
-            self.multiplier_n_bits = multiplier_n_bits
+            self.lut_values_bitwidth = lut_values_bitwidth
             self.eps = eps
 
 else:

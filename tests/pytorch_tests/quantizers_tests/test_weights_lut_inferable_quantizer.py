@@ -24,14 +24,14 @@ from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_lut_
 
 class TestPytorchWeightsLutQuantizers(unittest.TestCase):
 
-    def _weights_lut_quantizer_test(self, inferable_quantizer, num_bits, threshold, cluster_centers,
-                                    per_channel, channel_axis, multiplier_n_bits):
+    def _weights_lut_quantizer_test(self, inferable_quantizer, num_bits, threshold, lut_values,
+                                    per_channel, channel_axis, lut_values_bitwidth):
         quantizer = inferable_quantizer(num_bits=num_bits,
                                         per_channel=per_channel,
-                                        cluster_centers=cluster_centers,
+                                        lut_values=lut_values,
                                         threshold=threshold,
                                         channel_axis=channel_axis,
-                                        multiplier_n_bits=multiplier_n_bits)
+                                        lut_values_bitwidth=lut_values_bitwidth)
 
         # Initialize a random input to quantize between -50 to 50.
         input_tensor = torch.rand(1, 3, 3, 3) * 100 - 50
@@ -40,7 +40,7 @@ class TestPytorchWeightsLutQuantizers(unittest.TestCase):
         # Using a signed quantization, so we expect all values to be between -abs(max(threshold))
         # and abs(max(threshold))
         max_threshold = np.max(np.abs(threshold))
-        delta_threshold = 1 / (2 ** (multiplier_n_bits - 1))
+        delta_threshold = 1 / (2 ** (lut_values_bitwidth - 1))
 
         fake_quantized_tensor = fake_quantized_tensor.detach().cpu().numpy()
 
@@ -55,32 +55,32 @@ class TestPytorchWeightsLutQuantizers(unittest.TestCase):
                         f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                         f'{len(np.unique(fake_quantized_tensor))} unique values')
 
-        clip_max = 2 ** (multiplier_n_bits - 1) - 1
-        clip_min = -2 ** (multiplier_n_bits - 1)
+        clip_max = 2 ** (lut_values_bitwidth - 1) - 1
+        clip_min = -2 ** (lut_values_bitwidth - 1)
 
         if per_channel:
             for i in range(len(threshold)):
                 channel_slice_i = fake_quantized_tensor[:, :, :, i]
-                channel_quant_tensor_values = cluster_centers / (2 ** (multiplier_n_bits - 1)) * threshold[i]
+                channel_quant_tensor_values = lut_values / (2 ** (lut_values_bitwidth - 1)) * threshold[i]
                 self.assertTrue(len(np.unique(channel_slice_i)) <= 2 ** num_bits,
                                           f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                                           f'{len(np.unique(channel_slice_i))} unique values')
                 self.assertTrue(np.all(np.unique(channel_slice_i) == np.sort(channel_quant_tensor_values)))
 
                 # Check quantized tensor assigned correctly
-                tensor = torch.clip((input_tensor / threshold[i]) * (2 ** (multiplier_n_bits - 1)),
+                tensor = torch.clip((input_tensor / threshold[i]) * (2 ** (lut_values_bitwidth - 1)),
                                     min=clip_min, max=clip_max)
                 tensor = tensor[:, :, :, i].unsqueeze(-1)
-                expanded_cluster_centers = cluster_centers.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
-                cluster_assignments = torch.argmin(torch.abs(tensor - expanded_cluster_centers), dim=-1)
-                centers = cluster_centers.flatten()[cluster_assignments]
+                expanded_lut_values = lut_values.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
+                lut_values_assignments = torch.argmin(torch.abs(tensor - expanded_lut_values), dim=-1)
+                centers = lut_values.flatten()[lut_values_assignments]
 
                 self.assertTrue(
-                    np.all(centers / (2 ** (multiplier_n_bits - 1)) * threshold[i] == channel_slice_i),
+                    np.all(centers / (2 ** (lut_values_bitwidth - 1)) * threshold[i] == channel_slice_i),
                     "Quantized tensor values weren't assigned correctly")
 
         else:
-            quant_tensor_values = cluster_centers / (2 ** (multiplier_n_bits - 1)) * threshold
+            quant_tensor_values = lut_values / (2 ** (lut_values_bitwidth - 1)) * threshold
             self.assertTrue(len(np.unique(fake_quantized_tensor)) <= 2 ** num_bits,
                                       f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                                       f'{len(np.unique(fake_quantized_tensor))} unique values')
@@ -88,15 +88,15 @@ class TestPytorchWeightsLutQuantizers(unittest.TestCase):
                                              == np.sort(quant_tensor_values)))
 
             # Check quantized tensor assigned correctly
-            tensor = torch.clip((input_tensor / threshold) * (2 ** (multiplier_n_bits - 1)),
+            tensor = torch.clip((input_tensor / threshold) * (2 ** (lut_values_bitwidth - 1)),
                                 min=clip_min, max=clip_max)
             tensor = tensor.unsqueeze(-1)
-            expanded_cluster_centers = cluster_centers.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
-            cluster_assignments = torch.argmin(torch.abs(tensor - expanded_cluster_centers), dim=-1)
-            centers = cluster_centers.flatten()[cluster_assignments]
+            expanded_lut_values = lut_values.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
+            lut_values_assignments = torch.argmin(torch.abs(tensor - expanded_lut_values), dim=-1)
+            centers = lut_values.flatten()[lut_values_assignments]
 
             self.assertTrue(
-                np.all(centers / (2 ** (multiplier_n_bits - 1)) * threshold == fake_quantized_tensor),
+                np.all(centers / (2 ** (lut_values_bitwidth - 1)) * threshold == fake_quantized_tensor),
                 "Quantized tensor values weren't assigned correctly")
 
         # Assert some values are negative (signed quantization)
@@ -105,64 +105,64 @@ class TestPytorchWeightsLutQuantizers(unittest.TestCase):
 
     def test_weights_symmetric_lut_quantizer(self):
         inferable_quantizer = WeightsLUTSymmetricInferableQuantizer
-        cluster_centers = np.asarray([-25, 25])
+        lut_values = np.asarray([-25, 25])
         per_channel = True
         num_bits = 3
 
         # test per channel
         threshold = np.asarray([3., 8., 7.])
         channel_axis = 3
-        multiplier_n_bits = 8
+        lut_values_bitwidth = 8
         self._weights_lut_quantizer_test(inferable_quantizer=inferable_quantizer, num_bits=num_bits,
-                                         threshold=threshold, cluster_centers=cluster_centers,
+                                         threshold=threshold, lut_values=lut_values,
                                          per_channel=per_channel, channel_axis=channel_axis,
-                                         multiplier_n_bits=multiplier_n_bits)
+                                         lut_values_bitwidth=lut_values_bitwidth)
 
         # test per channel and channel axis is not last
         threshold = np.asarray([3., 8., 7.])
         channel_axis = 1
         self._weights_lut_quantizer_test(inferable_quantizer=inferable_quantizer, num_bits=num_bits,
-                                         threshold=threshold, cluster_centers=cluster_centers,
+                                         threshold=threshold, lut_values=lut_values,
                                          per_channel=per_channel, channel_axis=channel_axis,
-                                         multiplier_n_bits=multiplier_n_bits)
+                                         lut_values_bitwidth=lut_values_bitwidth)
 
         # test per tensor
         threshold = np.asarray([3.])
         channel_axis = None
         per_channel = False
         self._weights_lut_quantizer_test(inferable_quantizer=inferable_quantizer, num_bits=num_bits,
-                                         threshold=threshold, cluster_centers=cluster_centers,
+                                         threshold=threshold, lut_values=lut_values,
                                          per_channel=per_channel, channel_axis=channel_axis,
-                                         multiplier_n_bits=multiplier_n_bits)
+                                         lut_values_bitwidth=lut_values_bitwidth)
 
     def test_weights_pot_lut_quantizer(self):
         inferable_quantizer = WeightsLUTSymmetricInferableQuantizer
-        cluster_centers = np.asarray([-25, 25])
+        lut_values = np.asarray([-25, 25])
         per_channel = True
         num_bits = 3
-        multiplier_n_bits = 7
+        lut_values_bitwidth = 7
 
         # test per channel
         threshold = np.asarray([2., 8., 16.])
         channel_axis = 3
         self._weights_lut_quantizer_test(inferable_quantizer=inferable_quantizer, num_bits=num_bits,
-                                         threshold=threshold, cluster_centers=cluster_centers,
+                                         threshold=threshold, lut_values=lut_values,
                                          per_channel=per_channel, channel_axis=channel_axis,
-                                         multiplier_n_bits=multiplier_n_bits)
+                                         lut_values_bitwidth=lut_values_bitwidth)
 
         # test per channel and channel axis is not last
         threshold = np.asarray([2., 8., 16.])
         channel_axis = 1
         self._weights_lut_quantizer_test(inferable_quantizer=inferable_quantizer, num_bits=num_bits,
-                                         threshold=threshold, cluster_centers=cluster_centers,
+                                         threshold=threshold, lut_values=lut_values,
                                          per_channel=per_channel, channel_axis=channel_axis,
-                                         multiplier_n_bits=multiplier_n_bits)
+                                         lut_values_bitwidth=lut_values_bitwidth)
 
         # test per tensor
         threshold = np.asarray([4.])
         channel_axis = None
         per_channel = False
         self._weights_lut_quantizer_test(inferable_quantizer=inferable_quantizer, num_bits=num_bits,
-                                         threshold=threshold, cluster_centers=cluster_centers,
+                                         threshold=threshold, lut_values=lut_values,
                                          per_channel=per_channel, channel_axis=channel_axis,
-                                         multiplier_n_bits=multiplier_n_bits)
+                                         lut_values_bitwidth=lut_values_bitwidth)

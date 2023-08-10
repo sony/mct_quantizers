@@ -27,56 +27,56 @@ class TestKerasActivationIllegalLutPotQuantizer(unittest.TestCase):
     def test_illegal_pot_lut_quantizer(self):
         with self.assertRaises(Exception) as e:
             ActivationLutPOTInferableQuantizer(num_bits=8,
-                                               cluster_centers=np.asarray([25., 85.]),
+                                               lut_values=np.asarray([25., 85.]),
                                                threshold=[3.],
                                                signed=True)
         self.assertEqual('Expected threshold to be power of 2 but is [3.0]', str(e.exception))
 
-    def test_illegal_cluster_centers(self):
+    def test_illegal_lut_values(self):
         with self.assertRaises(Exception) as e:
             ActivationLutPOTInferableQuantizer(num_bits=8,
-                                               cluster_centers=np.asarray([25.9, 85.]),
+                                               lut_values=np.asarray([25.9, 85.]),
                                                threshold=[4.],
                                                signed=True)
-        self.assertEqual('Expected cluster centers to be integers', str(e.exception))
+        self.assertEqual('Expected lut values to be integers', str(e.exception))
 
-    def test_illegal_num_of_cluster_centers(self):
-        cluster_centers = np.asarray([-25, 25, 12, 45, 11])
+    def test_illegal_num_of_lut_values(self):
+        lut_values = np.asarray([-25, 25, 12, 45, 11])
         with self.assertRaises(Exception) as e:
             ActivationLutPOTInferableQuantizer(num_bits=2,
-                                               cluster_centers=cluster_centers,
+                                               lut_values=lut_values,
                                                threshold=[4.],
                                                signed=True)
         self.assertEqual(
-            f'Expected num of cluster centers to be less or equal than {2 ** 2} but got '
-            f'{len(cluster_centers)}', str(e.exception))
+            f'Expected num of lut values to be less or equal than {2 ** 2} but got '
+            f'{len(lut_values)}', str(e.exception))
 
-    def test_illegal_cluster_centers_range_(self):
+    def test_illegal_lut_values_range_(self):
         with self.assertRaises(Exception) as e:
             ActivationLutPOTInferableQuantizer(num_bits=2,
-                                               cluster_centers=np.asarray([50]),
+                                               lut_values=np.asarray([50]),
                                                threshold=[4.],
                                                signed=True,
-                                               multiplier_n_bits=3)
-        self.assertEqual('Expected cluster centers in the quantization range', str(e.exception))
+                                               lut_values_bitwidth=3)
+        self.assertEqual('Expected lut values in the quantization range', str(e.exception))
 
-    def test_illegal_num_bit_bigger_than_multiplier_n_bits(self):
+    def test_illegal_num_bit_bigger_than_lut_values_bitwidth(self):
         with self.assertRaises(Exception) as e:
             ActivationLutPOTInferableQuantizer(num_bits=10,
-                                               cluster_centers=np.asarray([25]),
+                                               lut_values=np.asarray([25]),
                                                threshold=[4.],
                                                signed=True,
-                                               multiplier_n_bits=8)
+                                               lut_values_bitwidth=8)
         self.assertEqual('Look-Up-Table bit configuration has 10 bits. It must be less then 8'
                                              , str(e.exception))
 
-    def test_warning_num_bit_equal_multiplier_n_bits(self):
+    def test_warning_num_bit_equal_lut_values_bitwidth(self):
         with warnings.catch_warnings(record=True) as w:
             ActivationLutPOTInferableQuantizer(num_bits=8,
-                                               cluster_centers=np.asarray([25]),
+                                               lut_values=np.asarray([25]),
                                                threshold=[4.],
                                                signed=True,
-                                               multiplier_n_bits=8)
+                                               lut_values_bitwidth=8)
         self.assertTrue(
             'Num of bits equal to multiplier n bits, Please be aware LUT quantizier may be inefficient '
             'in that case, consider using SymmetricInferableQuantizer instead'
@@ -85,28 +85,28 @@ class TestKerasActivationIllegalLutPotQuantizer(unittest.TestCase):
     def test_illegal_num_of_thresholds(self):
         with self.assertRaises(Exception) as e:
             ActivationLutPOTInferableQuantizer(num_bits=3,
-                                               cluster_centers=np.asarray([25]),
+                                               lut_values=np.asarray([25]),
                                                threshold=[4., 2.],
                                                signed=True,
-                                               multiplier_n_bits=8)
+                                               lut_values_bitwidth=8)
         self.assertEqual('In per-tensor quantization threshold should be of length 1 but is 2',
                                              str(e.exception))
 
     def test_illegal_threshold_type(self):
         with self.assertRaises(Exception) as e:
             ActivationLutPOTInferableQuantizer(num_bits=3,
-                                               cluster_centers=np.asarray([25]),
+                                               lut_values=np.asarray([25]),
                                                threshold=np.asarray([4.]),
                                                signed=True,
-                                               multiplier_n_bits=8)
+                                               lut_values_bitwidth=8)
             self.assertEqual(
                 'Expected threshold to be of type list but is <class \'numpy.ndarray\'>', str(e.exception))
 
-    def test_illegal_signed_cluster_centers(self):
+    def test_illegal_signed_lut_values(self):
         with self.assertRaises(Exception) as e:
             ActivationLutPOTInferableQuantizer(num_bits=8,
-                                               cluster_centers=np.asarray([-25., 85.]),
+                                               lut_values=np.asarray([-25., 85.]),
                                                threshold=[2.],
                                                signed=False)
-        self.assertEqual('Expected unsigned cluster centers in unsigned activation quantization ',
+        self.assertEqual('Expected unsigned lut values in unsigned activation quantization ',
                                              str(e.exception))

@@ -15,7 +15,7 @@
 import numpy as np
 
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
-from mct_quantizers.common.constants import FOUND_TORCH, MULTIPLIER_N_BITS, EPS
+from mct_quantizers.common.constants import FOUND_TORCH, LUT_VALUES_BITWIDTH, EPS
 from mct_quantizers.common.quant_info import QuantizationMethod
 
 
@@ -34,29 +34,29 @@ if FOUND_TORCH:
 
         def __init__(self,
                      num_bits: int,
-                     cluster_centers: np.ndarray,
+                     lut_values: np.ndarray,
                      threshold: np.ndarray,
                      signed: bool,
-                     multiplier_n_bits: int = MULTIPLIER_N_BITS,
+                     lut_values_bitwidth: int = LUT_VALUES_BITWIDTH,
                      eps: float = EPS):
             """
             Initialize the quantizer with the specified parameters.
 
             Args:
                 num_bits: number of bits to use for quantization
-                cluster_centers: the cluster centers to assign the activations
+                lut_values: the values in the look-up table to assign the weights to
                 threshold: threshold for quantizing activations
                 signed: whether to use signed quantization or not
-                multiplier_n_bits: Number of bits that determines the quantization range
+                lut_values_bitwidth: Number of bits that determines the quantization range
                 eps: Small value for numerical stability in division
             """
 
             super(ActivationLutPOTInferableQuantizer, self).__init__(
                 num_bits=num_bits,
-                cluster_centers=cluster_centers,
+                lut_values=lut_values,
                 threshold=threshold,
                 signed=signed,
-                multiplier_n_bits=multiplier_n_bits,
+                lut_values_bitwidth=lut_values_bitwidth,
                 eps=eps)
 
             is_threshold_pot = np.all(np.round(np.log2(threshold.flatten())) == np.log2(threshold.flatten()))
@@ -68,7 +68,7 @@ if FOUND_TORCH:
                                       f'should be of length 1 but is {len(threshold)}'
             self.threshold = self.threshold[0]
 
-            self.cluster_centers = to_torch_tensor(self.cluster_centers).to(get_working_device())
+            self.lut_values = to_torch_tensor(self.lut_values).to(get_working_device())
 
         def __call__(self, inputs: torch.Tensor):
             """
@@ -80,8 +80,8 @@ if FOUND_TORCH:
             Returns:
                 quantized tensor.
             """
-            return lut_quantizer(inputs, cluster_centers=self.cluster_centers, signed=self.signed,
-                                 threshold=self.threshold, multiplier_n_bits=self.multiplier_n_bits, eps=self.eps)
+            return lut_quantizer(inputs, lut_values=self.lut_values, signed=self.signed,
+                                 threshold=self.threshold, lut_values_bitwidth=self.lut_values_bitwidth, eps=self.eps)
 
 else:
     class ActivationLutPOTInferableQuantizer:  # pragma: no cover

@@ -62,7 +62,7 @@ MIN_RANGE = 'min_range'
 MAX_RANGE = 'max_range'
 CHANNEL_AXIS = 'channel_axis'
 INPUT_RANK = 'input_rank'
-CLUSTER_CENTERS = 'cluster_centers'
+LUT_VALUES = 'lut_values'
 
 
 ## Constant values
@@ -71,4 +71,4 @@ LAYER = "layer"
 STEPS = "optimizer_step"
 TRAINING = "training"
 EPS = 1e-8
-MULTIPLIER_N_BITS = 8
+LUT_VALUES_BITWIDTH = 8
