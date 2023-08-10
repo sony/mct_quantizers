@@ -24,7 +24,7 @@ from mct_quantizers.keras.quantizers.activation_inferable_quantizers.activation_
 class TestKerasActivationLutPotQuantizer(unittest.TestCase):
 
     def test_lut_pot_signed_quantizer(self):
-        lut_values = np.asarray([-25, 25])
+        lut_values = np.asarray([-25, 25], dtype=np.float32)
         thresholds = [4.]
         num_bits = 3
         signed = True
@@ -95,7 +95,7 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
                         f'Expected some values to be negative but quantized tensor is {quantized_tensor}')
 
     def test_lut_pot_unsigned_quantizer(self):
-        lut_values = np.asarray([25, 85])
+        lut_values = np.asarray([25, 85], dtype=np.float32)
         thresholds = [2.]
         num_bits = 3
         signed = False
