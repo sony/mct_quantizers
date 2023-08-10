@@ -18,7 +18,8 @@ import sys
 
 from tests.keras_tests.compatibility_tests.base_compatibility_test import BaseQuantizerBuildAndSaveTest
 from tests.keras_tests.compatibility_tests.compatibility_save_model_test import WeightsPOTQuantizerBuildAndSaveTest, \
-    WeightsSymmetricQuantizerBuildAndSaveTest, WeightsUniformQuantizerBuildAndSaveTest
+    WeightsSymmetricQuantizerBuildAndSaveTest, WeightsUniformQuantizerBuildAndSaveTest, \
+    WeightsPOTLutQuantizerBuildAndSaveTest, WeightsSymmetricLutQuantizerBuildAndSaveTest
 
 if __name__ == '__main__':
     mct_quantizers_version = sys.argv[1]
@@ -30,6 +31,8 @@ if __name__ == '__main__':
     suiteList.append(test_loader.loadTestsFromTestCase(WeightsPOTQuantizerBuildAndSaveTest))
     suiteList.append(test_loader.loadTestsFromTestCase(WeightsSymmetricQuantizerBuildAndSaveTest))
     suiteList.append(test_loader.loadTestsFromTestCase(WeightsUniformQuantizerBuildAndSaveTest))
+    suiteList.append(test_loader.loadTestsFromTestCase(WeightsPOTLutQuantizerBuildAndSaveTest))
+    suiteList.append(test_loader.loadTestsFromTestCase(WeightsSymmetricLutQuantizerBuildAndSaveTest))
 
     keras_save_models_suite = unittest.TestSuite(suiteList)
 

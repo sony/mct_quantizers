@@ -15,7 +15,7 @@
 import tensorflow as tf
 
 from mct_quantizers.keras.quantizers import WeightsPOTInferableQuantizer, WeightsSymmetricInferableQuantizer, \
-    WeightsUniformInferableQuantizer
+    WeightsUniformInferableQuantizer, WeightsLUTPOTInferableQuantizer, WeightsLUTSymmetricInferableQuantizer
 from tests.keras_tests.compatibility_tests.base_compatibility_test import BaseQuantizerBuildAndSaveTest, QUANTIZER2NAME, \
     LAYER2NAME, QUANTIZER2LAYER2ARGS
 from tests.keras_tests.test_keras_quantization_wrapper import WEIGHT, DEPTHWISE_WEIGHT
@@ -51,6 +51,30 @@ class WeightsUniformQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest):
         self.quantizer = WeightsUniformInferableQuantizer
 
     def test_weights_uniform_quantizer(self):
+        self.conv_test(self.quantizer)
+        self.depthwise_test(self.quantizer)
+        self.convtrans_test(self.quantizer)
+        self.dense_test(self.quantizer)
+
+
+class WeightsPOTLutQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest):
+
+    def setUp(self):
+        self.quantizer = WeightsLUTPOTInferableQuantizer
+
+    def test_weights_pot_lut_quantizer(self):
+        self.conv_test(self.quantizer)
+        self.depthwise_test(self.quantizer)
+        self.convtrans_test(self.quantizer)
+        self.dense_test(self.quantizer)
+
+
+class WeightsSymmetricLutQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest):
+
+    def setUp(self):
+        self.quantizer = WeightsLUTSymmetricInferableQuantizer
+
+    def test_weights_pot_lut_quantizer(self):
         self.conv_test(self.quantizer)
         self.depthwise_test(self.quantizer)
         self.convtrans_test(self.quantizer)

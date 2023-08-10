@@ -20,14 +20,16 @@ from keras.layers import Conv2D, DepthwiseConv2D, Conv2DTranspose, Dense
 from mct_quantizers import KerasQuantizationWrapper, keras_load_quantized_model
 from mct_quantizers.common.constants import WEIGHTS_QUANTIZERS
 from mct_quantizers.keras.quantizers import WeightsPOTInferableQuantizer, WeightsSymmetricInferableQuantizer, \
-    WeightsUniformInferableQuantizer
+    WeightsUniformInferableQuantizer, WeightsLUTPOTInferableQuantizer, WeightsLUTSymmetricInferableQuantizer
 from tests.keras_tests.test_keras_quantization_wrapper import WEIGHT, DEPTHWISE_WEIGHT
 
 LAYER2NAME = {Conv2D: 'conv', DepthwiseConv2D: 'depthwise', Conv2DTranspose: 'convtrans', Dense: 'dense'}
 
 QUANTIZER2NAME = {WeightsPOTInferableQuantizer: 'pot',
                   WeightsSymmetricInferableQuantizer: 'sym',
-                  WeightsUniformInferableQuantizer: 'unf'}
+                  WeightsUniformInferableQuantizer: 'unf',
+                  WeightsLUTPOTInferableQuantizer: 'pot_lut',
+                  WeightsLUTSymmetricInferableQuantizer: 'sym_lut'}
 
 QUANTIZER2LAYER2ARGS = {**dict.fromkeys([WeightsPOTInferableQuantizer, WeightsSymmetricInferableQuantizer],
                                         {Conv2D:
@@ -91,7 +93,49 @@ QUANTIZER2LAYER2ARGS = {**dict.fromkeys([WeightsPOTInferableQuantizer, WeightsSy
                                                                 'input_rank': 2,
                                                                 'channel_axis': 1
                                                                 },
-                                                           }
+                                                           },
+                        **dict.fromkeys([WeightsLUTPOTInferableQuantizer, WeightsLUTSymmetricInferableQuantizer],
+                                         {Conv2D:
+                                              {'num_bits': 4,
+                                               'threshold': [2.0, 0.5, 4.0],
+                                               'cluster_centers': [22.0, -53.0, 62.0, 0.0, -66.0, -21.0, 44.0, -40.0],
+                                               'per_channel': True,
+                                               'input_rank': 4,
+                                               'channel_axis': 3,
+                                               'multiplier_n_bits': 8,
+                                               'eps': 1e-08
+                                               },
+                                          DepthwiseConv2D:
+                                              {'num_bits': 4,
+                                               'threshold': [2.0, 0.5, 4.0],
+                                               'cluster_centers': [22.0, -53.0, 62.0, 0.0, -66.0, -21.0, 44.0, -40.0],
+                                               'per_channel': True,
+                                               'input_rank': 4,
+                                               'channel_axis': 2,
+                                               'multiplier_n_bits': 8,
+                                               'eps': 1e-08
+                                               },
+                                          Conv2DTranspose:
+                                              {'num_bits': 4,
+                                               'threshold': [2.0, 0.5, 4.0],
+                                               'cluster_centers': [22.0, -53.0, 62.0, 0.0, -66.0, -21.0, 44.0, -40.0],
+                                               'per_channel': True,
+                                               'input_rank': 4,
+                                               'channel_axis': 2,
+                                               'multiplier_n_bits': 8,
+                                               'eps': 1e-08
+                                               },
+                                          Dense:
+                                              {'num_bits': 4,
+                                               'threshold': [2.0, 0.5, 4.0],
+                                               'cluster_centers': [22.0, -53.0, 62.0, 0.0, -66.0, -21.0, 44.0, -40.0],
+                                               'per_channel': True,
+                                               'input_rank': 2,
+                                               'channel_axis': 1,
+                                               'multiplier_n_bits': 8,
+                                               'eps': 1e-08
+                                               },
+                                          })
                         }
 
 
@@ -189,7 +233,9 @@ class BaseQuantizerLoadAndCompareTest(unittest.TestCase):
         tested_layer = tested_layer[0]
 
         self.assertEqual(tested_layer.get_config()[WEIGHTS_QUANTIZERS][weight_name]['config'],
-                         QUANTIZER2LAYER2ARGS[quantizer_type][layer_type])
+                         QUANTIZER2LAYER2ARGS[quantizer_type][layer_type],
+                         f"Parameters of loaded quantizer should have the same values as saved quantizer, "
+                         f"but some values are not match.")
 
     def conv_test(self, quantizer_type):
         layer = tf.keras.layers.Conv2D
