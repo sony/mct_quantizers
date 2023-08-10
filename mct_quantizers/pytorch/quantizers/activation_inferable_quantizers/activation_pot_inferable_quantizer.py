@@ -21,27 +21,8 @@ from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, Quant
 from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS
 from mct_quantizers.common.quant_info import QuantizationMethod
 
-if FOUND_ONNXRUNTIME_EXTENSIONS:
-    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import quantize_sym_activations_numpy
-    from onnxruntime_extensions import onnx_op, PyCustomOpDef
-
-    # Add onnx op function to use during onnxruntime ActivationPOTQuantizer op inference
-    @onnx_op(op_type="mct_quantizers::ActivationPOTQuantizer",
-             inputs=[PyCustomOpDef.dt_float],
-             outputs=[PyCustomOpDef.dt_float],
-             attrs={"threshold": PyCustomOpDef.dt_float,
-                    "signed": PyCustomOpDef.dt_int64,
-                    "num_bits": PyCustomOpDef.dt_int64
-                    })
-    def activation_pot_ort(input_tensor,
-                           **kwargs):
-        return quantize_sym_activations_numpy(input_tensor,
-                                              kwargs["threshold"],
-                                              kwargs["signed"],
-                                              kwargs["num_bits"]
-                                              )
-
 if FOUND_TORCH:
+    from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
     import torch
     from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import \
     ActivationSymmetricInferableQuantizer, quantize_sym_activations_torch, quantize_sym_activations_numpy
@@ -125,7 +106,7 @@ if FOUND_TORCH:
             Returns:
                 The node in the ONNX graph representing the output of this operation.
             """
-            return g.op("mct_quantizers::ActivationPOTQuantizer",
+            return g.op(f"{ONNX_CUSTOM_OP_DOMAIN}::ActivationPOTQuantizer",
                         input_tensor,
                         threshold_f=threshold,
                         signed_i=int(signed),
@@ -150,3 +131,27 @@ else:
             raise Exception('Installing torch is mandatory '
                             'when using ActivationPOTInferableQuantizer. '
                             'Could not find torch package.')
+
+
+if FOUND_ONNXRUNTIME_EXTENSIONS:
+    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import quantize_sym_activations_numpy
+    from onnxruntime_extensions import onnx_op, PyCustomOpDef
+
+    # Add onnx op function to use during onnxruntime ActivationPOTQuantizer op inference
+    @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::ActivationPOTQuantizer",
+             inputs=[PyCustomOpDef.dt_float],
+             outputs=[PyCustomOpDef.dt_float],
+             attrs={"threshold": PyCustomOpDef.dt_float,
+                    "signed": PyCustomOpDef.dt_int64,
+                    "num_bits": PyCustomOpDef.dt_int64
+                    })
+    def activation_pot_ort(input_tensor,
+                           **kwargs):
+        return quantize_sym_activations_numpy(input_tensor,
+                                              kwargs["threshold"],
+                                              kwargs["signed"],
+                                              kwargs["num_bits"]
+                                              )
+
+
+

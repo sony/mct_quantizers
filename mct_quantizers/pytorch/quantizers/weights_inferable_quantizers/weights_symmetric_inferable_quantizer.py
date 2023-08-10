@@ -20,66 +20,12 @@ from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, Quant
 from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS
 from mct_quantizers.common.quant_info import QuantizationMethod
 
-if FOUND_ONNXRUNTIME_EXTENSIONS:
-    from onnxruntime_extensions import onnx_op, PyCustomOpDef
-    def quantize_sym_weights_numpy(input_tensor: np.ndarray,
-                                   num_bits: int,
-                                   threshold: float,
-                                   per_channel: bool,
-                                   channel_axis: int):
-        """
-           Quantizes the input tensor symmetrically using numpy.
-
-           Args:
-               input_tensor (np.ndarray): The input tensor to be quantized.
-               num_bits (int): Number of bits to represent the quantized value.
-               threshold (float): The quantization threshold.
-               per_channel (bool): Quantize input tensor per-channel or per-tensor.
-               channel_axis (int): Axis to quantize the tensor in case of per-channel quantization.
-
-           Returns:
-               Symmetrically quantized tensor.
-        """
-        scale = threshold / (2 ** (num_bits - 1))
-        _min, _max = -threshold, threshold - scale
-        if per_channel:
-            ones = np.ones(input_tensor.ndim)
-            ones[channel_axis] = -1
-            new_shape = tuple([int(x) for x in ones])
-            _min = np.reshape(_min, new_shape)
-            _max = np.reshape(_max, new_shape)
-            scale = np.reshape(scale, new_shape)
-
-        # Use torch.where to clip the values in x
-        clipped_x = np.where(input_tensor < _min, _min, input_tensor)
-        quantized = np.round(np.where(input_tensor > _max, _max, clipped_x) / scale) * scale
-        return quantized
-
-    # Add onnx op function to use during onnxruntime WeightsSymmetricQuantizer op inference
-    @onnx_op(op_type="mct_quantizers::WeightsSymmetricQuantizer",
-             inputs=[PyCustomOpDef.dt_float,
-                     PyCustomOpDef.dt_float],
-             outputs=[PyCustomOpDef.dt_float],
-             attrs={
-                 "num_bits": PyCustomOpDef.dt_int64,
-                 "per_channel": PyCustomOpDef.dt_int64,
-                 "channel_axis": PyCustomOpDef.dt_int64,
-             })
-    def weight_sym_ort(input_tensor: np.ndarray,
-                       threshold: np.ndarray, **kwargs):
-
-        return quantize_sym_weights_numpy(input_tensor,
-                                          kwargs["num_bits"],
-                                          threshold,
-                                          kwargs["per_channel"],
-                                          kwargs["channel_axis"]
-                                          )
-
 
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.base_symmetric_inferable_quantizer import BaseSymmetricInferableQuantizer
     from mct_quantizers.pytorch.quantizer_utils import to_torch_tensor, get_working_device
+    from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
 
 
     def quantize_sym_weights_torch(input_tensor: torch.Tensor,
@@ -268,3 +214,59 @@ else:
             raise Exception('Installing torch is mandatory '
                             'when using WeightsSymmetricInferableQuantizer. '
                             'Could not find torch package.')
+
+
+if FOUND_ONNXRUNTIME_EXTENSIONS:
+    from onnxruntime_extensions import onnx_op, PyCustomOpDef
+    def quantize_sym_weights_numpy(input_tensor: np.ndarray,
+                                   num_bits: int,
+                                   threshold: float,
+                                   per_channel: bool,
+                                   channel_axis: int):
+        """
+           Quantizes the input tensor symmetrically using numpy.
+
+           Args:
+               input_tensor (np.ndarray): The input tensor to be quantized.
+               num_bits (int): Number of bits to represent the quantized value.
+               threshold (float): The quantization threshold.
+               per_channel (bool): Quantize input tensor per-channel or per-tensor.
+               channel_axis (int): Axis to quantize the tensor in case of per-channel quantization.
+
+           Returns:
+               Symmetrically quantized tensor.
+        """
+        scale = threshold / (2 ** (num_bits - 1))
+        _min, _max = -threshold, threshold - scale
+        if per_channel:
+            ones = np.ones(input_tensor.ndim)
+            ones[channel_axis] = -1
+            new_shape = tuple([int(x) for x in ones])
+            _min = np.reshape(_min, new_shape)
+            _max = np.reshape(_max, new_shape)
+            scale = np.reshape(scale, new_shape)
+
+        # Use torch.where to clip the values in x
+        clipped_x = np.where(input_tensor < _min, _min, input_tensor)
+        quantized = np.round(np.where(input_tensor > _max, _max, clipped_x) / scale) * scale
+        return quantized
+
+    # Add onnx op function to use during onnxruntime WeightsSymmetricQuantizer op inference
+    @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::WeightsSymmetricQuantizer",
+             inputs=[PyCustomOpDef.dt_float,
+                     PyCustomOpDef.dt_float],
+             outputs=[PyCustomOpDef.dt_float],
+             attrs={
+                 "num_bits": PyCustomOpDef.dt_int64,
+                 "per_channel": PyCustomOpDef.dt_int64,
+                 "channel_axis": PyCustomOpDef.dt_int64,
+             })
+    def weight_sym_ort(input_tensor: np.ndarray,
+                       threshold: np.ndarray, **kwargs):
+
+        return quantize_sym_weights_numpy(input_tensor,
+                                          kwargs["num_bits"],
+                                          threshold,
+                                          kwargs["per_channel"],
+                                          kwargs["channel_axis"]
+                                          )

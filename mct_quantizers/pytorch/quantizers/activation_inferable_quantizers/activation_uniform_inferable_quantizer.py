@@ -21,59 +21,11 @@ from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTEN
 from mct_quantizers.common.quant_info import QuantizationMethod
 from mct_quantizers.common.quant_utils import adjust_range_to_include_zero
 
-if FOUND_ONNXRUNTIME_EXTENSIONS:
-    from onnxruntime_extensions import onnx_op, PyCustomOpDef
-
-    def quantize_uniform_activations_numpy(tensor_data: np.ndarray,
-                                           range_min: float,
-                                           range_max: float,
-                                           n_bits: int) -> np.ndarray:
-        """
-        Quantize a tensor according to given range (min, max) and number of bits.
-
-        Args:
-            tensor_data: Tensor values to quantize.
-            range_min: minimum bound of the range for quantization (or array of min values per channel).
-            range_max: maximum bound of the range for quantization (or array of max values per channel).
-            n_bits: Number of bits to quantize the tensor.
-
-        Returns:
-            Quantized data.
-        """
-
-        # adjusts the quantization rage so the quantization grid include zero.
-        a, b = adjust_range_to_include_zero(range_min, range_max, n_bits)
-
-        # Compute the step size of quantized values.
-        delta = (b - a) / (2 ** n_bits - 1)
-
-        # Clip data in range
-        clipped_tensor = np.clip(tensor_data, a_min=a, a_max=b)
-
-        # Quantize the data between min/max of quantization range.
-        q = delta * np.round((clipped_tensor - a) / delta) + a
-        return q
-
-    # Add onnx op function to use during onnxruntime ActivationUniformQuantizer op inference
-    @onnx_op(op_type="mct_quantizers::ActivationUniformQuantizer",
-             inputs=[PyCustomOpDef.dt_float],
-             outputs=[PyCustomOpDef.dt_float],
-             attrs={"num_bits": PyCustomOpDef.dt_int64,
-                    "min_range": PyCustomOpDef.dt_float,
-                    "max_range": PyCustomOpDef.dt_float}
-             )
-    def activation_uniform_ort(input_tensor: np.ndarray,
-                               **kwargs):
-        return quantize_uniform_activations_numpy(input_tensor,
-                                                  kwargs["min_range"],
-                                                  kwargs["max_range"],
-                                                  kwargs["num_bits"])
-
-
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.base_uniform_inferable_quantizer import BaseUniformInferableQuantizer
     from mct_quantizers.pytorch.quantizer_utils import fix_range_to_include_zero, get_working_device
+    from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
 
 
     def quantize_uniform_activations_torch(tensor_data: torch.Tensor,
@@ -246,3 +198,53 @@ else:
             raise Exception('Installing torch is mandatory '
                             'when using ActivationUniformInferableQuantizer. '
                             'Could not find torch package.')
+
+
+if FOUND_ONNXRUNTIME_EXTENSIONS:
+    from onnxruntime_extensions import onnx_op, PyCustomOpDef
+
+    def quantize_uniform_activations_numpy(tensor_data: np.ndarray,
+                                           range_min: float,
+                                           range_max: float,
+                                           n_bits: int) -> np.ndarray:
+        """
+        Quantize a tensor according to given range (min, max) and number of bits.
+
+        Args:
+            tensor_data: Tensor values to quantize.
+            range_min: minimum bound of the range for quantization (or array of min values per channel).
+            range_max: maximum bound of the range for quantization (or array of max values per channel).
+            n_bits: Number of bits to quantize the tensor.
+
+        Returns:
+            Quantized data.
+        """
+
+        # adjusts the quantization rage so the quantization grid include zero.
+        a, b = adjust_range_to_include_zero(range_min, range_max, n_bits)
+
+        # Compute the step size of quantized values.
+        delta = (b - a) / (2 ** n_bits - 1)
+
+        # Clip data in range
+        clipped_tensor = np.clip(tensor_data, a_min=a, a_max=b)
+
+        # Quantize the data between min/max of quantization range.
+        q = delta * np.round((clipped_tensor - a) / delta) + a
+        return q
+
+    # Add onnx op function to use during onnxruntime ActivationUniformQuantizer op inference
+    @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::ActivationUniformQuantizer",
+             inputs=[PyCustomOpDef.dt_float],
+             outputs=[PyCustomOpDef.dt_float],
+             attrs={"num_bits": PyCustomOpDef.dt_int64,
+                    "min_range": PyCustomOpDef.dt_float,
+                    "max_range": PyCustomOpDef.dt_float}
+             )
+    def activation_uniform_ort(input_tensor: np.ndarray,
+                               **kwargs):
+        return quantize_uniform_activations_numpy(input_tensor,
+                                                  kwargs["min_range"],
+                                                  kwargs["max_range"],
+                                                  kwargs["num_bits"])
+

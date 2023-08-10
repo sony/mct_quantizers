@@ -20,32 +20,12 @@ from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, Quant
 from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS
 from mct_quantizers.common.quant_info import QuantizationMethod
 
-if FOUND_ONNXRUNTIME_EXTENSIONS:
-    from onnxruntime_extensions import onnx_op, PyCustomOpDef
-    from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_symmetric_inferable_quantizer import quantize_sym_weights_numpy
-
-    # Add onnx op function to use during onnxruntime WeightsPOTQuantizer op inference
-    @onnx_op(op_type="mct_quantizers::WeightsPOTQuantizer",
-             inputs=[PyCustomOpDef.dt_float,
-                     PyCustomOpDef.dt_float],
-             outputs=[PyCustomOpDef.dt_float],
-             attrs={
-                    "num_bits": PyCustomOpDef.dt_int64,
-                    "per_channel": PyCustomOpDef.dt_int64,
-                    "channel_axis": PyCustomOpDef.dt_int64,
-                    }
-             )
-    def weight_pot_ort(input_tensor: np.ndarray, threshold: np.ndarray, **kwargs):
-        return quantize_sym_weights_numpy(input_tensor,
-                                          kwargs["num_bits"],
-                                          threshold,
-                                          kwargs["per_channel"],
-                                          kwargs["channel_axis"])
-
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_symmetric_inferable_quantizer import \
         WeightsSymmetricInferableQuantizer, quantize_sym_weights_torch
+    from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
+
 
     @mark_quantizer(quantization_target=QuantizationTarget.Weights,
                     quantization_method=[QuantizationMethod.POWER_OF_TWO],
@@ -173,3 +153,26 @@ else:
             raise Exception('Installing torch is mandatory '
                             'when using WeightsPOTInferableQuantizer. '
                             'Could not find torch package.')
+
+
+if FOUND_ONNXRUNTIME_EXTENSIONS:
+    from onnxruntime_extensions import onnx_op, PyCustomOpDef
+    from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_symmetric_inferable_quantizer import quantize_sym_weights_numpy
+
+    # Add onnx op function to use during onnxruntime WeightsPOTQuantizer op inference
+    @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::WeightsPOTQuantizer",
+             inputs=[PyCustomOpDef.dt_float,
+                     PyCustomOpDef.dt_float],
+             outputs=[PyCustomOpDef.dt_float],
+             attrs={
+                    "num_bits": PyCustomOpDef.dt_int64,
+                    "per_channel": PyCustomOpDef.dt_int64,
+                    "channel_axis": PyCustomOpDef.dt_int64,
+                    }
+             )
+    def weight_pot_ort(input_tensor: np.ndarray, threshold: np.ndarray, **kwargs):
+        return quantize_sym_weights_numpy(input_tensor,
+                                          kwargs["num_bits"],
+                                          threshold,
+                                          kwargs["per_channel"],
+                                          kwargs["channel_axis"])

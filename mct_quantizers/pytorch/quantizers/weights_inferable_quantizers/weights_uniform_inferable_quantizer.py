@@ -22,77 +22,13 @@ from mct_quantizers.common.quant_info import QuantizationMethod
 from mct_quantizers.common.quant_utils import adjust_range_to_include_zero
 from mct_quantizers.logger import Logger
 
-if FOUND_ONNXRUNTIME_EXTENSIONS:
-    from onnxruntime_extensions import onnx_op, PyCustomOpDef
-
-
-    def quantize_uniform_weights_numpy(input_tensor: np.ndarray,
-                                       num_bits: int,
-                                       min_range: np.ndarray,
-                                       max_range: np.ndarray,
-                                       per_channel: bool,
-                                       channel_axis: int):
-        """
-           Quantizes the input tensor symmetrically using numpy.
-
-           Args:
-               input_tensor (np.ndarray): The input tensor to be quantized.
-               num_bits (int): Number of bits to represent the quantized value.
-                min_range (np.ndarray): min quantization range for quantizing weights
-                max_range (np.ndarray): max quantization range for quantizing weights
-                per_channel (bool): Quantize input tensor per-channel or per-tensor.
-               channel_axis (int): Axis to quantize the tensor in case of per-channel quantization.
-
-           Returns:
-               Symmetrically quantized tensor.
-        """
-        # adjusts the quantization rage so the quantization grid include zero.
-        a, b = adjust_range_to_include_zero(min_range, max_range, num_bits)
-
-        # Compute the step size of quantized values.
-        delta = (b - a) / (2 ** num_bits - 1)
-        if per_channel:
-            ones = np.ones(input_tensor.ndim)
-            ones[channel_axis] = -1
-            new_shape = tuple([int(x) for x in ones])
-            # Make sure min_values and max_values have the same shape as x along the first axis
-            a = np.reshape(a, new_shape)
-            b = np.reshape(b, new_shape)
-            delta = np.reshape(delta, new_shape)
-
-        # Use torch.where to clip the values in x
-        clipped_x = np.where(input_tensor < a, a, input_tensor)
-        quantized = np.round(np.where(input_tensor > b, b, clipped_x) / delta) * delta
-        return quantized
-
-    # Add onnx op function to use during onnxruntime WeightsUniformQuantizer op inference
-    @onnx_op(op_type="mct_quantizers::WeightsUniformQuantizer",
-             inputs=[PyCustomOpDef.dt_float,
-                     PyCustomOpDef.dt_float,
-                     PyCustomOpDef.dt_float
-                     ],
-             outputs=[PyCustomOpDef.dt_float],
-             attrs={
-                 "num_bits": PyCustomOpDef.dt_int64,
-                 "per_channel": PyCustomOpDef.dt_int64,
-                 "channel_axis": PyCustomOpDef.dt_int64,
-             }
-             )
-    def weight_uniform_ort(x, min_range, max_range, **kwargs):
-        return quantize_uniform_weights_numpy(x,
-                                              kwargs["num_bits"],
-                                              min_range,
-                                              max_range,
-                                              kwargs["per_channel"],
-                                              kwargs["channel_axis"]
-                                              )
-
 
 
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.base_uniform_inferable_quantizer import BaseUniformInferableQuantizer
     from mct_quantizers.pytorch.quantizer_utils import fix_range_to_include_zero, get_working_device, to_torch_tensor
+    from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
 
     def quantize_uniform_weights_torch(input_tensor: torch.Tensor,
                                        num_bits: int,
@@ -296,3 +232,69 @@ else:
             Logger.error('Installing torch is mandatory '
                          'when using WeightsUniformInferableQuantizer. '
                          'Could not find torch package.')
+
+
+if FOUND_ONNXRUNTIME_EXTENSIONS:
+    from onnxruntime_extensions import onnx_op, PyCustomOpDef
+
+
+    def quantize_uniform_weights_numpy(input_tensor: np.ndarray,
+                                       num_bits: int,
+                                       min_range: np.ndarray,
+                                       max_range: np.ndarray,
+                                       per_channel: bool,
+                                       channel_axis: int):
+        """
+           Quantizes the input tensor symmetrically using numpy.
+
+           Args:
+               input_tensor (np.ndarray): The input tensor to be quantized.
+               num_bits (int): Number of bits to represent the quantized value.
+                min_range (np.ndarray): min quantization range for quantizing weights
+                max_range (np.ndarray): max quantization range for quantizing weights
+                per_channel (bool): Quantize input tensor per-channel or per-tensor.
+               channel_axis (int): Axis to quantize the tensor in case of per-channel quantization.
+
+           Returns:
+               Symmetrically quantized tensor.
+        """
+        # adjusts the quantization rage so the quantization grid include zero.
+        a, b = adjust_range_to_include_zero(min_range, max_range, num_bits)
+
+        # Compute the step size of quantized values.
+        delta = (b - a) / (2 ** num_bits - 1)
+        if per_channel:
+            ones = np.ones(input_tensor.ndim)
+            ones[channel_axis] = -1
+            new_shape = tuple([int(x) for x in ones])
+            # Make sure min_values and max_values have the same shape as x along the first axis
+            a = np.reshape(a, new_shape)
+            b = np.reshape(b, new_shape)
+            delta = np.reshape(delta, new_shape)
+
+        # Use torch.where to clip the values in x
+        clipped_x = np.where(input_tensor < a, a, input_tensor)
+        quantized = np.round(np.where(input_tensor > b, b, clipped_x) / delta) * delta
+        return quantized
+
+    # Add onnx op function to use during onnxruntime WeightsUniformQuantizer op inference
+    @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::WeightsUniformQuantizer",
+             inputs=[PyCustomOpDef.dt_float,
+                     PyCustomOpDef.dt_float,
+                     PyCustomOpDef.dt_float
+                     ],
+             outputs=[PyCustomOpDef.dt_float],
+             attrs={
+                 "num_bits": PyCustomOpDef.dt_int64,
+                 "per_channel": PyCustomOpDef.dt_int64,
+                 "channel_axis": PyCustomOpDef.dt_int64,
+             }
+             )
+    def weight_uniform_ort(x, min_range, max_range, **kwargs):
+        return quantize_uniform_weights_numpy(x,
+                                              kwargs["num_bits"],
+                                              min_range,
+                                              max_range,
+                                              kwargs["per_channel"],
+                                              kwargs["channel_axis"]
+                                              )

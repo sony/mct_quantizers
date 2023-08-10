@@ -21,56 +21,11 @@ from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTEN
 from mct_quantizers.common.quant_info import QuantizationMethod
 
 
-if FOUND_ONNXRUNTIME_EXTENSIONS:
-    from onnxruntime_extensions import onnx_op, PyCustomOpDef
-
-    # Add onnx op function to use during onnxruntime ActivationSymmetricQuantizer op inference
-    @onnx_op(op_type="mct_quantizers::ActivationSymmetricQuantizer",
-             inputs=[PyCustomOpDef.dt_float],
-             outputs=[PyCustomOpDef.dt_float],
-             attrs={"threshold": PyCustomOpDef.dt_float,
-                    "signed": PyCustomOpDef.dt_int64,
-                    "num_bits": PyCustomOpDef.dt_int64
-                    }
-             )
-    def activation_sym_ort(input_tensor,
-                           **kwargs):
-        return quantize_sym_activations_numpy(input_tensor,
-                                              kwargs["threshold"],
-                                              kwargs["signed"],
-                                              kwargs["num_bits"])
-
-
-    def quantize_sym_activations_numpy(input_tensor: np.ndarray,
-                                       threshold: float,
-                                       signed: bool,
-                                       num_bits: int):
-        """
-           Quantizes the input tensor symmetrically using numpy.
-
-           Args:
-               input_tensor (np.ndarray): The input tensor to be quantized.
-               threshold (float): The quantization threshold.
-               signed (bool): A flag indicating whether the quantization is signed or unsigned.
-               num_bits (int): Number of bits to represent the quantized value.
-
-           Returns:
-               np.ndarray: Symmetrically quantized tensor.
-        """
-
-        if signed:
-            scale = threshold / (2 ** (num_bits - 1))
-            min, max = -threshold, threshold - scale
-        else:
-            scale = threshold / (2 ** num_bits)
-            min, max = 0, threshold - scale
-
-        quantized = np.round(np.clip(input_tensor, min, max) / scale) * scale
-        return quantized
 
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.base_symmetric_inferable_quantizer import BaseSymmetricInferableQuantizer
+    from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
 
     def quantize_sym_activations_torch(input_tensor: torch.Tensor,
                                        threshold: float,
@@ -224,3 +179,51 @@ else:
             raise Exception('Installing torch is mandatory '
                             'when using ActivationSymmetricInferableQuantizer. '
                             'Could not find torch package.')
+
+
+if FOUND_ONNXRUNTIME_EXTENSIONS:
+    from onnxruntime_extensions import onnx_op, PyCustomOpDef
+
+    # Add onnx op function to use during onnxruntime ActivationSymmetricQuantizer op inference
+    @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::ActivationSymmetricQuantizer",
+             inputs=[PyCustomOpDef.dt_float],
+             outputs=[PyCustomOpDef.dt_float],
+             attrs={"threshold": PyCustomOpDef.dt_float,
+                    "signed": PyCustomOpDef.dt_int64,
+                    "num_bits": PyCustomOpDef.dt_int64
+                    }
+             )
+    def activation_sym_ort(input_tensor,
+                           **kwargs):
+        return quantize_sym_activations_numpy(input_tensor,
+                                              kwargs["threshold"],
+                                              kwargs["signed"],
+                                              kwargs["num_bits"])
+
+
+    def quantize_sym_activations_numpy(input_tensor: np.ndarray,
+                                       threshold: float,
+                                       signed: bool,
+                                       num_bits: int):
+        """
+           Quantizes the input tensor symmetrically using numpy.
+
+           Args:
+               input_tensor (np.ndarray): The input tensor to be quantized.
+               threshold (float): The quantization threshold.
+               signed (bool): A flag indicating whether the quantization is signed or unsigned.
+               num_bits (int): Number of bits to represent the quantized value.
+
+           Returns:
+               np.ndarray: Symmetrically quantized tensor.
+        """
+
+        if signed:
+            scale = threshold / (2 ** (num_bits - 1))
+            min, max = -threshold, threshold - scale
+        else:
+            scale = threshold / (2 ** num_bits)
+            min, max = 0, threshold - scale
+
+        quantized = np.round(np.clip(input_tensor, min, max) / scale) * scale
+        return quantized
