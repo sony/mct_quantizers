@@ -48,8 +48,8 @@ QUANTIZER2ARGS = {**dict.fromkeys([ActivationPOTInferableQuantizer, ActivationSy
                       {'num_bits': 4,
                        'threshold': [0.5],
                        'signed': True,
-                       'cluster_centers': [22.0, -53.0, 62.0, 0.0, -66.0, -21.0, 44.0, -40.0],
-                       'multiplier_n_bits': 8,
+                       'lut_values': [22.0, -53.0, 62.0, 0.0, -66.0, -21.0, 44.0, -40.0],
+                       'lut_values_bitwidth': 8,
                        'eps': 1e-8
                        }
                   }

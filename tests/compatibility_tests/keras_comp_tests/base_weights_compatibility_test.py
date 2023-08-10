@@ -98,41 +98,41 @@ QUANTIZER2LAYER2ARGS = {**dict.fromkeys([WeightsPOTInferableQuantizer, WeightsSy
                                          {Conv2D:
                                               {'num_bits': 4,
                                                'threshold': [2.0, 0.5, 4.0],
-                                               'cluster_centers': [22.0, -53.0, 62.0, 0.0, -66.0, -21.0, 44.0, -40.0],
+                                               'lut_values': [22.0, -53.0, 62.0, 0.0, -66.0, -21.0, 44.0, -40.0],
                                                'per_channel': True,
                                                'input_rank': 4,
                                                'channel_axis': 3,
-                                               'multiplier_n_bits': 8,
+                                               'lut_values_bitwidth': 8,
                                                'eps': 1e-08
                                                },
                                           DepthwiseConv2D:
                                               {'num_bits': 4,
                                                'threshold': [2.0, 0.5, 4.0],
-                                               'cluster_centers': [22.0, -53.0, 62.0, 0.0, -66.0, -21.0, 44.0, -40.0],
+                                               'lut_values': [22.0, -53.0, 62.0, 0.0, -66.0, -21.0, 44.0, -40.0],
                                                'per_channel': True,
                                                'input_rank': 4,
                                                'channel_axis': 2,
-                                               'multiplier_n_bits': 8,
+                                               'lut_values_bitwidth': 8,
                                                'eps': 1e-08
                                                },
                                           Conv2DTranspose:
                                               {'num_bits': 4,
                                                'threshold': [2.0, 0.5, 4.0],
-                                               'cluster_centers': [22.0, -53.0, 62.0, 0.0, -66.0, -21.0, 44.0, -40.0],
+                                               'lut_values': [22.0, -53.0, 62.0, 0.0, -66.0, -21.0, 44.0, -40.0],
                                                'per_channel': True,
                                                'input_rank': 4,
                                                'channel_axis': 2,
-                                               'multiplier_n_bits': 8,
+                                               'lut_values_bitwidth': 8,
                                                'eps': 1e-08
                                                },
                                           Dense:
                                               {'num_bits': 4,
                                                'threshold': [2.0, 0.5, 4.0],
-                                               'cluster_centers': [22.0, -53.0, 62.0, 0.0, -66.0, -21.0, 44.0, -40.0],
+                                               'lut_values': [22.0, -53.0, 62.0, 0.0, -66.0, -21.0, 44.0, -40.0],
                                                'per_channel': True,
                                                'input_rank': 2,
                                                'channel_axis': 1,
-                                               'multiplier_n_bits': 8,
+                                               'lut_values_bitwidth': 8,
                                                'eps': 1e-08
                                                },
                                           })
