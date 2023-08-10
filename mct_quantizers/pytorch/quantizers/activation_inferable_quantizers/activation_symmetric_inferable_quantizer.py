@@ -154,7 +154,7 @@ if FOUND_TORCH:
             Returns:
                 The node in the ONNX graph representing the output of this operation.
             """
-            return g.op("mct_quantizers::ActivationSymmetricQuantizer", input_tensor,
+            return g.op(f"{ONNX_CUSTOM_OP_DOMAIN}::ActivationSymmetricQuantizer", input_tensor,
                         threshold_f=threshold,
                         signed_i=int(signed),
                         num_bits_i=num_bits

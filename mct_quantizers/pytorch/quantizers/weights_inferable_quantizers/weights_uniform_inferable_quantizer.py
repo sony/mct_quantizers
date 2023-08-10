@@ -204,7 +204,7 @@ if FOUND_TORCH:
             Returns:
                 The node in the ONNX graph representing the output of this operation.
             """
-            return g.op("mct_quantizers::WeightsUniformQuantizer", input_tensor,
+            return g.op(f"{ONNX_CUSTOM_OP_DOMAIN}::WeightsUniformQuantizer", input_tensor,
                         g.op('Constant', value_t=torch.tensor(min_range, dtype=torch.float32)),
                         g.op('Constant', value_t=torch.tensor(max_range, dtype=torch.float32)),
                         num_bits_i=num_bits,

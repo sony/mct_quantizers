@@ -173,7 +173,7 @@ if FOUND_TORCH:
             Returns:
                 The node in the ONNX graph representing the output of this operation.
             """
-            return g.op("mct_quantizers::ActivationUniformQuantizer", input_tensor,
+            return g.op(f"{ONNX_CUSTOM_OP_DOMAIN}::ActivationUniformQuantizer", input_tensor,
                         min_range_f=min_range,
                         max_range_f=max_range,
                         num_bits_i=num_bits
