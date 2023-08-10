@@ -30,7 +30,7 @@ if FOUND_TF:
                     identifier=QuantizerID.INFERABLE)
     class WeightsSymmetricInferableQuantizer(WeightsUniformInferableQuantizer):
         """
-        Class for quantizing weights using unsigned symmetric quantizer.
+        Class for quantizing weights using a symmetric quantizer.
         """
         def __init__(self,
                      num_bits: int,
@@ -78,6 +78,16 @@ if FOUND_TF:
                     'per_channel': self.per_channel,
                     'channel_axis': self.channel_axis,
                     'input_rank': self.input_rank}
+
+        @property
+        def signed(self) -> bool:
+            """
+            Property to indicates that symmetric weights quantization is always signed.
+
+            Returns: True by definition.
+
+            """
+            return True
 
 else:
     class WeightsSymmetricInferableQuantizer:  # pragma: no cover

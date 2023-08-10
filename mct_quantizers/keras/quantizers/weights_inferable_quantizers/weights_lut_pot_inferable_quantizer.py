@@ -17,7 +17,7 @@ from typing import List
 import numpy as np
 
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
-from mct_quantizers.common.constants import FOUND_TF, MULTIPLIER_N_BITS, EPS
+from mct_quantizers.common.constants import FOUND_TF, LUT_VALUES_BITWIDTH, EPS
 from mct_quantizers.common.quant_info import QuantizationMethod
 
 
@@ -36,34 +36,34 @@ if FOUND_TF:
 
         def __init__(self,
                      num_bits: int,
-                     cluster_centers: List[float],
+                     lut_values: List[float],
                      threshold: List[float],
                      per_channel: bool,
                      channel_axis: int = None,
                      input_rank: int = None,
-                     multiplier_n_bits: int = MULTIPLIER_N_BITS,
+                     lut_values_bitwidth: int = LUT_VALUES_BITWIDTH,
                      eps: float = EPS):
             """
             Initialize the quantizer with the specified parameters.
 
             Args:
                 num_bits: number of bits to use for quantization
-                cluster_centers: the cluster centers to assign the weights
+                lut_values: the values in the look-up table to assign the weights to
                 threshold: threshold for quantizing weights
                 per_channel: whether to use per-channel quantization
                 channel_axis: axis along which to apply per-channel quantization
                 input_rank: number of dimensions of input tensor the quantizer quantizes
-                multiplier_n_bits: Number of bits that determines the quantization range
+                lut_values_bitwidth: Number of bits that determines the quantization range
                 eps: Small value for numerical stability in division
             """
 
             super(WeightsLUTPOTInferableQuantizer, self).__init__(num_bits=num_bits,
-                                                                  cluster_centers=cluster_centers,
+                                                                  lut_values=lut_values,
                                                                   threshold=threshold,
                                                                   per_channel=per_channel,
                                                                   channel_axis=channel_axis,
                                                                   input_rank=input_rank,
-                                                                  multiplier_n_bits=multiplier_n_bits,
+                                                                  lut_values_bitwidth=lut_values_bitwidth,
                                                                   eps=eps)
 
             is_threshold_pot = np.all([int(np.log2(x)) == np.log2(x) for x in self._np_threshold.flatten()])

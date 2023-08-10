@@ -85,38 +85,38 @@ def fix_range_to_include_zero(range_min: torch.Tensor,
 
 
 def lut_quantizer(tensor_data: torch.Tensor,
-                  cluster_centers: torch.Tensor,
+                  lut_values: torch.Tensor,
                   signed: bool,
                   threshold: torch.Tensor,
-                  multiplier_n_bits: int,
+                  lut_values_bitwidth: int,
                   eps: float) -> torch.Tensor:
     """
-    Quantize a tensor using a non-uniform quantization based on the pre-defined clusters.
+    Quantize a tensor using a non-uniform quantization based on the pre-defined values.
     1. Scales tensor_data with the threshold into n-bit quantization range.
-    2. Assigns cluster centers to each value.
+    2. Assigns lut values to each value.
     3. Scales back by multiplying the result by threshold and dividing with the quantization range max value.
     The result is the quantized tensor.
 
     Args:
         tensor_data: Input activation tensor.
-        cluster_centers: The cluster centers to assign the tensor values.
+        lut_values: The values in the look-up table to assign the weights to
         signed: Whether the quantization is signed or not.
         threshold: Threshold for quantization.
-        multiplier_n_bits: Number of bits that determines the quantization range
+        lut_values_bitwidth: Number of bits that determines the quantization range
         eps: Small value for numerical stability in division.
 
     Returns: Quantized tensor.
     """
 
-    tensor = int_quantization_with_threshold(tensor_data, n_bits=multiplier_n_bits, signed=signed, threshold=threshold,
+    tensor = int_quantization_with_threshold(tensor_data, n_bits=lut_values_bitwidth, signed=signed, threshold=threshold,
                                              eps=eps)
     tensor = tensor.unsqueeze(-1)
 
-    expanded_cluster_centers = cluster_centers.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
-    cluster_assignments = torch.argmin(torch.abs(tensor - expanded_cluster_centers), dim=-1)
-    centers = cluster_centers.flatten()[cluster_assignments]
+    expanded_lut_values = lut_values.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
+    lut_values_assignments = torch.argmin(torch.abs(tensor - expanded_lut_values), dim=-1)
+    centers = lut_values.flatten()[lut_values_assignments]
 
-    quant_tensor = (centers / (2 ** (multiplier_n_bits - int(signed)))) * threshold
+    quant_tensor = (centers / (2 ** (lut_values_bitwidth - int(signed)))) * threshold
 
     return quant_tensor
 
