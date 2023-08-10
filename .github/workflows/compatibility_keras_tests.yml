@@ -1,4 +1,4 @@
-name: Run Keras Weights Quantizers Compatibility Tests
+name: Run Keras Quantizers Compatibility Tests
 
 on:
   workflow_call:
@@ -35,6 +35,7 @@ jobs:
           echo "Updated PYTHONPATH: $PYTHONPATH"
           cd ..
           python tests/compatibility_tests/keras_comp_tests/compatibility_weights_save_model_test_suite.py ${{  inputs.save_version  }}
+          python tests/compatibility_tests/keras_comp_tests/compatibility_activation_save_model_test_suite.py ${{  inputs.save_version  }}
       - name: Checkout to MCT Quantizers latest version
         run: |
           git checkout main
@@ -46,3 +47,4 @@ jobs:
           echo "Updated PYTHONPATH: $PYTHONPATH"
           cd ..
           python tests/compatibility_tests/keras_comp_tests/compatibility_weights_load_model_test_suite.py ${{  inputs.save_version  }}
+          python tests/compatibility_tests/keras_comp_tests/compatibility_activation_load_model_test_suite.py ${{  inputs.save_version  }}
