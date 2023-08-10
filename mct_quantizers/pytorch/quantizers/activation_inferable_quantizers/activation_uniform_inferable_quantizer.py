@@ -24,7 +24,6 @@ from mct_quantizers.common.quant_utils import adjust_range_to_include_zero
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.base_uniform_inferable_quantizer import BaseUniformInferableQuantizer
-    from mct_quantizers.pytorch.quantizer_utils import fix_range_to_include_zero, get_working_device
     from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
 
 
@@ -89,8 +88,8 @@ if FOUND_TORCH:
                                                                       min_range=min_range,
                                                                       max_range=max_range)
 
-            assert isinstance(min_range,list), f'min_range is expected to be a list, but is of type {type(min_range)}'
-            assert isinstance(max_range,list), f'max_range is expected to be a list, but is of type {type(max_range)}'
+            assert isinstance(min_range, list), f'min_range is expected to be a list, but is of type {type(min_range)}'
+            assert isinstance(max_range, list), f'max_range is expected to be a list, but is of type {type(max_range)}'
 
             assert len(
                 min_range) == 1, f'For activation, quantization per channel is not supported and min_range should be ' \
@@ -199,9 +198,9 @@ else:
                             'when using ActivationUniformInferableQuantizer. '
                             'Could not find torch package.')
 
-
 if FOUND_ONNXRUNTIME_EXTENSIONS:
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
+
 
     def quantize_uniform_activations_numpy(tensor_data: np.ndarray,
                                            range_min: float,
@@ -233,6 +232,7 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
         q = delta * np.round((clipped_tensor - a) / delta) + a
         return q
 
+
     # Add onnx op function to use during onnxruntime ActivationUniformQuantizer op inference
     @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::ActivationUniformQuantizer",
              inputs=[PyCustomOpDef.dt_float],
@@ -247,4 +247,3 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
                                                   kwargs["min_range"],
                                                   kwargs["max_range"],
                                                   kwargs["num_bits"])
-

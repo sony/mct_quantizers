@@ -15,7 +15,6 @@
 from typing import Any, List
 
 import numpy as np
-from torch.onnx import symbolic_helper
 
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
 from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS
@@ -24,8 +23,10 @@ from mct_quantizers.common.quant_info import QuantizationMethod
 if FOUND_TORCH:
     from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
     import torch
-    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import \
-    ActivationSymmetricInferableQuantizer, quantize_sym_activations_torch, quantize_sym_activations_numpy
+    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer \
+        import \
+        ActivationSymmetricInferableQuantizer, quantize_sym_activations_torch, quantize_sym_activations_numpy
+
 
     @mark_quantizer(quantization_target=QuantizationTarget.Activation,
                     quantization_method=[QuantizationMethod.POWER_OF_TWO],
@@ -65,14 +66,13 @@ if FOUND_TORCH:
             return super(ActivationPOTInferableQuantizer, self).__call__(inputs)
 
 
-
-
     class ActivationPOTF(torch.autograd.Function):
         """
         Custom autograd function for POT activations quantizer.
         It provides a way to define a custom forward and symbolic operation
         and currently does not implement a backward operation.
         """
+
         @staticmethod
         def forward(ctx, input_tensor, threshold, signed, num_bits):
             """
@@ -132,10 +132,12 @@ else:
                             'when using ActivationPOTInferableQuantizer. '
                             'Could not find torch package.')
 
-
 if FOUND_ONNXRUNTIME_EXTENSIONS:
-    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import quantize_sym_activations_numpy
+    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer \
+        import \
+        quantize_sym_activations_numpy
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
+
 
     # Add onnx op function to use during onnxruntime ActivationPOTQuantizer op inference
     @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::ActivationPOTQuantizer",
@@ -152,6 +154,3 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
                                               kwargs["signed"],
                                               kwargs["num_bits"]
                                               )
-
-
-

@@ -20,12 +20,11 @@ from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, Quant
 from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS
 from mct_quantizers.common.quant_info import QuantizationMethod
 
-
-
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.base_symmetric_inferable_quantizer import BaseSymmetricInferableQuantizer
     from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
+
 
     def quantize_sym_activations_torch(input_tensor: torch.Tensor,
                                        threshold: float,
@@ -180,9 +179,9 @@ else:
                             'when using ActivationSymmetricInferableQuantizer. '
                             'Could not find torch package.')
 
-
 if FOUND_ONNXRUNTIME_EXTENSIONS:
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
+
 
     # Add onnx op function to use during onnxruntime ActivationSymmetricQuantizer op inference
     @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::ActivationSymmetricQuantizer",

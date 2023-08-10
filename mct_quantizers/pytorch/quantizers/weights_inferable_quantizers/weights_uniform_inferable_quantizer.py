@@ -22,13 +22,12 @@ from mct_quantizers.common.quant_info import QuantizationMethod
 from mct_quantizers.common.quant_utils import adjust_range_to_include_zero
 from mct_quantizers.logger import Logger
 
-
-
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.base_uniform_inferable_quantizer import BaseUniformInferableQuantizer
     from mct_quantizers.pytorch.quantizer_utils import fix_range_to_include_zero, get_working_device, to_torch_tensor
     from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
+
 
     def quantize_uniform_weights_torch(input_tensor: torch.Tensor,
                                        num_bits: int,
@@ -74,7 +73,6 @@ if FOUND_TORCH:
         clipped_x = torch.where(input_tensor < a, a, input_tensor)
         quantized = torch.round(torch.where(input_tensor > b, b, clipped_x) / delta) * delta
         return quantized
-
 
 
     @mark_quantizer(quantization_target=QuantizationTarget.Weights,
@@ -233,7 +231,6 @@ else:
                          'when using WeightsUniformInferableQuantizer. '
                          'Could not find torch package.')
 
-
 if FOUND_ONNXRUNTIME_EXTENSIONS:
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
 
@@ -276,6 +273,7 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
         clipped_x = np.where(input_tensor < a, a, input_tensor)
         quantized = np.round(np.where(input_tensor > b, b, clipped_x) / delta) * delta
         return quantized
+
 
     # Add onnx op function to use during onnxruntime WeightsUniformQuantizer op inference
     @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::WeightsUniformQuantizer",

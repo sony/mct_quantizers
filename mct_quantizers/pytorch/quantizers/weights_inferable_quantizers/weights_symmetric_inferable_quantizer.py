@@ -20,7 +20,6 @@ from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, Quant
 from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS
 from mct_quantizers.common.quant_info import QuantizationMethod
 
-
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.base_symmetric_inferable_quantizer import BaseSymmetricInferableQuantizer
@@ -215,9 +214,10 @@ else:
                             'when using WeightsSymmetricInferableQuantizer. '
                             'Could not find torch package.')
 
-
 if FOUND_ONNXRUNTIME_EXTENSIONS:
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
+
+
     def quantize_sym_weights_numpy(input_tensor: np.ndarray,
                                    num_bits: int,
                                    threshold: float,
@@ -250,6 +250,7 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
         clipped_x = np.where(input_tensor < _min, _min, input_tensor)
         quantized = np.round(np.where(input_tensor > _max, _max, clipped_x) / scale) * scale
         return quantized
+
 
     # Add onnx op function to use during onnxruntime WeightsSymmetricQuantizer op inference
     @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::WeightsSymmetricQuantizer",

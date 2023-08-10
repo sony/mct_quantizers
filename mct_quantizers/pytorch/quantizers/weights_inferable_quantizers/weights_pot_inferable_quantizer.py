@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-from typing import Any, List
+from typing import Any
 
 import numpy as np
 
@@ -133,7 +133,7 @@ if FOUND_TORCH:
                         num_bits_i=num_bits,
                         per_channel_i=int(per_channel),
                         channel_axis_i=channel_axis
-            ).setType(
+                        ).setType(
                 input_tensor.type())
 
         def backward(ctx: Any, *grad_outputs: Any) -> Any:
@@ -154,10 +154,11 @@ else:
                             'when using WeightsPOTInferableQuantizer. '
                             'Could not find torch package.')
 
-
 if FOUND_ONNXRUNTIME_EXTENSIONS:
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
-    from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_symmetric_inferable_quantizer import quantize_sym_weights_numpy
+    from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_symmetric_inferable_quantizer import \
+        quantize_sym_weights_numpy
+
 
     # Add onnx op function to use during onnxruntime WeightsPOTQuantizer op inference
     @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::WeightsPOTQuantizer",
@@ -165,10 +166,10 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
                      PyCustomOpDef.dt_float],
              outputs=[PyCustomOpDef.dt_float],
              attrs={
-                    "num_bits": PyCustomOpDef.dt_int64,
-                    "per_channel": PyCustomOpDef.dt_int64,
-                    "channel_axis": PyCustomOpDef.dt_int64,
-                    }
+                 "num_bits": PyCustomOpDef.dt_int64,
+                 "per_channel": PyCustomOpDef.dt_int64,
+                 "channel_axis": PyCustomOpDef.dt_int64,
+             }
              )
     def weight_pot_ort(input_tensor: np.ndarray, threshold: np.ndarray, **kwargs):
         return quantize_sym_weights_numpy(input_tensor,
