@@ -13,13 +13,19 @@
 # limitations under the License.
 # ==============================================================================
 import tensorflow as tf
+from keras.activations import swish, sigmoid
+from keras.layers import ReLU, LeakyReLU, Add
 
 from mct_quantizers.keras.quantizers import WeightsPOTInferableQuantizer, WeightsSymmetricInferableQuantizer, \
-    WeightsUniformInferableQuantizer, WeightsLUTPOTInferableQuantizer, WeightsLUTSymmetricInferableQuantizer
-from tests.compatibility_tests.keras_comp_tests.base_compatibility_test import BaseQuantizerLoadAndCompareTest
+    WeightsUniformInferableQuantizer, WeightsLUTPOTInferableQuantizer, WeightsLUTSymmetricInferableQuantizer, \
+    ActivationPOTInferableQuantizer, ActivationLutPOTInferableQuantizer, ActivationUniformInferableQuantizer, \
+    ActivationSymmetricInferableQuantizer
+from tests.compatibility_tests.keras_comp_tests.base_activation_compatibility_test import \
+    BaseActivationQuantizerLoadAndCompareTest
+from tests.compatibility_tests.keras_comp_tests.base_weights_compatibility_test import BaseWeightsQuantizerLoadAndCompareTest
 
 
-class WeightsPOTQuantizerLoadAndCompareTest(BaseQuantizerLoadAndCompareTest):
+class WeightsPOTQuantizerLoadAndCompareTest(BaseWeightsQuantizerLoadAndCompareTest):
 
     def setUp(self):
         self.quantizer_type = WeightsPOTInferableQuantizer
@@ -31,7 +37,7 @@ class WeightsPOTQuantizerLoadAndCompareTest(BaseQuantizerLoadAndCompareTest):
         self.dense_test(self.quantizer_type)
 
 
-class WeightsSymmetricQuantizerLoadAndCompareTest(BaseQuantizerLoadAndCompareTest):
+class WeightsSymmetricQuantizerLoadAndCompareTest(BaseWeightsQuantizerLoadAndCompareTest):
 
     def setUp(self):
         self.quantizer_type = WeightsSymmetricInferableQuantizer
@@ -43,7 +49,7 @@ class WeightsSymmetricQuantizerLoadAndCompareTest(BaseQuantizerLoadAndCompareTes
         self.dense_test(self.quantizer_type)
 
 
-class WeightsUniformQuantizerLoadAndCompareTest(BaseQuantizerLoadAndCompareTest):
+class WeightsUniformQuantizerLoadAndCompareTest(BaseWeightsQuantizerLoadAndCompareTest):
 
     def setUp(self):
         self.quantizer_type = WeightsUniformInferableQuantizer
@@ -55,7 +61,7 @@ class WeightsUniformQuantizerLoadAndCompareTest(BaseQuantizerLoadAndCompareTest)
         self.dense_test(self.quantizer_type)
 
 
-class WeightsPOTLutQuantizerLoadAndCompareTest(BaseQuantizerLoadAndCompareTest):
+class WeightsPOTLutQuantizerLoadAndCompareTest(BaseWeightsQuantizerLoadAndCompareTest):
 
     def setUp(self):
         self.quantizer_type = WeightsLUTPOTInferableQuantizer
@@ -67,7 +73,7 @@ class WeightsPOTLutQuantizerLoadAndCompareTest(BaseQuantizerLoadAndCompareTest):
         self.dense_test(self.quantizer_type)
 
 
-class WeightsSymmetricLutQuantizerLoadAndCompareTest(BaseQuantizerLoadAndCompareTest):
+class WeightsSymmetricLutQuantizerLoadAndCompareTest(BaseWeightsQuantizerLoadAndCompareTest):
 
     def setUp(self):
         self.quantizer_type = WeightsLUTSymmetricInferableQuantizer
@@ -78,3 +84,54 @@ class WeightsSymmetricLutQuantizerLoadAndCompareTest(BaseQuantizerLoadAndCompare
         self.convtrans_test(self.quantizer_type)
         self.dense_test(self.quantizer_type)
 
+
+class ActivationPOTQuantizerLoadAndCompareTest(BaseActivationQuantizerLoadAndCompareTest):
+
+    def setUp(self):
+        self.quantizer_type = ActivationPOTInferableQuantizer
+
+    def test_weights_uniform_quantizer(self):
+        self.activation_test(self.quantizer_type, ReLU)
+        self.activation_test(self.quantizer_type, LeakyReLU)
+        self.activation_test(self.quantizer_type, Add)
+        self.activation_test(self.quantizer_type, swish)
+        self.activation_test(self.quantizer_type, sigmoid)
+
+
+class ActivationSymmetricQuantizerLoadAndCompareTest(BaseActivationQuantizerLoadAndCompareTest):
+
+    def setUp(self):
+        self.quantizer_type = ActivationSymmetricInferableQuantizer
+
+    def test_weights_uniform_quantizer(self):
+        self.activation_test(self.quantizer_type, ReLU)
+        self.activation_test(self.quantizer_type, LeakyReLU)
+        self.activation_test(self.quantizer_type, Add)
+        self.activation_test(self.quantizer_type, swish)
+        self.activation_test(self.quantizer_type, sigmoid)
+
+
+class ActivationUniformQuantizerLoadAndCompareTest(BaseActivationQuantizerLoadAndCompareTest):
+
+    def setUp(self):
+        self.quantizer_type = ActivationUniformInferableQuantizer
+
+    def test_weights_uniform_quantizer(self):
+        self.activation_test(self.quantizer_type, ReLU)
+        self.activation_test(self.quantizer_type, LeakyReLU)
+        self.activation_test(self.quantizer_type, Add)
+        self.activation_test(self.quantizer_type, swish)
+        self.activation_test(self.quantizer_type, sigmoid)
+
+
+class ActivationPOTLutQuantizerLoadAndCompareTest(BaseActivationQuantizerLoadAndCompareTest):
+
+    def setUp(self):
+        self.quantizer_type = ActivationLutPOTInferableQuantizer
+
+    def test_weights_uniform_quantizer(self):
+        self.activation_test(self.quantizer_type, ReLU)
+        self.activation_test(self.quantizer_type, LeakyReLU)
+        self.activation_test(self.quantizer_type, Add)
+        self.activation_test(self.quantizer_type, swish)
+        self.activation_test(self.quantizer_type, sigmoid)

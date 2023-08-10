@@ -146,11 +146,11 @@ def _build_model_with_quantize_wrapper(quant_weights_layer, input_shape, model_n
     return tf.keras.Model(inputs=inputs, outputs=x, name=model_name)
 
 
-class BaseQuantizerBuildAndSaveTest(unittest.TestCase):
+class BaseWeightsQuantizerBuildAndSaveTest(unittest.TestCase):
     VERSION = None
 
     def build_and_save_model(self, quantizer, quantizer_params, layer, model_name, input_shape, weight_name):
-        assert BaseQuantizerBuildAndSaveTest.VERSION is not None
+        assert BaseWeightsQuantizerBuildAndSaveTest.VERSION is not None
 
         weights_quantizer = quantizer(**quantizer_params)
 
@@ -173,7 +173,7 @@ class BaseQuantizerBuildAndSaveTest(unittest.TestCase):
         self.build_and_save_model(quantizer=quantizer,
                                   quantizer_params=QUANTIZER2LAYER2ARGS[quantizer][layer],
                                   layer=layer(filters=3, kernel_size=4),
-                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
+                                  model_name=f"{BaseWeightsQuantizerBuildAndSaveTest.VERSION}_"
                                              f"{LAYER2NAME[layer]}_"
                                              f"{QUANTIZER2NAME[quantizer]}",
                                   weight_name=WEIGHT,
@@ -184,7 +184,7 @@ class BaseQuantizerBuildAndSaveTest(unittest.TestCase):
         self.build_and_save_model(quantizer=quantizer,
                                   quantizer_params=QUANTIZER2LAYER2ARGS[quantizer][layer],
                                   layer=layer(kernel_size=4),
-                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
+                                  model_name=f"{BaseWeightsQuantizerBuildAndSaveTest.VERSION}_"
                                              f"{LAYER2NAME[layer]}_"
                                              f"{QUANTIZER2NAME[quantizer]}",
                                   weight_name=DEPTHWISE_WEIGHT,
@@ -195,7 +195,7 @@ class BaseQuantizerBuildAndSaveTest(unittest.TestCase):
         self.build_and_save_model(quantizer=quantizer,
                                   quantizer_params=QUANTIZER2LAYER2ARGS[quantizer][layer],
                                   layer=layer(filters=3, kernel_size=4),
-                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
+                                  model_name=f"{BaseWeightsQuantizerBuildAndSaveTest.VERSION}_"
                                              f"{LAYER2NAME[layer]}_"
                                              f"{QUANTIZER2NAME[quantizer]}",
                                   weight_name=WEIGHT,
@@ -206,20 +206,20 @@ class BaseQuantizerBuildAndSaveTest(unittest.TestCase):
         self.build_and_save_model(quantizer=quantizer,
                                   quantizer_params=QUANTIZER2LAYER2ARGS[quantizer][layer],
                                   layer=layer(units=3),
-                                  model_name=f"{BaseQuantizerBuildAndSaveTest.VERSION}_"
+                                  model_name=f"{BaseWeightsQuantizerBuildAndSaveTest.VERSION}_"
                                              f"{LAYER2NAME[layer]}_"
                                              f"{QUANTIZER2NAME[quantizer]}",
                                   weight_name=WEIGHT,
                                   input_shape=(8, 8, 3))
 
 
-class BaseQuantizerLoadAndCompareTest(unittest.TestCase):
+class BaseWeightsQuantizerLoadAndCompareTest(unittest.TestCase):
     SAVED_VERSION = None
 
     def load_and_compare_model(self, quantizer_type, layer_type, weight_name):
-        assert BaseQuantizerLoadAndCompareTest.SAVED_VERSION is not None
+        assert BaseWeightsQuantizerLoadAndCompareTest.SAVED_VERSION is not None
 
-        model_path = (f"{BaseQuantizerLoadAndCompareTest.SAVED_VERSION}_"
+        model_path = (f"{BaseWeightsQuantizerLoadAndCompareTest.SAVED_VERSION}_"
                       f"{LAYER2NAME[layer_type]}_"
                       f"{QUANTIZER2NAME[quantizer_type]}.h5")
 

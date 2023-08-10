@@ -34,7 +34,7 @@ jobs:
           export PYTHONPATH="$PWD:${PYTHONPATH}"
           echo "Updated PYTHONPATH: $PYTHONPATH"
           cd ..
-          python tests/compatibility_tests/keras_comp_tests/compatibility_save_model_test_suite.py ${{  inputs.save_version  }}
+          python tests/compatibility_tests/keras_comp_tests/compatibility_weights_save_model_test_suite.py ${{  inputs.save_version  }}
       - name: Checkout to MCT Quantizers latest version
         run: |
           git checkout main
@@ -45,4 +45,4 @@ jobs:
           export PYTHONPATH="$PWD:${PYTHONPATH}"
           echo "Updated PYTHONPATH: $PYTHONPATH"
           cd ..
-          python tests/compatibility_tests/keras_comp_tests/compatibility_load_model_test_suite.py ${{  inputs.save_version  }}
+          python tests/compatibility_tests/keras_comp_tests/compatibility_weights_load_model_test_suite.py ${{  inputs.save_version  }}

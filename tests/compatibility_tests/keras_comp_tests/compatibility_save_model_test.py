@@ -12,13 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-import tensorflow as tf
+from keras.activations import swish, sigmoid
+from keras.layers import ReLU, LeakyReLU, Add
 
 from mct_quantizers.keras.quantizers import WeightsPOTInferableQuantizer, WeightsSymmetricInferableQuantizer, \
-    WeightsUniformInferableQuantizer, WeightsLUTPOTInferableQuantizer, WeightsLUTSymmetricInferableQuantizer
-from tests.compatibility_tests.keras_comp_tests.base_compatibility_test import BaseQuantizerBuildAndSaveTest
+    WeightsUniformInferableQuantizer, WeightsLUTPOTInferableQuantizer, WeightsLUTSymmetricInferableQuantizer, \
+    ActivationPOTInferableQuantizer, ActivationSymmetricInferableQuantizer, ActivationUniformInferableQuantizer, \
+    ActivationLutPOTInferableQuantizer
+from tests.compatibility_tests.keras_comp_tests.base_activation_compatibility_test import \
+    BaseActivationQuantizerBuildAndSaveTest
+from tests.compatibility_tests.keras_comp_tests.base_weights_compatibility_test import BaseWeightsQuantizerBuildAndSaveTest
 
-class WeightsPOTQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest):
+
+class WeightsPOTQuantizerBuildAndSaveTest(BaseWeightsQuantizerBuildAndSaveTest):
 
     def setUp(self):
         self.quantizer = WeightsPOTInferableQuantizer
@@ -30,7 +36,7 @@ class WeightsPOTQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest):
         self.dense_test(self.quantizer)
 
 
-class WeightsSymmetricQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest):
+class WeightsSymmetricQuantizerBuildAndSaveTest(BaseWeightsQuantizerBuildAndSaveTest):
 
     def setUp(self):
         self.quantizer = WeightsSymmetricInferableQuantizer
@@ -42,7 +48,7 @@ class WeightsSymmetricQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest):
         self.dense_test(quantizer=self.quantizer)
 
 
-class WeightsUniformQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest):
+class WeightsUniformQuantizerBuildAndSaveTest(BaseWeightsQuantizerBuildAndSaveTest):
 
     def setUp(self):
         self.quantizer = WeightsUniformInferableQuantizer
@@ -54,7 +60,7 @@ class WeightsUniformQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest):
         self.dense_test(self.quantizer)
 
 
-class WeightsPOTLutQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest):
+class WeightsPOTLutQuantizerBuildAndSaveTest(BaseWeightsQuantizerBuildAndSaveTest):
 
     def setUp(self):
         self.quantizer = WeightsLUTPOTInferableQuantizer
@@ -66,7 +72,7 @@ class WeightsPOTLutQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest):
         self.dense_test(self.quantizer)
 
 
-class WeightsSymmetricLutQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest):
+class WeightsSymmetricLutQuantizerBuildAndSaveTest(BaseWeightsQuantizerBuildAndSaveTest):
 
     def setUp(self):
         self.quantizer = WeightsLUTSymmetricInferableQuantizer
@@ -76,3 +82,55 @@ class WeightsSymmetricLutQuantizerBuildAndSaveTest(BaseQuantizerBuildAndSaveTest
         self.depthwise_test(self.quantizer)
         self.convtrans_test(self.quantizer)
         self.dense_test(self.quantizer)
+
+
+class ActivationPOTQuantizerBuildAndSaveTest(BaseActivationQuantizerBuildAndSaveTest):
+
+    def setUp(self):
+        self.quantizer = ActivationPOTInferableQuantizer
+
+    def test_activation_pot_quantizer(self):
+        self.activation_test(self.quantizer, ReLU, is_op=False)
+        self.activation_test(self.quantizer, LeakyReLU, is_op=False)
+        self.activation_test(self.quantizer, Add, is_op=True)
+        self.activation_test(self.quantizer, lambda: swish, is_op=False, layer_type=swish)
+        self.activation_test(self.quantizer, lambda: sigmoid, is_op=False, layer_type=sigmoid)
+
+
+class ActivationSymmetricQuantizerBuildAndSaveTest(BaseActivationQuantizerBuildAndSaveTest):
+
+    def setUp(self):
+        self.quantizer = ActivationSymmetricInferableQuantizer
+
+    def test_activation_pot_quantizer(self):
+        self.activation_test(self.quantizer, ReLU, is_op=False)
+        self.activation_test(self.quantizer, LeakyReLU, is_op=False)
+        self.activation_test(self.quantizer, Add, is_op=True)
+        self.activation_test(self.quantizer, lambda: swish, is_op=False, layer_type=swish)
+        self.activation_test(self.quantizer, lambda: sigmoid, is_op=False, layer_type=sigmoid)
+
+
+class ActivationUniformQuantizerBuildAndSaveTest(BaseActivationQuantizerBuildAndSaveTest):
+
+    def setUp(self):
+        self.quantizer = ActivationUniformInferableQuantizer
+
+    def test_activation_pot_quantizer(self):
+        self.activation_test(self.quantizer, ReLU, is_op=False)
+        self.activation_test(self.quantizer, LeakyReLU, is_op=False)
+        self.activation_test(self.quantizer, Add, is_op=True)
+        self.activation_test(self.quantizer, lambda: swish, is_op=False, layer_type=swish)
+        self.activation_test(self.quantizer, lambda: sigmoid, is_op=False, layer_type=sigmoid)
+
+
+class ActivationPOTLutQuantizerBuildAndSaveTest(BaseActivationQuantizerBuildAndSaveTest):
+
+    def setUp(self):
+        self.quantizer = ActivationLutPOTInferableQuantizer
+
+    def test_activation_pot_quantizer(self):
+        self.activation_test(self.quantizer, ReLU, is_op=False)
+        self.activation_test(self.quantizer, LeakyReLU, is_op=False)
+        self.activation_test(self.quantizer, Add, is_op=True)
+        self.activation_test(self.quantizer, lambda: swish, is_op=False, layer_type=swish)
+        self.activation_test(self.quantizer, lambda: sigmoid, is_op=False, layer_type=sigmoid)

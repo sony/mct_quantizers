@@ -16,24 +16,22 @@
 import unittest
 import sys
 
-from tests.compatibility_tests.keras_comp_tests.base_compatibility_test import BaseQuantizerBuildAndSaveTest
+from tests.compatibility_tests.keras_comp_tests.base_activation_compatibility_test import BaseActivationQuantizerBuildAndSaveTest
 from tests.compatibility_tests.keras_comp_tests.compatibility_save_model_test import \
-    WeightsPOTQuantizerBuildAndSaveTest, WeightsSymmetricQuantizerBuildAndSaveTest, \
-    WeightsUniformQuantizerBuildAndSaveTest, WeightsPOTLutQuantizerBuildAndSaveTest, \
-    WeightsSymmetricLutQuantizerBuildAndSaveTest
+    ActivationPOTQuantizerBuildAndSaveTest, ActivationPOTLutQuantizerBuildAndSaveTest, \
+    ActivationUniformQuantizerBuildAndSaveTest, ActivationSymmetricQuantizerBuildAndSaveTest
 
 if __name__ == '__main__':
     mct_quantizers_version = sys.argv[1]
     suiteList = []
     test_loader = unittest.TestLoader()
 
-    BaseQuantizerBuildAndSaveTest.VERSION = mct_quantizers_version
+    BaseActivationQuantizerBuildAndSaveTest.VERSION = mct_quantizers_version
 
-    suiteList.append(test_loader.loadTestsFromTestCase(WeightsPOTQuantizerBuildAndSaveTest))
-    suiteList.append(test_loader.loadTestsFromTestCase(WeightsSymmetricQuantizerBuildAndSaveTest))
-    suiteList.append(test_loader.loadTestsFromTestCase(WeightsUniformQuantizerBuildAndSaveTest))
-    suiteList.append(test_loader.loadTestsFromTestCase(WeightsPOTLutQuantizerBuildAndSaveTest))
-    suiteList.append(test_loader.loadTestsFromTestCase(WeightsSymmetricLutQuantizerBuildAndSaveTest))
+    suiteList.append(test_loader.loadTestsFromTestCase(ActivationPOTQuantizerBuildAndSaveTest))
+    suiteList.append(test_loader.loadTestsFromTestCase(ActivationSymmetricQuantizerBuildAndSaveTest))
+    suiteList.append(test_loader.loadTestsFromTestCase(ActivationUniformQuantizerBuildAndSaveTest))
+    suiteList.append(test_loader.loadTestsFromTestCase(ActivationPOTLutQuantizerBuildAndSaveTest))
 
     keras_save_models_suite = unittest.TestSuite(suiteList)
 
