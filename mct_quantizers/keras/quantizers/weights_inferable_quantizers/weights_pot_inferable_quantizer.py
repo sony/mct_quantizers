@@ -33,7 +33,7 @@ if FOUND_TF:
         Class for quantizing weights using a power-of-two quantizer.
         """
 
-        def __init__unsigned(self,
+        def __init__(self,
                      num_bits: int,
                      threshold: List[float],
                      per_channel: bool,
