@@ -26,7 +26,7 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
 
     # Add onnx op function to use during onnxruntime ActivationPOTQuantizer op inference
-    @onnx_op(op_type="ActivationPOTQuantizer",
+    @onnx_op(op_type="mct_quantizers::ActivationPOTQuantizer",
              inputs=[PyCustomOpDef.dt_float],
              outputs=[PyCustomOpDef.dt_float],
              attrs={"threshold": PyCustomOpDef.dt_float,
@@ -125,7 +125,7 @@ if FOUND_TORCH:
             Returns:
                 The node in the ONNX graph representing the output of this operation.
             """
-            return g.op("ai.onnx.contrib::ActivationPOTQuantizer",
+            return g.op("mct_quantizers::ActivationPOTQuantizer",
                         input_tensor,
                         threshold_f=threshold,
                         signed_i=int(signed),

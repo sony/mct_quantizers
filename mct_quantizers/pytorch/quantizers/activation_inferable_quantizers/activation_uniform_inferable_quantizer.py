@@ -55,7 +55,7 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
         return q
 
     # Add onnx op function to use during onnxruntime ActivationUniformQuantizer op inference
-    @onnx_op(op_type="ActivationUniformQuantizer",
+    @onnx_op(op_type="mct_quantizers::ActivationUniformQuantizer",
              inputs=[PyCustomOpDef.dt_float],
              outputs=[PyCustomOpDef.dt_float],
              attrs={"num_bits": PyCustomOpDef.dt_int64,
@@ -222,7 +222,7 @@ if FOUND_TORCH:
             Returns:
                 The node in the ONNX graph representing the output of this operation.
             """
-            return g.op("ai.onnx.contrib::ActivationUniformQuantizer", input_tensor,
+            return g.op("mct_quantizers::ActivationUniformQuantizer", input_tensor,
                         min_range_f=min_range,
                         max_range_f=max_range,
                         num_bits_i=num_bits

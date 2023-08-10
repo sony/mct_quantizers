@@ -56,7 +56,7 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
         return quantized
 
     # Add onnx op function to use during onnxruntime WeightsSymmetricQuantizer op inference
-    @onnx_op(op_type="WeightsSymmetricQuantizer",
+    @onnx_op(op_type="mct_quantizers::WeightsSymmetricQuantizer",
              inputs=[PyCustomOpDef.dt_float,
                      PyCustomOpDef.dt_float],
              outputs=[PyCustomOpDef.dt_float],
@@ -242,7 +242,7 @@ if FOUND_TORCH:
             Returns:
                 The node in the ONNX graph representing the output of this operation.
             """
-            return g.op("ai.onnx.contrib::WeightsSymmetricQuantizer", input_tensor,
+            return g.op("mct_quantizers::WeightsSymmetricQuantizer", input_tensor,
                         g.op('Constant', value_t=torch.tensor(threshold, dtype=torch.float32)),
                         num_bits_i=num_bits,
                         per_channel_i=int(per_channel),

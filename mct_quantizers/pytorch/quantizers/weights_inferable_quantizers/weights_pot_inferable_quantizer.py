@@ -25,7 +25,7 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
     from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_symmetric_inferable_quantizer import quantize_sym_weights_numpy
 
     # Add onnx op function to use during onnxruntime WeightsPOTQuantizer op inference
-    @onnx_op(op_type="WeightsPOTQuantizer",
+    @onnx_op(op_type="mct_quantizers::WeightsPOTQuantizer",
              inputs=[PyCustomOpDef.dt_float,
                      PyCustomOpDef.dt_float],
              outputs=[PyCustomOpDef.dt_float],
@@ -148,7 +148,7 @@ if FOUND_TORCH:
             Returns:
                 The node in the ONNX graph representing the output of this operation.
             """
-            return g.op("ai.onnx.contrib::WeightsPOTQuantizer", input_tensor,
+            return g.op("mct_quantizers::WeightsPOTQuantizer", input_tensor,
                         g.op('Constant', value_t=torch.tensor(threshold, dtype=torch.float32)),
                         num_bits_i=num_bits,
                         per_channel_i=int(per_channel),

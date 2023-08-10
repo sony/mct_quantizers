@@ -66,7 +66,7 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
         return quantized
 
     # Add onnx op function to use during onnxruntime WeightsUniformQuantizer op inference
-    @onnx_op(op_type="WeightsUniformQuantizer",
+    @onnx_op(op_type="mct_quantizers::WeightsUniformQuantizer",
              inputs=[PyCustomOpDef.dt_float,
                      PyCustomOpDef.dt_float,
                      PyCustomOpDef.dt_float
@@ -270,7 +270,7 @@ if FOUND_TORCH:
             Returns:
                 The node in the ONNX graph representing the output of this operation.
             """
-            return g.op("ai.onnx.contrib::WeightsUniformQuantizer", input_tensor,
+            return g.op("mct_quantizers::WeightsUniformQuantizer", input_tensor,
                         g.op('Constant', value_t=torch.tensor(min_range, dtype=torch.float32)),
                         g.op('Constant', value_t=torch.tensor(max_range, dtype=torch.float32)),
                         num_bits_i=num_bits,
