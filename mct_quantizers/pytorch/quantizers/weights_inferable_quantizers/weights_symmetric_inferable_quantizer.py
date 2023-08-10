@@ -58,21 +58,22 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
     # Add onnx op function to use during onnxruntime WeightsSymmetricQuantizer op inference
     @onnx_op(op_type="WeightsSymmetricQuantizer",
              inputs=[PyCustomOpDef.dt_float,
-                     PyCustomOpDef.dt_int64,
-                     PyCustomOpDef.dt_float,
-                     PyCustomOpDef.dt_bool,
-                     PyCustomOpDef.dt_int64],
-             outputs=[PyCustomOpDef.dt_float])
+                     PyCustomOpDef.dt_float],
+             outputs=[PyCustomOpDef.dt_float],
+             attrs={
+                 "num_bits": PyCustomOpDef.dt_int64,
+                 "per_channel": PyCustomOpDef.dt_int64,
+                 "channel_axis": PyCustomOpDef.dt_int64,
+             })
     def weight_sym_ort(input_tensor: np.ndarray,
-                       num_bits: int,
-                       threshold: float,
-                       per_channel: bool,
-                       channel_axis: int):
+                       threshold: np.ndarray, **kwargs):
+
         return quantize_sym_weights_numpy(input_tensor,
-                                          num_bits,
+                                          kwargs["num_bits"],
                                           threshold,
-                                          per_channel,
-                                          channel_axis)
+                                          kwargs["per_channel"],
+                                          kwargs["channel_axis"]
+                                          )
 
 
 if FOUND_TORCH:
@@ -242,10 +243,11 @@ if FOUND_TORCH:
                 The node in the ONNX graph representing the output of this operation.
             """
             return g.op("ai.onnx.contrib::WeightsSymmetricQuantizer", input_tensor,
-                        g.op('Constant', value_t=torch.tensor(num_bits, dtype=torch.int64)),
                         g.op('Constant', value_t=torch.tensor(threshold, dtype=torch.float32)),
-                        g.op('Constant', value_t=torch.tensor(per_channel, dtype=torch.bool)),
-                        g.op('Constant', value_t=torch.tensor(channel_axis, dtype=torch.int64))).setType(
+                        num_bits_i=num_bits,
+                        per_channel_i=int(per_channel),
+                        channel_axis_i=channel_axis
+                        ).setType(
                 input_tensor.type())
 
         def backward(ctx: Any, *grad_outputs: Any) -> Any:

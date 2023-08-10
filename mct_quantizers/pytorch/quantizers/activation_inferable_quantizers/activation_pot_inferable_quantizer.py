@@ -15,6 +15,7 @@
 from typing import Any, List
 
 import numpy as np
+from torch.onnx import symbolic_helper
 
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
 from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS
@@ -23,27 +24,27 @@ from mct_quantizers.common.quant_info import QuantizationMethod
 if FOUND_ONNXRUNTIME_EXTENSIONS:
     from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import quantize_sym_activations_numpy
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
+
     # Add onnx op function to use during onnxruntime ActivationPOTQuantizer op inference
     @onnx_op(op_type="ActivationPOTQuantizer",
-             inputs=[PyCustomOpDef.dt_float,
-                     PyCustomOpDef.dt_float,
-                     PyCustomOpDef.dt_bool,
-                     PyCustomOpDef.dt_int64],
-             outputs=[PyCustomOpDef.dt_float])
+             inputs=[PyCustomOpDef.dt_float],
+             outputs=[PyCustomOpDef.dt_float],
+             attrs={"threshold": PyCustomOpDef.dt_float,
+                    "signed": PyCustomOpDef.dt_int64,
+                    "num_bits": PyCustomOpDef.dt_int64
+                    })
     def activation_pot_ort(input_tensor,
-                           threshold,
-                           signed,
-                           nbits):
+                           **kwargs):
         return quantize_sym_activations_numpy(input_tensor,
-                                              threshold,
-                                              signed,
-                                              nbits)
+                                              kwargs["threshold"],
+                                              kwargs["signed"],
+                                              kwargs["num_bits"]
+                                              )
 
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import \
     ActivationSymmetricInferableQuantizer, quantize_sym_activations_torch, quantize_sym_activations_numpy
-
 
     @mark_quantizer(quantization_target=QuantizationTarget.Activation,
                     quantization_method=[QuantizationMethod.POWER_OF_TWO],
@@ -83,13 +84,14 @@ if FOUND_TORCH:
             return super(ActivationPOTInferableQuantizer, self).__call__(inputs)
 
 
+
+
     class ActivationPOTF(torch.autograd.Function):
         """
         Custom autograd function for POT activations quantizer.
         It provides a way to define a custom forward and symbolic operation
         and currently does not implement a backward operation.
         """
-
         @staticmethod
         def forward(ctx, input_tensor, threshold, signed, num_bits):
             """
@@ -123,10 +125,12 @@ if FOUND_TORCH:
             Returns:
                 The node in the ONNX graph representing the output of this operation.
             """
-            return g.op("ai.onnx.contrib::ActivationPOTQuantizer", input_tensor,
-                        g.op('Constant', value_t=torch.tensor(threshold, dtype=torch.float32)),
-                        g.op('Constant', value_t=torch.tensor(signed, dtype=torch.bool)),
-                        g.op('Constant', value_t=torch.tensor(num_bits, dtype=torch.int64))).setType(
+            return g.op("ai.onnx.contrib::ActivationPOTQuantizer",
+                        input_tensor,
+                        threshold_f=threshold,
+                        signed_i=int(signed),
+                        num_bits_i=num_bits
+                        ).setType(
                 input_tensor.type())
 
         def backward(ctx: Any, *grad_outputs: Any) -> Any:

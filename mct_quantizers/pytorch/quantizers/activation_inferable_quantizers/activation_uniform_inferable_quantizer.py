@@ -56,25 +56,24 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
 
     # Add onnx op function to use during onnxruntime ActivationUniformQuantizer op inference
     @onnx_op(op_type="ActivationUniformQuantizer",
-             inputs=[PyCustomOpDef.dt_float,
-                     PyCustomOpDef.dt_float,
-                     PyCustomOpDef.dt_float,
-                     PyCustomOpDef.dt_int64],
-             outputs=[PyCustomOpDef.dt_float])
+             inputs=[PyCustomOpDef.dt_float],
+             outputs=[PyCustomOpDef.dt_float],
+             attrs={"num_bits": PyCustomOpDef.dt_int64,
+                    "min_range": PyCustomOpDef.dt_float,
+                    "max_range": PyCustomOpDef.dt_float}
+             )
     def activation_uniform_ort(input_tensor: np.ndarray,
-                               min_range: float,
-                               max_range: float,
-                               num_bits: int):
+                               **kwargs):
         return quantize_uniform_activations_numpy(input_tensor,
-                                                  min_range,
-                                                  max_range,
-                                                  num_bits)
+                                                  kwargs["min_range"],
+                                                  kwargs["max_range"],
+                                                  kwargs["num_bits"])
 
 
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.base_uniform_inferable_quantizer import BaseUniformInferableQuantizer
-    from mct_quantizers.pytorch.quantizer_utils import fix_range_to_include_zero
+    from mct_quantizers.pytorch.quantizer_utils import fix_range_to_include_zero, get_working_device
 
 
     def quantize_uniform_activations_torch(tensor_data: torch.Tensor,
@@ -94,11 +93,13 @@ if FOUND_TORCH:
            torch.Tensor: Uniformly quantized tensor.
        """
 
-        range_min = torch.tensor([range_min])
-        range_max = torch.tensor([range_max])
+        # range_min = torch.tensor([range_min]).to(get_working_device())
+        # range_max = torch.tensor([range_max]).to(get_working_device())
 
         # adjusts the quantization rage so the quantization grid include zero.
-        a, b = fix_range_to_include_zero(range_min, range_max, n_bits)
+        # a, b = fix_range_to_include_zero(range_min, range_max, n_bits)
+
+        a, b = adjust_range_to_include_zero(range_min, range_max, n_bits)
 
         # Compute the step size of quantized values.
         delta = (b - a) / (2 ** n_bits - 1)
@@ -222,9 +223,10 @@ if FOUND_TORCH:
                 The node in the ONNX graph representing the output of this operation.
             """
             return g.op("ai.onnx.contrib::ActivationUniformQuantizer", input_tensor,
-                        g.op('Constant', value_t=torch.tensor(min_range, dtype=torch.float32)),
-                        g.op('Constant', value_t=torch.tensor(max_range, dtype=torch.float32)),
-                        g.op('Constant', value_t=torch.tensor(num_bits, dtype=torch.int64))).setType(
+                        min_range_f=min_range,
+                        max_range_f=max_range,
+                        num_bits_i=num_bits
+                        ).setType(
                 input_tensor.type())
 
         def backward(ctx: Any, *grad_outputs: Any) -> Any:

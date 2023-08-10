@@ -26,19 +26,19 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
 
     # Add onnx op function to use during onnxruntime ActivationSymmetricQuantizer op inference
     @onnx_op(op_type="ActivationSymmetricQuantizer",
-             inputs=[PyCustomOpDef.dt_float,
-                     PyCustomOpDef.dt_float,
-                     PyCustomOpDef.dt_bool,
-                     PyCustomOpDef.dt_int64],
-             outputs=[PyCustomOpDef.dt_float])
+             inputs=[PyCustomOpDef.dt_float],
+             outputs=[PyCustomOpDef.dt_float],
+             attrs={"threshold": PyCustomOpDef.dt_float,
+                    "signed": PyCustomOpDef.dt_int64,
+                    "num_bits": PyCustomOpDef.dt_int64
+                    }
+             )
     def activation_sym_ort(input_tensor,
-                           threshold,
-                           signed,
-                           num_bits):
+                           **kwargs):
         return quantize_sym_activations_numpy(input_tensor,
-                                              threshold,
-                                              signed,
-                                              num_bits)
+                                              kwargs["threshold"],
+                                              kwargs["signed"],
+                                              kwargs["num_bits"])
 
 
     def quantize_sym_activations_numpy(input_tensor: np.ndarray,
@@ -201,9 +201,10 @@ if FOUND_TORCH:
                 The node in the ONNX graph representing the output of this operation.
             """
             return g.op("ai.onnx.contrib::ActivationSymmetricQuantizer", input_tensor,
-                        g.op('Constant', value_t=torch.tensor(threshold, dtype=torch.float32)),
-                        g.op('Constant', value_t=torch.tensor(signed, dtype=torch.bool)),
-                        g.op('Constant', value_t=torch.tensor(num_bits, dtype=torch.int64))).setType(
+                        threshold_f=threshold,
+                        signed_i=int(signed),
+                        num_bits_i=num_bits
+                        ).setType(
                 input_tensor.type())
 
         def backward(ctx: Any, *grad_outputs: Any) -> Any:
