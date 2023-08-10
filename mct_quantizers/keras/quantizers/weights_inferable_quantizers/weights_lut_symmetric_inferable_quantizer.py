@@ -142,7 +142,7 @@ if FOUND_TF:
 
                 # Quantize the input tensor using per-channel quantization
                 q_tensor = lut_quantizer(inputs,
-                                         lut_values=self._np_lut_values,
+                                         lut_values=self._np_lut_values.astype(np.float32),
                                          signed=True,
                                          threshold=self._np_threshold,
                                          lut_values_bitwidth=self.lut_values_bitwidth,

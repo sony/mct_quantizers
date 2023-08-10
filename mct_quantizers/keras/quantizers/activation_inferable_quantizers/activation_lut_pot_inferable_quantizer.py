@@ -127,7 +127,7 @@ if FOUND_TF:
                                                f'{inputs.dtype}'
 
             return lut_quantizer(inputs,
-                                 lut_values=self._lut_values_as_np,
+                                 lut_values=self._lut_values_as_np.astype(np.float32),
                                  signed=self.signed,
                                  # In activation per-channel quantization is not supported
                                  # thus we expect a single threshold value. Assertion is made in init.
