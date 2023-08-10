@@ -16,8 +16,7 @@ import tensorflow as tf
 
 from mct_quantizers.keras.quantizers import WeightsPOTInferableQuantizer, WeightsSymmetricInferableQuantizer, \
     WeightsUniformInferableQuantizer, WeightsLUTPOTInferableQuantizer, WeightsLUTSymmetricInferableQuantizer
-from tests.keras_tests.compatibility_tests.base_compatibility_test import BaseQuantizerLoadAndCompareTest
-from tests.keras_tests.test_keras_quantization_wrapper import WEIGHT, DEPTHWISE_WEIGHT
+from tests.compatibility_tests.keras_comp_tests.base_compatibility_test import BaseQuantizerLoadAndCompareTest
 
 
 class WeightsPOTQuantizerLoadAndCompareTest(BaseQuantizerLoadAndCompareTest):

@@ -16,10 +16,11 @@
 import unittest
 import sys
 
-from tests.keras_tests.compatibility_tests.base_compatibility_test import BaseQuantizerBuildAndSaveTest
-from tests.keras_tests.compatibility_tests.compatibility_save_model_test import WeightsPOTQuantizerBuildAndSaveTest, \
-    WeightsSymmetricQuantizerBuildAndSaveTest, WeightsUniformQuantizerBuildAndSaveTest, \
-    WeightsPOTLutQuantizerBuildAndSaveTest, WeightsSymmetricLutQuantizerBuildAndSaveTest
+from tests.compatibility_tests.keras_comp_tests.base_compatibility_test import BaseQuantizerBuildAndSaveTest
+from tests.compatibility_tests.keras_comp_tests.compatibility_save_model_test import \
+    WeightsPOTQuantizerBuildAndSaveTest, WeightsSymmetricQuantizerBuildAndSaveTest, \
+    WeightsUniformQuantizerBuildAndSaveTest, WeightsPOTLutQuantizerBuildAndSaveTest, \
+    WeightsSymmetricLutQuantizerBuildAndSaveTest
 
 if __name__ == '__main__':
     mct_quantizers_version = sys.argv[1]
