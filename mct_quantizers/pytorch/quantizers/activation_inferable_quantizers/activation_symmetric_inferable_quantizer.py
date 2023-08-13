@@ -24,6 +24,9 @@ if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.base_symmetric_inferable_quantizer import BaseSymmetricInferableQuantizer
     from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
+    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers\
+        .base_activation_quantizer_autograd_function import \
+        BaseActivationQuantizerAutogradFunction
 
 
     def quantize_sym_activations_torch(input_tensor: torch.Tensor,
@@ -114,7 +117,7 @@ if FOUND_TORCH:
                                                                  quant_max=self.max_quantized_domain)
 
 
-    class ActivationSymF(torch.autograd.Function):
+    class ActivationSymF(BaseActivationQuantizerAutogradFunction):
         """
         Custom autograd function for Symmetric activations quantizer.
         It provides a way to define a custom forward and symbolic operation
@@ -157,20 +160,11 @@ if FOUND_TORCH:
             return g.op(f"{ONNX_CUSTOM_OP_DOMAIN}::ActivationSymmetricQuantizer", input_tensor,
                         threshold_f=threshold,
                         signed_i=int(signed),
-                        num_bits_i=num_bits
+                        num_bits_i=num_bits,
+                        **ActivationSymF._get_metadata_attributes()
                         ).setType(
                 input_tensor.type())
 
-        def backward(ctx: Any, *grad_outputs: Any) -> Any:
-            """
-            Backward computation function. Raises a NotImplementedError
-            since backward is not needed for this op.
-
-            Args:
-                ctx (Any): A context object from the forward pass.
-                grad_outputs (Any): Gradients w.r.t. the output tensor.
-            """
-            raise NotImplementedError()
 
 else:
     class ActivationSymmetricInferableQuantizer:  # pragma: no cover

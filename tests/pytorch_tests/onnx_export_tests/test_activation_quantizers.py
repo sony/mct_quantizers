@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+from mct_quantizers import __version__ as mctq_version
 import tempfile
 import unittest
 
@@ -59,6 +60,7 @@ def _get_qparams_from_input_tensors_for_single_quantizer(onnx_file_path, quantiz
     node_qparams = [constname_to_constvalue[input_name] for input_name in node.input if
                     input_name in constname_to_constvalue]
 
+
     return node_qparams
 
 
@@ -71,16 +73,12 @@ def _get_qparams_from_attributes_for_single_quantizer(onnx_file_path, quantizer_
     # Extract attributes as a key-value dictionary
     attributes_dict = {}
     for attribute in node.attribute:
-        # For simplicity, we're assuming all attributes are of basic types
-        # like float, int, string, etc. Some attributes might be lists or tensors,
-        # so you may need to handle those cases separately.
         if attribute.HasField('f'):
             attributes_dict[attribute.name] = attribute.f
         elif attribute.HasField('i'):
             attributes_dict[attribute.name] = attribute.i
         elif attribute.HasField('s'):
             attributes_dict[attribute.name] = attribute.s.decode('utf-8')
-        # ... handle other data types as necessary
         else:
             raise Exception(f'Encountered an unfamiliar attribute type in attribute {attribute}')
 
@@ -120,7 +118,7 @@ class TestONNXExportActivationQuantizers(unittest.TestCase):
                                              f'{onnx_threshold}'
         assert onnx_signed == signed, f'Expected signed in quantizer to be {signed} but found {onnx_signed}'
         assert onnx_nbits == num_bits, f'Expected num_bits in quantizer to be {num_bits} but found {onnx_nbits}'
-
+        assert node_qparams['mctq_version'] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams["mctq_version"]}'
 
 
 
@@ -152,7 +150,7 @@ class TestONNXExportActivationQuantizers(unittest.TestCase):
                                              f'{onnx_threshold}'
         assert onnx_signed == signed, f'Expected signed in quantizer to be {signed} but found {onnx_signed}'
         assert onnx_nbits == num_bits, f'Expected num_bits in quantizer to be {num_bits} but found {onnx_nbits}'
-
+        assert node_qparams['mctq_version'] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams["mctq_version"]}'
 
     def test_onnx_activation_uniform(self):
         num_bits = 3
@@ -185,6 +183,7 @@ class TestONNXExportActivationQuantizers(unittest.TestCase):
                                       f' but found {onnx_min_range}'
         assert onnx_max_range == max_range[0], f'Expected max_range in quantizer to be {max_range} but found {onnx_max_range}'
         assert onnx_nbits == num_bits, f'Expected num_bits in quantizer to be {num_bits} but found {onnx_nbits}'
+        assert node_qparams['mctq_version'] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams["mctq_version"]}'
 
 
 

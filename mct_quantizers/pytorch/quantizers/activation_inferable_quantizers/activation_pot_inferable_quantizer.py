@@ -16,17 +16,18 @@ from typing import Any, List
 
 import numpy as np
 
+from mct_quantizers import __version__ as mctq_version
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
 from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS
 from mct_quantizers.common.quant_info import QuantizationMethod
+from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.base_activation_quantizer_autograd_function \
+    import \
+    BaseActivationQuantizerAutogradFunction
 
 if FOUND_TORCH:
     from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
     import torch
-    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer \
-        import \
-        ActivationSymmetricInferableQuantizer, quantize_sym_activations_torch, quantize_sym_activations_numpy
-
+    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import ActivationSymmetricInferableQuantizer, quantize_sym_activations_torch, quantize_sym_activations_numpy
 
     @mark_quantizer(quantization_target=QuantizationTarget.Activation,
                     quantization_method=[QuantizationMethod.POWER_OF_TWO],
@@ -66,7 +67,7 @@ if FOUND_TORCH:
             return super(ActivationPOTInferableQuantizer, self).__call__(inputs)
 
 
-    class ActivationPOTF(torch.autograd.Function):
+    class ActivationPOTF(BaseActivationQuantizerAutogradFunction):
         """
         Custom autograd function for POT activations quantizer.
         It provides a way to define a custom forward and symbolic operation
@@ -106,24 +107,16 @@ if FOUND_TORCH:
             Returns:
                 The node in the ONNX graph representing the output of this operation.
             """
-            return g.op(f"{ONNX_CUSTOM_OP_DOMAIN}::ActivationPOTQuantizer",
+            added_op = g.op(f"{ONNX_CUSTOM_OP_DOMAIN}::ActivationPOTQuantizer",
                         input_tensor,
                         threshold_f=threshold,
                         signed_i=int(signed),
-                        num_bits_i=num_bits
+                        num_bits_i=num_bits,
+                            **ActivationPOTF._get_metadata_attributes()
                         ).setType(
                 input_tensor.type())
+            return added_op
 
-        def backward(ctx: Any, *grad_outputs: Any) -> Any:
-            """
-            Backward computation function. Raises a NotImplementedError
-            since backward is not needed for this op.
-
-            Args:
-                ctx (Any): A context object from the forward pass.
-                grad_outputs (Any): Gradients w.r.t. the output tensor.
-            """
-            raise NotImplementedError()
 
 else:
     class ActivationPOTInferableQuantizer:  # pragma: no cover
@@ -134,10 +127,8 @@ else:
 
 if FOUND_ONNXRUNTIME_EXTENSIONS:
     from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer \
-        import \
-        quantize_sym_activations_numpy
+        import quantize_sym_activations_numpy
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
-
 
     # Add onnx op function to use during onnxruntime ActivationPOTQuantizer op inference
     @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::ActivationPOTQuantizer",

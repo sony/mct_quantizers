@@ -136,7 +136,8 @@ if FOUND_TORCH:
                         num_bits_i=num_bits,
                         per_channel_i=int(per_channel),
                         channel_axis_i=channel_axis,
-                        signed_i=int(WeightsPOTF.is_signed())
+                        signed_i=int(WeightsPOTF.is_signed()),
+                        **WeightsPOTF._get_metadata_attributes()
                         ).setType(
                 input_tensor.type())
 

@@ -21,11 +21,14 @@ from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTEN
 from mct_quantizers.common.quant_info import QuantizationMethod
 from mct_quantizers.common.quant_utils import adjust_range_to_include_zero
 
+
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.base_uniform_inferable_quantizer import BaseUniformInferableQuantizer
     from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
-
+    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.base_activation_quantizer_autograd_function \
+        import \
+        BaseActivationQuantizerAutogradFunction
 
     def quantize_uniform_activations_torch(tensor_data: torch.Tensor,
                                            range_min: float,
@@ -133,7 +136,7 @@ if FOUND_TORCH:
                                                                  quant_max=self.max_quantized_domain)
 
 
-    class ActivationUniformF(torch.autograd.Function):
+    class ActivationUniformF(BaseActivationQuantizerAutogradFunction):
         """
         Custom autograd function for uniform activations quantizer.
         It provides a way to define a custom forward and symbolic operation
@@ -176,20 +179,11 @@ if FOUND_TORCH:
             return g.op(f"{ONNX_CUSTOM_OP_DOMAIN}::ActivationUniformQuantizer", input_tensor,
                         min_range_f=min_range,
                         max_range_f=max_range,
-                        num_bits_i=num_bits
+                        num_bits_i=num_bits,
+                        **ActivationUniformF._get_metadata_attributes()
                         ).setType(
                 input_tensor.type())
 
-        def backward(ctx: Any, *grad_outputs: Any) -> Any:
-            """
-            Backward computation function. Raises a NotImplementedError
-            since backward is not needed for this op.
-
-            Args:
-                ctx (Any): A context object from the forward pass.
-                grad_outputs (Any): Gradients w.r.t. the output tensor.
-            """
-            raise NotImplementedError()
 
 else:
     class ActivationUniformInferableQuantizer:  # pragma: no cover
@@ -200,7 +194,6 @@ else:
 
 if FOUND_ONNXRUNTIME_EXTENSIONS:
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
-
 
     def quantize_uniform_activations_numpy(tensor_data: np.ndarray,
                                            range_min: float,

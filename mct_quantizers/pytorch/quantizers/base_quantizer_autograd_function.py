@@ -15,7 +15,7 @@
 from typing import Any
 
 import torch
-
+from mct_quantizers import __version__ as mctq_version
 
 class BaseQuantizerAutogradFunction(torch.autograd.Function):
     """
@@ -23,10 +23,6 @@ class BaseQuantizerAutogradFunction(torch.autograd.Function):
     It provides a way to define a custom forward and symbolic operation
     and currently does not implement a backward operation.
     """
-
-    # @staticmethod
-    # def is_signed():
-    #     return True
 
     @staticmethod
     def forward(ctx, input_tensor, **kwargs):
@@ -50,3 +46,7 @@ class BaseQuantizerAutogradFunction(torch.autograd.Function):
             grad_outputs (Any): Gradients w.r.t. the output tensor.
         """
         raise NotImplementedError()
+
+    @staticmethod
+    def _get_metadata_attributes():
+        return {"mctq_version_s": mctq_version}
