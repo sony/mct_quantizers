@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+from typing import List
 
 import numpy as np
 
@@ -75,8 +76,8 @@ if FOUND_TORCH:
 
         def __init__(self,
                      num_bits: int,
-                     min_range: np.ndarray,
-                     max_range: np.ndarray
+                     min_range: List[float],
+                     max_range: List[float]
                      ):
             """
             Initialize the quantizer with the specified parameters.

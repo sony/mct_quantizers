@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+from typing import List
 
 import numpy as np
 
@@ -79,7 +80,7 @@ if FOUND_TORCH:
 
         def __init__(self,
                      num_bits: int,
-                     threshold: np.ndarray,
+                     threshold: List[float],
                      per_channel: bool,
                      channel_axis: int = None
                      ):
@@ -209,8 +210,6 @@ else:
 
 if FOUND_ONNXRUNTIME_EXTENSIONS:
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
-
-
     def quantize_sym_weights_numpy(input_tensor: np.ndarray,
                                    num_bits: int,
                                    threshold: float,
