@@ -23,11 +23,8 @@ from mct_quantizers.common.quant_info import QuantizationMethod
 if FOUND_TORCH:
     from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
     import torch
-    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import ActivationSymmetricInferableQuantizer, quantize_sym_activations_torch, quantize_sym_activations_numpy
-    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.base_activation_quantizer_autograd_function \
-        import \
-        BaseActivationQuantizerAutogradFunction
-
+    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import ActivationSymmetricInferableQuantizer, quantize_sym_activations_torch
+    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.base_activation_quantizer_autograd_function import BaseActivationQuantizerAutogradFunction
 
     @mark_quantizer(quantization_target=QuantizationTarget.Activation,
                     quantization_method=[QuantizationMethod.POWER_OF_TWO],
