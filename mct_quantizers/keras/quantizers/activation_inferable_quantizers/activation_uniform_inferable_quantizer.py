@@ -103,6 +103,17 @@ if FOUND_TF:
                     'min_range': self.min_range,
                     'max_range': self.max_range}
 
+        @classmethod
+        def from_config(cls, config):
+            """
+            Args:
+                config(dict): dictionary of object configuration
+            Returns: A object created with config
+            """
+            return cls(config.get('num_bits'),
+                       config.get('min_range'),
+                       config.get('max_range'))
+
 else:
     class ActivationUniformInferableQuantizer:  # pragma: no cover
         def __init__(self, *args, **kwargs):

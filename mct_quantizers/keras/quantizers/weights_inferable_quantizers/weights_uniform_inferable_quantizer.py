@@ -142,7 +142,6 @@ if FOUND_TF:
                                                                     max=self.max_range_np,
                                                                     num_bits=self.num_bits)
 
-
         def get_config(self):
             """
             Return a dictionary with the configuration of the quantizer.
@@ -156,6 +155,20 @@ if FOUND_TF:
                     'min_range': self.min_range,
                     'channel_axis': self.channel_axis,
                     'input_rank': self.input_rank}
+
+        @classmethod
+        def from_config(cls, config):
+            """
+            Args:
+                config(dict): dictionary of object configuration
+            Returns: A object created with config
+            """
+            return cls(config.get('num_bits'),
+                       config.get('min_range'),
+                       config.get('max_range'),
+                       config.get('per_channel'),
+                       config.get('channel_axis', None),
+                       config.get('input_rank', None))
 
 
 else:

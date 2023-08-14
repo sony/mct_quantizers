@@ -77,7 +77,16 @@ if FOUND_TF:
                     'signed': self.signed,
                     'threshold': self.threshold}
 
-
+        @classmethod
+        def from_config(cls, config):
+            """
+            Args:
+                config(dict): dictionary of object configuration
+            Returns: A object created with config
+            """
+            return cls(config.get('num_bits'),
+                       config.get('threshold'),
+                       config.get('signed'))
 else:
     class ActivationSymmetricInferableQuantizer:  # pragma: no cover
         def __init__(self, *args, **kwargs):
