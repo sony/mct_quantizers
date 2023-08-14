@@ -23,6 +23,7 @@ keras = tf.keras
 layers = keras.layers
 
 WEIGHT = 'kernel'
+DEPTHWISE_WEIGHT = 'depthwise_kernel'
 CLASS_NAME = 'class_name'
 
 
