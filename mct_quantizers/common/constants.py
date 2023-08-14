@@ -22,7 +22,7 @@ TENSORFLOW = 'tensorflow'
 TORCH = 'torch'
 ONNX = 'onnx'
 ONNXRUNTIME = 'onnxruntime'
-ONNXRUNTIME_EXTENSIONS = 'onnxruntime_extensions'
+ONNXRUNTIME_EXTENSIONS = 'onnxruntime-extensions'
 
 FOUND_TF = importlib.util.find_spec(TENSORFLOW) is not None
 FOUND_TORCH = importlib.util.find_spec(TORCH) is not None
