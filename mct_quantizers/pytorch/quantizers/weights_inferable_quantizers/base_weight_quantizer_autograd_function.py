@@ -12,16 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-from typing import Any
-
-import torch
 
 from mct_quantizers.pytorch.quantizers.base_quantizer_autograd_function import BaseQuantizerAutogradFunction
 
 
 class BaseWeightQuantizerAutogradFunction(BaseQuantizerAutogradFunction):
     """
-    Custom autograd function for quantizer.
+    Custom autograd function for weights quantizer.
     It provides a way to define a custom forward and symbolic operation
     and currently does not implement a backward operation.
     """

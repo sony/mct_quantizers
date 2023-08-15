@@ -229,7 +229,6 @@ else:
 if FOUND_ONNXRUNTIME_EXTENSIONS:
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
 
-
     def quantize_uniform_weights_numpy(input_tensor: np.ndarray,
                                        num_bits: int,
                                        min_range: np.ndarray,
@@ -269,8 +268,8 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
         quantized = np.round(np.where(input_tensor > b, b, clipped_x) / delta) * delta
         return quantized
 
-
     # Add onnx op function to use during onnxruntime WeightsUniformQuantizer op inference
+    # Using this decorator the op WeightsUniformQuantizer is defined using its inputs, outputs and attributes.
     @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::WeightsUniformQuantizer",
              inputs=[PyCustomOpDef.dt_float,
                      PyCustomOpDef.dt_float,

@@ -56,6 +56,16 @@ if FOUND_TORCH:
             assert is_threshold_pot, f'Expected threshold to be power of 2 but is {threshold}'
 
         def __call__(self, inputs):
+            """
+            Quantize an input tensor. If custom implementation is enabled, quantizer's autograd
+            function class is applied.
+
+            Args:
+                inputs: Activation tensor to quantize.
+
+            Returns:
+                Quantized tensor.
+            """
             if self._use_custom_impl and torch.jit.is_tracing():
                 return ActivationPOTF.apply(inputs,
                                             self.threshold_np,
@@ -123,11 +133,11 @@ else:
                             'Could not find torch package.')
 
 if FOUND_ONNXRUNTIME_EXTENSIONS:
-    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer \
-        import quantize_sym_activations_numpy
+    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_symmetric_inferable_quantizer import quantize_sym_activations_numpy
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
 
-    # Add onnx op function to use during onnxruntime ActivationPOTQuantizer op inference
+    # Add onnx op function to use during onnxruntime ActivationPOTQuantizer op inference.
+    # Using this decorator the op ActivationPOTQuantizer is defined using its inputs, outputs and attributes.
     @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::ActivationPOTQuantizer",
              inputs=[PyCustomOpDef.dt_float],
              outputs=[PyCustomOpDef.dt_float],

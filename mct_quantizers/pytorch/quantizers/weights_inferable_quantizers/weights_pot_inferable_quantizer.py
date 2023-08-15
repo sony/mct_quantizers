@@ -156,6 +156,7 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
 
 
     # Add onnx op function to use during onnxruntime WeightsPOTQuantizer op inference
+    # Using this decorator the op WeightsPOTQuantizer is defined using its inputs, outputs and attributes.
     @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::WeightsPOTQuantizer",
              inputs=[PyCustomOpDef.dt_float,
                      PyCustomOpDef.dt_float],

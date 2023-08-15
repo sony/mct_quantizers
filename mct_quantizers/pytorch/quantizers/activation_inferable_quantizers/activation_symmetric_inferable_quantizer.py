@@ -24,10 +24,7 @@ if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.base_symmetric_inferable_quantizer import BaseSymmetricInferableQuantizer
     from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
-    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers\
-        .base_activation_quantizer_autograd_function import \
-        BaseActivationQuantizerAutogradFunction
-
+    from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.base_activation_quantizer_autograd_function import BaseActivationQuantizerAutogradFunction
 
     def quantize_sym_activations_torch(input_tensor: torch.Tensor,
                                        threshold: float,
@@ -173,11 +170,12 @@ else:
                             'when using ActivationSymmetricInferableQuantizer. '
                             'Could not find torch package.')
 
+
 if FOUND_ONNXRUNTIME_EXTENSIONS:
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
 
-
     # Add onnx op function to use during onnxruntime ActivationSymmetricQuantizer op inference
+    # Using this decorator the op ActivationSymmetricQuantizer is defined using its inputs, outputs and attributes.
     @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::ActivationSymmetricQuantizer",
              inputs=[PyCustomOpDef.dt_float],
              outputs=[PyCustomOpDef.dt_float],

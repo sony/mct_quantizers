@@ -227,6 +227,7 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
 
 
     # Add onnx op function to use during onnxruntime ActivationUniformQuantizer op inference
+    # Using this decorator the op ActivationUniformQuantizer is defined using its inputs, outputs and attributes.
     @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::ActivationUniformQuantizer",
              inputs=[PyCustomOpDef.dt_float],
              outputs=[PyCustomOpDef.dt_float],

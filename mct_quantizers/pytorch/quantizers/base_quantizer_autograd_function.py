@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-from typing import Any
+from typing import Any, Dict
 
 import torch
 from mct_quantizers import __version__ as mctq_version
@@ -48,5 +48,10 @@ class BaseQuantizerAutogradFunction(torch.autograd.Function):
         raise NotImplementedError()
 
     @staticmethod
-    def _get_metadata_attributes():
+    def _get_metadata_attributes() -> Dict[str,Any]:
+        """
+
+        Returns: Metadata dictionary for all quantizers onnx symbolic ops.
+
+        """
         return {"mctq_version_s": mctq_version}
