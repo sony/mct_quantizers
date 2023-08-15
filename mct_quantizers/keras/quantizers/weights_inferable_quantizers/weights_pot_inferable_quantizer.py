@@ -13,13 +13,11 @@
 # limitations under the License.
 # ==============================================================================
 from typing import List
-
 import numpy as np
 
 from mct_quantizers.common.base_inferable_quantizer import QuantizationTarget, mark_quantizer, QuantizerID
 from mct_quantizers.common.constants import FOUND_TF
 from mct_quantizers.common.quant_info import QuantizationMethod
-
 
 if FOUND_TF:
     from mct_quantizers.keras.quantizers.weights_inferable_quantizers.weights_symmetric_inferable_quantizer import \
@@ -58,6 +56,20 @@ if FOUND_TF:
 
             is_threshold_pot = np.all([int(np.log2(x)) == np.log2(x) for x in self._np_threshold.flatten()])
             assert is_threshold_pot, f'Expected threshold to be power of 2 but is {self.threshold}'
+
+        @classmethod
+        def from_config(cls, config):
+            """
+            Return an object with config
+            Args:
+                config(dict): dictionary of object configuration
+            Returns: An object created with config
+            """
+            return cls(config.get('num_bits'),
+                       config.get('threshold'),
+                       config.get('per_channel'),
+                       config.get('channel_axis', None),
+                       config.get('input_rank', None))
 
 
 else:

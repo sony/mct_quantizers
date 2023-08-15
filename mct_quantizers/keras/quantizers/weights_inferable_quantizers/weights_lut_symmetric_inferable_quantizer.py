@@ -179,6 +179,23 @@ if FOUND_TF:
                     'lut_values_bitwidth': self.lut_values_bitwidth,
                     'eps': self.eps}
 
+        @classmethod
+        def from_config(cls, config):
+            """
+            Return an object with config
+            Args:
+                config(dict): dictionary of object configuration
+            Returns: An object created with config
+            """
+            return cls(config.get('num_bits'),
+                       config.get('lut_values'),
+                       config.get('threshold'),
+                       config.get('per_channel'),
+                       config.get('channel_axis', None),
+                       config.get('input_rank', None),
+                       config.get('lut_values_bitwidth', LUT_VALUES_BITWIDTH),
+                       config.get('eps', EPS))
+
         @property
         def signed(self) -> bool:
             """

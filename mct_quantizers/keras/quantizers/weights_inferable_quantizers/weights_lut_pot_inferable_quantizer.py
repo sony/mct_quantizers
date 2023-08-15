@@ -69,6 +69,22 @@ if FOUND_TF:
             is_threshold_pot = np.all([int(np.log2(x)) == np.log2(x) for x in self._np_threshold.flatten()])
             assert is_threshold_pot, f'Expected threshold to be power of 2 but is {self._np_threshold}'
 
+        @classmethod
+        def from_config(cls, config):
+            """
+            Return an object with config
+            Args:
+                config(dict): dictionary of object configuration
+            Returns: An object created with config
+            """
+            return cls(config.get('num_bits'),
+                       config.get('lut_values'),
+                       config.get('threshold'),
+                       config.get('per_channel'),
+                       config.get('channel_axis', None),
+                       config.get('input_rank', None),
+                       config.get('lut_values_bitwidth', LUT_VALUES_BITWIDTH),
+                       config.get('eps', EPS))
 
 else:
     class WeightsLUTPOTInferableQuantizer:  # pragma: no cover

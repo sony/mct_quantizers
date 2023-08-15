@@ -79,6 +79,21 @@ if FOUND_TF:
                     'channel_axis': self.channel_axis,
                     'input_rank': self.input_rank}
 
+        @classmethod
+        def from_config(cls, config):
+            """
+            Return an object with config
+            Args:
+                config(dict): dictionary of object configuration
+            Returns: An object created with config
+            """
+            return cls(config.get('num_bits'),
+                       config.get('threshold'),
+                       config.get('per_channel'),
+                       config.get('channel_axis', None),
+                       config.get('input_rank', None))
+
+
         @property
         def signed(self) -> bool:
             """
