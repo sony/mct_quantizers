@@ -13,6 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 
+__version__ = "1.2.0"
+
+
 from mct_quantizers.common.base_inferable_quantizer import QuantizationTarget, BaseInferableQuantizer, mark_quantizer
 from mct_quantizers.common.quant_info import QuantizationMethod
 from mct_quantizers.keras.activation_quantization_holder import KerasActivationQuantizationHolder
@@ -26,4 +29,6 @@ from mct_quantizers.common import constants
 from mct_quantizers.keras import quantizers as keras_quantizers
 from mct_quantizers.pytorch import quantizers as pytorch_quantizers
 
-__version__ = "1.2.0"
+from mct_quantizers.pytorch.onnxruntime_session_options import get_ort_session_options
+
+

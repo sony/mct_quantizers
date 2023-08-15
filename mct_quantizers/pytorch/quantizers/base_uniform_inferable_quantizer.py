@@ -18,9 +18,9 @@ from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, Quant
 from mct_quantizers.common.constants import FOUND_TORCH
 from mct_quantizers.common.quant_info import QuantizationMethod
 
-
 if FOUND_TORCH:
     from mct_quantizers.pytorch.quantizers.base_pytorch_inferable_quantizer import BasePyTorchInferableQuantizer
+
 
     @mark_quantizer(quantization_target=None,
                     quantization_method=[QuantizationMethod.UNIFORM],

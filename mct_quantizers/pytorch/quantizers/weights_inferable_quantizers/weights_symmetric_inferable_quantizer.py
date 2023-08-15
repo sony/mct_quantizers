@@ -12,18 +12,63 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+from typing import List
 
 import numpy as np
 
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
-from mct_quantizers.common.constants import FOUND_TORCH
+from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS
 from mct_quantizers.common.quant_info import QuantizationMethod
-
 
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.base_symmetric_inferable_quantizer import BaseSymmetricInferableQuantizer
     from mct_quantizers.pytorch.quantizer_utils import to_torch_tensor, get_working_device
+    from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
+    from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.base_weight_quantizer_autograd_function import \
+        BaseWeightQuantizerAutogradFunction
+
+
+    def quantize_sym_weights_torch(input_tensor: torch.Tensor,
+                                   num_bits: int,
+                                   threshold: float,
+                                   per_channel: bool,
+                                   channel_axis: int):
+        """
+           Quantizes the input tensor symmetrically using torch.
+
+           Args:
+               input_tensor (torch.Tensor): The input tensor to be quantized.
+               num_bits (int): Number of bits to represent the quantized value.
+               threshold (float): The quantization threshold.
+               per_channel (bool): Quantize input tensor per-channel or per-tensor.
+               channel_axis (int): Axis to quantize the tensor in case of per-channel quantization.
+
+           Returns:
+               Symmetrically quantized tensor.
+        """
+
+        if isinstance(threshold, np.ndarray):
+            threshold = torch.tensor(threshold, dtype=torch.float32).to(get_working_device())
+
+        input_tensor = input_tensor
+        scale = threshold / (2 ** (num_bits - 1))
+        _min, _max = -threshold, threshold - scale
+
+        if per_channel:
+            ones = [1] * input_tensor.ndim
+            ones[channel_axis] = -1
+            new_shape = tuple(ones)
+            _min = torch.reshape(_min, new_shape)
+            _max = torch.reshape(_max, new_shape)
+            scale = torch.reshape(scale, new_shape)
+
+        # Use torch.where to clip the values in x
+        clipped_x = torch.where(input_tensor < _min, _min, input_tensor)
+        quantized = torch.round(torch.where(input_tensor > _max, _max, clipped_x) / scale) * scale
+
+        return quantized
+
 
     @mark_quantizer(quantization_target=QuantizationTarget.Weights,
                     quantization_method=[QuantizationMethod.SYMMETRIC],
@@ -35,7 +80,7 @@ if FOUND_TORCH:
 
         def __init__(self,
                      num_bits: int,
-                     threshold: np.ndarray,
+                     threshold: List[float],
                      per_channel: bool,
                      channel_axis: int = None
                      ):
@@ -60,7 +105,8 @@ if FOUND_TORCH:
                                      f'{len(threshold)}'
             else:
                 assert len(
-                    threshold) == 1, f'In per-tensor quantization threshold should be of length 1 but is {len(threshold)}'
+                    threshold) == 1, f'In per-tensor quantization threshold should be of length 1 but is ' \
+                                     f'{len(threshold)}'
 
             self.per_channel = per_channel
             self.channel_axis = channel_axis
@@ -78,6 +124,14 @@ if FOUND_TORCH:
             Returns:
                 quantized tensor.
             """
+
+            if self._use_custom_impl and torch.jit.is_tracing():
+                return WeightsSymmetricF.apply(inputs,
+                                               self.num_bits,
+                                               self.threshold_np,
+                                               self.per_channel,
+                                               self.channel_axis)
+
             inputs.requires_grad = False
             if self.per_channel:
                 return torch.fake_quantize_per_channel_affine(inputs,
@@ -93,9 +147,120 @@ if FOUND_TORCH:
                                                          quant_max=self.max_quantized_domain)
 
 
+    class WeightsSymmetricF(BaseWeightQuantizerAutogradFunction):
+        """
+        Custom autograd function for symmetric weights quantizer.
+        It provides a way to define a custom forward and symbolic operation
+        and currently does not implement a backward operation.
+        """
+
+        @staticmethod
+        def forward(ctx, input_tensor, num_bits, threshold, per_channel, channel_axis):
+            """
+             Forward computation function. This method performs the forward computation using
+             the given quantize_sym_weights_torch function.
+
+             Args:
+                 ctx: An object that can be used to stash information for backward function.
+                 input_tensor: The input tensor to be quantized.
+                 num_bits: The number of bits to represent the quantized tensor.
+                 threshold: The quantization threshold.
+                 per_channel: whether to use per-channel quantization
+                 channel_axis: Axis of input to apply per-channel quantization on.
+
+             Returns:
+                 The quantized tensor.
+             """
+            return quantize_sym_weights_torch(input_tensor, num_bits, threshold, per_channel, channel_axis)
+
+        @staticmethod
+        def symbolic(g, input_tensor, num_bits, threshold, per_channel, channel_axis):
+            """
+            Symbolic method that defines the custom operation for ONNX export.
+
+            Args:
+                g: A graph object that represents the ONNX computation graph.
+                input_tensor: The input tensor to be quantized.
+                num_bits: The number of bits to represent the quantized value.
+                threshold: The quantization threshold.
+                per_channel: whether to use per-channel quantization
+                channel_axis: Axis of input to apply per-channel quantization on.
+
+            Returns:
+                The node in the ONNX graph representing the output of this operation.
+            """
+            return g.op(f"{ONNX_CUSTOM_OP_DOMAIN}::WeightsSymmetricQuantizer", input_tensor,
+                        g.op('Constant', value_t=torch.tensor(threshold, dtype=torch.float32)),
+                        num_bits_i=num_bits,
+                        per_channel_i=int(per_channel),
+                        channel_axis_i=channel_axis,
+                        signed_i=int(WeightsSymmetricF.is_signed()),
+                        **WeightsSymmetricF._get_metadata_attributes()
+                        ).setType(
+                input_tensor.type())
+
+
+
 else:
     class WeightsSymmetricInferableQuantizer:  # pragma: no cover
         def __init__(self, *args, **kwargs):
             raise Exception('Installing torch is mandatory '
                             'when using WeightsSymmetricInferableQuantizer. '
                             'Could not find torch package.')
+
+if FOUND_ONNXRUNTIME_EXTENSIONS:
+    from onnxruntime_extensions import onnx_op, PyCustomOpDef
+    def quantize_sym_weights_numpy(input_tensor: np.ndarray,
+                                   num_bits: int,
+                                   threshold: float,
+                                   per_channel: bool,
+                                   channel_axis: int):
+        """
+           Quantizes the input tensor symmetrically using numpy.
+
+           Args:
+               input_tensor (np.ndarray): The input tensor to be quantized.
+               num_bits (int): Number of bits to represent the quantized value.
+               threshold (float): The quantization threshold.
+               per_channel (bool): Quantize input tensor per-channel or per-tensor.
+               channel_axis (int): Axis to quantize the tensor in case of per-channel quantization.
+
+           Returns:
+               Symmetrically quantized tensor.
+        """
+        scale = threshold / (2 ** (num_bits - 1))
+        _min, _max = -threshold, threshold - scale
+        if per_channel:
+            ones = np.ones(input_tensor.ndim)
+            ones[channel_axis] = -1
+            new_shape = tuple([int(x) for x in ones])
+            _min = np.reshape(_min, new_shape)
+            _max = np.reshape(_max, new_shape)
+            scale = np.reshape(scale, new_shape)
+
+        # Use torch.where to clip the values in x
+        clipped_x = np.where(input_tensor < _min, _min, input_tensor)
+        quantized = np.round(np.where(input_tensor > _max, _max, clipped_x) / scale) * scale
+        return quantized
+
+
+    # Add onnx op function to use during onnxruntime WeightsSymmetricQuantizer op inference
+    # Using this decorator the op WeightsSymmetricQuantizer is defined using its inputs, outputs and attributes.
+    @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::WeightsSymmetricQuantizer",
+             inputs=[PyCustomOpDef.dt_float,
+                     PyCustomOpDef.dt_float],
+             outputs=[PyCustomOpDef.dt_float],
+             attrs={
+                 "num_bits": PyCustomOpDef.dt_int64,
+                 "per_channel": PyCustomOpDef.dt_int64,
+                 "channel_axis": PyCustomOpDef.dt_int64,
+             })
+    def weight_sym_ort(input_tensor: np.ndarray,
+                       threshold: np.ndarray, **kwargs):
+
+        return quantize_sym_weights_numpy(input_tensor,
+                                          kwargs["num_bits"],
+                                          threshold,
+                                          kwargs["per_channel"],
+                                          kwargs["channel_axis"]
+                                          )

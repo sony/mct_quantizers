@@ -12,18 +12,71 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+from typing import List
 
 import numpy as np
 
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
-from mct_quantizers.common.constants import FOUND_TORCH
+from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS
 from mct_quantizers.common.quant_info import QuantizationMethod
+from mct_quantizers.common.quant_utils import adjust_range_to_include_zero
 from mct_quantizers.logger import Logger
+
 
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.base_uniform_inferable_quantizer import BaseUniformInferableQuantizer
     from mct_quantizers.pytorch.quantizer_utils import fix_range_to_include_zero, get_working_device, to_torch_tensor
+    from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
+    from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.base_weight_quantizer_autograd_function import \
+        BaseWeightQuantizerAutogradFunction
+
+
+    def quantize_uniform_weights_torch(input_tensor: torch.Tensor,
+                                       num_bits: int,
+                                       min_range: np.ndarray,
+                                       max_range: np.ndarray,
+                                       per_channel: bool,
+                                       channel_axis: int):
+        """
+           Quantizes the input tensor symmetrically using torch.
+
+           Args:
+               input_tensor (torch.Tensor): The input tensor to be quantized.
+               num_bits (int): Number of bits to represent the quantized value.
+                min_range (np.ndarray): min quantization range for quantizing weights
+                max_range (np.ndarray): max quantization range for quantizing weights
+                per_channel (bool): Quantize input tensor per-channel or per-tensor.
+               channel_axis (int): Axis to quantize the tensor in case of per-channel quantization.
+
+           Returns:
+               Symmetrically quantized tensor.
+        """
+        if isinstance(min_range, np.ndarray):
+            min_range = torch.tensor(min_range, dtype=torch.float32).to(get_working_device())
+        if isinstance(max_range, np.ndarray):
+            max_range = torch.tensor(max_range, dtype=torch.float32).to(get_working_device())
+
+        # adjusts the quantization rage so the quantization grid include zero.
+        a, b = fix_range_to_include_zero(min_range, max_range, num_bits)
+
+        # Compute the step size of quantized values.
+        delta = (b - a) / (2 ** num_bits - 1)
+
+        if per_channel:
+            ones = [1] * input_tensor.ndim
+            ones[channel_axis] = -1
+            new_shape = tuple(ones)
+            # Make sure min_values and max_values have the same shape as x along the first axis
+            a = torch.reshape(a, new_shape)
+            b = torch.reshape(b, new_shape)
+            delta = torch.reshape(delta, new_shape)
+
+        # Use torch.where to clip the values in x
+        clipped_x = torch.where(input_tensor < a, a, input_tensor)
+        quantized = torch.round(torch.where(input_tensor > b, b, clipped_x) / delta) * delta
+        return quantized
+
 
     @mark_quantizer(quantization_target=QuantizationTarget.Weights,
                     quantization_method=[QuantizationMethod.UNIFORM],
@@ -35,8 +88,8 @@ if FOUND_TORCH:
 
         def __init__(self,
                      num_bits: int,
-                     min_range: np.ndarray,
-                     max_range: np.ndarray,
+                     min_range: List[float],
+                     max_range: List[float],
                      per_channel: bool,
                      channel_axis: int = None
                      ):
@@ -55,8 +108,8 @@ if FOUND_TORCH:
                                                                    max_range=max_range)
 
             # Align mix/max numpy arrays so they are torch Tensors on the working device
-            min_range = to_torch_tensor(min_range).to(get_working_device())
-            max_range = to_torch_tensor(max_range).to(get_working_device())
+            min_range = to_torch_tensor(np.asarray(min_range)).to(get_working_device())
+            max_range = to_torch_tensor(np.asarray(max_range)).to(get_working_device())
 
             self.per_channel = per_channel
             self.channel_axis = channel_axis
@@ -64,10 +117,14 @@ if FOUND_TORCH:
             min_range, max_range = fix_range_to_include_zero(min_range,
                                                              max_range,
                                                              num_bits)
+
+            self.adjusted_min_range_np = min_range.cpu().numpy()
+            self.adjusted_max_range_np = max_range.cpu().numpy()
+
             # Compute the step size of quantized values.
             self.scales = (max_range - min_range) / (2 ** num_bits - 1)
             self.zero_points = -(
-                        min_range / self.scales).int()  # zp has to be positive, and a <=0, so we multiply by -1
+                    min_range / self.scales).int()  # zp has to be positive, and a <=0, so we multiply by -1
 
             self.scales = self.scales.to(get_working_device())
             self.zero_points = self.zero_points.to(get_working_device())
@@ -82,6 +139,14 @@ if FOUND_TORCH:
             Returns:
                 quantized weights
             """
+            if self._use_custom_impl and torch.jit.is_tracing():
+                return WeightsUniformF.apply(inputs,
+                                             self.num_bits,
+                                             self.adjusted_min_range_np,
+                                             self.adjusted_max_range_np,
+                                             self.per_channel,
+                                             self.channel_axis)
+
             inputs.requires_grad = False
             if self.per_channel:
                 return torch.fake_quantize_per_channel_affine(inputs,
@@ -97,9 +162,131 @@ if FOUND_TORCH:
                                                          quant_max=self.max_quantized_domain)
 
 
+    class WeightsUniformF(BaseWeightQuantizerAutogradFunction):
+        """
+        Custom autograd function for uniform weights quantizer.
+        It provides a way to define a custom forward and symbolic operation
+        and currently does not implement a backward operation.
+        """
+
+        @staticmethod
+        def forward(ctx, input_tensor, num_bits, min_range, max_range, per_channel, channel_axis):
+            """
+             Forward computation function. This method performs the forward computation using
+             the given quantize_sym_weights_torch function.
+
+             Args:
+                 ctx: An object that can be used to stash information for backward function.
+                 input_tensor: The input tensor to be quantized.
+                 num_bits: The number of bits to represent the quantized tensor.
+                 min_range: min quantization range for quantizing weights
+                 max_range: max quantization range for quantizing weights
+                 per_channel: whether to use per-channel quantization
+                 channel_axis: Axis of input to apply per-channel quantization on.
+
+             Returns:
+                 The quantized tensor.
+             """
+            return quantize_uniform_weights_torch(input_tensor, num_bits, min_range, max_range, per_channel,
+                                                  channel_axis)
+
+        @staticmethod
+        def symbolic(g, input_tensor, num_bits, min_range, max_range, per_channel, channel_axis):
+            """
+            Symbolic method that defines the custom operation for ONNX export.
+
+            Args:
+                g: A graph object that represents the ONNX computation graph.
+                input_tensor: The input tensor to be quantized.
+                num_bits: The number of bits to represent the quantized value.
+                min_range: min quantization range for quantizing weights
+                max_range: max quantization range for quantizing weights
+                per_channel: whether to use per-channel quantization
+                channel_axis: Axis of input to apply per-channel quantization on.
+
+            Returns:
+                The node in the ONNX graph representing the output of this operation.
+            """
+            return g.op(f"{ONNX_CUSTOM_OP_DOMAIN}::WeightsUniformQuantizer", input_tensor,
+                        g.op('Constant', value_t=torch.tensor(min_range, dtype=torch.float32)),
+                        g.op('Constant', value_t=torch.tensor(max_range, dtype=torch.float32)),
+                        num_bits_i=num_bits,
+                        per_channel_i=int(per_channel),
+                        channel_axis_i=channel_axis,
+                        signed_i=WeightsUniformF.is_signed(),
+                        **WeightsUniformF._get_metadata_attributes()
+                        ).setType(
+                input_tensor.type())
+
+
 else:
     class WeightsUniformInferableQuantizer:  # pragma: no cover
         def __init__(self, *args, **kwargs):
             Logger.error('Installing torch is mandatory '
                          'when using WeightsUniformInferableQuantizer. '
                          'Could not find torch package.')
+
+if FOUND_ONNXRUNTIME_EXTENSIONS:
+    from onnxruntime_extensions import onnx_op, PyCustomOpDef
+
+    def quantize_uniform_weights_numpy(input_tensor: np.ndarray,
+                                       num_bits: int,
+                                       min_range: np.ndarray,
+                                       max_range: np.ndarray,
+                                       per_channel: bool,
+                                       channel_axis: int):
+        """
+           Quantizes the input tensor symmetrically using numpy.
+
+           Args:
+               input_tensor (np.ndarray): The input tensor to be quantized.
+               num_bits (int): Number of bits to represent the quantized value.
+                min_range (np.ndarray): min quantization range for quantizing weights
+                max_range (np.ndarray): max quantization range for quantizing weights
+                per_channel (bool): Quantize input tensor per-channel or per-tensor.
+               channel_axis (int): Axis to quantize the tensor in case of per-channel quantization.
+
+           Returns:
+               Symmetrically quantized tensor.
+        """
+        # adjusts the quantization rage so the quantization grid include zero.
+        a, b = adjust_range_to_include_zero(min_range, max_range, num_bits)
+
+        # Compute the step size of quantized values.
+        delta = (b - a) / (2 ** num_bits - 1)
+        if per_channel:
+            ones = np.ones(input_tensor.ndim)
+            ones[channel_axis] = -1
+            new_shape = tuple([int(x) for x in ones])
+            # Make sure min_values and max_values have the same shape as x along the first axis
+            a = np.reshape(a, new_shape)
+            b = np.reshape(b, new_shape)
+            delta = np.reshape(delta, new_shape)
+
+        # Use torch.where to clip the values in x
+        clipped_x = np.where(input_tensor < a, a, input_tensor)
+        quantized = np.round(np.where(input_tensor > b, b, clipped_x) / delta) * delta
+        return quantized
+
+    # Add onnx op function to use during onnxruntime WeightsUniformQuantizer op inference
+    # Using this decorator the op WeightsUniformQuantizer is defined using its inputs, outputs and attributes.
+    @onnx_op(op_type=f"{ONNX_CUSTOM_OP_DOMAIN}::WeightsUniformQuantizer",
+             inputs=[PyCustomOpDef.dt_float,
+                     PyCustomOpDef.dt_float,
+                     PyCustomOpDef.dt_float
+                     ],
+             outputs=[PyCustomOpDef.dt_float],
+             attrs={
+                 "num_bits": PyCustomOpDef.dt_int64,
+                 "per_channel": PyCustomOpDef.dt_int64,
+                 "channel_axis": PyCustomOpDef.dt_int64,
+             }
+             )
+    def weight_uniform_ort(x, min_range, max_range, **kwargs):
+        return quantize_uniform_weights_numpy(x,
+                                              kwargs["num_bits"],
+                                              min_range,
+                                              max_range,
+                                              kwargs["per_channel"],
+                                              kwargs["channel_axis"]
+                                              )

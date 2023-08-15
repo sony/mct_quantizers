@@ -20,12 +20,18 @@ import importlib.util
 
 TENSORFLOW = 'tensorflow'
 TORCH = 'torch'
+ONNX = 'onnx'
+ONNXRUNTIME = 'onnxruntime'
+ONNXRUNTIME_EXTENSIONS = 'onnxruntime_extensions'
+
 FOUND_TF = importlib.util.find_spec(TENSORFLOW) is not None
 FOUND_TORCH = importlib.util.find_spec(TORCH) is not None
+FOUND_ONNX = importlib.util.find_spec(ONNX) is not None
+FOUND_ONNXRUNTIME = importlib.util.find_spec(ONNXRUNTIME) is not None
+FOUND_ONNXRUNTIME_EXTENSIONS = importlib.util.find_spec(ONNXRUNTIME_EXTENSIONS) is not None
 
 
 ## Quantization properties
-
 IS_WEIGHTS = "is_weights"
 IS_ACTIVATIONS = "is_activations"
 WEIGHTS_QUANTIZERS = "weights_quantizer"

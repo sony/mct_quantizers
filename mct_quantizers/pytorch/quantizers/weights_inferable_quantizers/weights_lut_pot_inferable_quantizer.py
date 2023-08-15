@@ -19,10 +19,11 @@ from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, Quant
 from mct_quantizers.common.constants import FOUND_TORCH, LUT_VALUES_BITWIDTH, EPS
 from mct_quantizers.common.quant_info import QuantizationMethod
 
-
 if FOUND_TORCH:
-    from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_lut_symmetric_inferable_quantizer import \
+    from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_lut_symmetric_inferable_quantizer \
+        import \
         WeightsLUTSymmetricInferableQuantizer
+
 
     @mark_quantizer(quantization_target=QuantizationTarget.Weights,
                     quantization_method=[QuantizationMethod.LUT_POT_QUANTIZER],

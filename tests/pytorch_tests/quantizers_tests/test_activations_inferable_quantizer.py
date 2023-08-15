@@ -29,7 +29,7 @@ from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activatio
 class TestPytorchActivationInferableQuantizers(unittest.TestCase):
 
     def test_symmetric_activation_quantizer(self):
-        thresholds = np.asarray([4])
+        thresholds = [4]
         num_bits = 2
         quantizer = ActivationSymmetricInferableQuantizer(num_bits=num_bits,
                                                           threshold=thresholds,
@@ -62,7 +62,7 @@ class TestPytorchActivationInferableQuantizers(unittest.TestCase):
         self.assertTrue(torch.all(manually_quantized_tensor == quantized_tensor))
 
     def test_unsigned_symmetric_activation_quantizer(self):
-        thresholds = np.asarray([4])
+        thresholds = [4]
         num_bits = 2
         quantizer = ActivationSymmetricInferableQuantizer(num_bits=num_bits,
                                                           threshold=thresholds,
@@ -97,7 +97,7 @@ class TestPytorchActivationInferableQuantizers(unittest.TestCase):
         with self.assertRaises(Exception) as e:
             ActivationPOTInferableQuantizer(num_bits=8,
                                             # Not POT threshold
-                                            threshold=np.asarray([3]),
+                                            threshold=[3],
                                             signed=True)
         self.assertEqual('Expected threshold to be power of 2 but is [3]', str(e.exception))
 
@@ -107,10 +107,10 @@ class TestPytorchActivationInferableQuantizers(unittest.TestCase):
                                             threshold=4,
                                             signed=True)
 
-        self.assertEqual('Threshold is expected to be numpy array, but is of type <class \'int\'>', str(e.exception))
+        self.assertEqual('Threshold is expected to be a list, but is of type <class \'int\'>', str(e.exception))
 
     def test_power_of_two_activation_quantizer(self):
-        thresholds = np.asarray([1])
+        thresholds = [1]
         num_bits = 2
         quantizer = ActivationPOTInferableQuantizer(num_bits=num_bits,
                                                     signed=True,
@@ -140,7 +140,7 @@ class TestPytorchActivationInferableQuantizers(unittest.TestCase):
         self.assertTrue(torch.all(manually_quantized_tensor == fake_quantized_tensor))
 
     def test_unsigned_power_of_two_activation_quantizer(self):
-        thresholds = np.asarray([1])
+        thresholds = [1]
         num_bits = 2
         quantizer = ActivationPOTInferableQuantizer(num_bits=num_bits,
                                                     signed=False,
@@ -166,8 +166,8 @@ class TestPytorchActivationInferableQuantizers(unittest.TestCase):
         self.assertTrue(torch.all(manually_quantized_tensor == fake_quantized_tensor))
 
     def test_uniform_activation_quantizer(self):
-        min_range = np.asarray([-10])
-        max_range = np.asarray([5])
+        min_range = [-10]
+        max_range = [5]
         num_bits = 2
         quantizer = ActivationUniformInferableQuantizer(num_bits=num_bits,
                                                         min_range=min_range,
@@ -202,8 +202,8 @@ class TestPytorchActivationInferableQuantizers(unittest.TestCase):
         self.assertTrue(torch.all(manually_quantized_tensor == quantized_tensor))
 
     def test_illegal_range_uniform_activation_quantizer(self):
-        min_range = np.asarray([3])
-        max_range = np.asarray([10])
+        min_range = [3]
+        max_range = [10]
         num_bits = 2
         quantizer = ActivationUniformInferableQuantizer(num_bits=num_bits,
                                                         min_range=min_range,
