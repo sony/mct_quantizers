@@ -13,6 +13,8 @@
 # limitations under the License.
 # ==============================================================================
 
+from mct_quantizers.pytorch.quantizers.base_pytorch_inferable_quantizer import BasePyTorchInferableQuantizer
+
 from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_lut_pot_inferable_quantizer import \
     ActivationLutPOTInferableQuantizer
 from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_pot_inferable_quantizer import \
