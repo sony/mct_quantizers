@@ -35,6 +35,13 @@ if FOUND_TF:
             raise NotImplemented(f'{self.__class__.__name__} did not implement get_config')  # pragma: no cover
 
         @abstractmethod
+        def from_config(self, config):
+            """
+            Return an object with the configuration of the quantizer.
+            """
+            raise NotImplemented(f'{self.__class__.__name__} did not implement from_config')  # pragma: no cover
+
+        @abstractmethod
         def __call__(self, inputs: tf.Tensor):
             """
             Quantize the given inputs using the quantizer parameters.

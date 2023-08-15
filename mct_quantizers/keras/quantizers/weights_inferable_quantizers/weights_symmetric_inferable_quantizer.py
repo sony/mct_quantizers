@@ -82,9 +82,10 @@ if FOUND_TF:
         @classmethod
         def from_config(cls, config):
             """
+            Return an object with config
             Args:
                 config(dict): dictionary of object configuration
-            Returns: A object created with config
+            Returns: An object created with config
             """
             return cls(config.get('num_bits'),
                        config.get('threshold'),
