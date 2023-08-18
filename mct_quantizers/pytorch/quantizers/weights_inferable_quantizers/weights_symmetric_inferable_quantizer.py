@@ -16,17 +16,19 @@ from typing import List
 
 import numpy as np
 
-from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
-from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS
+from mct_quantizers.common.base_inferable_quantizer import QuantizationTarget, QuantizerID, mark_quantizer
+from mct_quantizers.common.constants import FOUND_ONNXRUNTIME_EXTENSIONS, FOUND_TORCH
 from mct_quantizers.common.quant_info import QuantizationMethod
 
 if FOUND_TORCH:
     import torch
-    from mct_quantizers.pytorch.quantizers.base_symmetric_inferable_quantizer import BaseSymmetricInferableQuantizer
-    from mct_quantizers.pytorch.quantizer_utils import to_torch_tensor, get_working_device
+
     from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
-    from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.base_weight_quantizer_autograd_function import \
-        BaseWeightQuantizerAutogradFunction
+    from mct_quantizers.pytorch.quantizer_utils import get_working_device, to_torch_tensor
+    from mct_quantizers.pytorch.quantizers.base_symmetric_inferable_quantizer import BaseSymmetricInferableQuantizer
+    from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.base_weight_quantizer_autograd_function import (
+        BaseWeightQuantizerAutogradFunction,
+    )
 
 
     def quantize_sym_weights_torch(input_tensor: torch.Tensor,
@@ -99,7 +101,7 @@ if FOUND_TORCH:
                                                                      signed=True)
 
             if per_channel:
-                assert channel_axis is not None, f'Channel axis is missing in per channel quantization'
+                assert channel_axis is not None, 'Channel axis is missing in per channel quantization'
                 assert len(
                     threshold) >= 1, f'In per-channel quantization threshold should be of length >= 1 but is ' \
                                      f'{len(threshold)}'
@@ -209,7 +211,7 @@ else:
                             'Could not find torch package.')
 
 if FOUND_ONNXRUNTIME_EXTENSIONS:
-    from onnxruntime_extensions import onnx_op, PyCustomOpDef
+    from onnxruntime_extensions import PyCustomOpDef, onnx_op
     def quantize_sym_weights_numpy(input_tensor: np.ndarray,
                                    num_bits: int,
                                    threshold: float,

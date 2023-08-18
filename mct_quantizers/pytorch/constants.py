@@ -13,4 +13,8 @@
 # limitations under the License.
 # ==============================================================================
 
-ONNX_CUSTOM_OP_DOMAIN = f"mct_quantizers"
+ONNX_CUSTOM_OP_DOMAIN = "mct_quantizers"
+
+# torch devices
+CUDA = "cuda"
+CPU = "cpu"

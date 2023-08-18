@@ -14,8 +14,12 @@
 # ==============================================================================
 from typing import Tuple
 
-import torch
 import numpy as np
+import torch
+
+from mct_quantizers.pytorch.constants import CPU, CUDA
+
+_device = CUDA if torch.cuda.is_available() else CPU
 
 
 def get_working_device():
@@ -26,7 +30,17 @@ def get_working_device():
         Device "cuda" if GPU is available, else "cpu"
 
     """
-    return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    global _device
+    return torch.device(_device)
+
+
+def set_working_device(device):
+    """
+    Set the working device of the environment
+
+    """
+    global _device
+    _device = device
 
 
 def to_torch_tensor(tensor):
@@ -52,12 +66,12 @@ def to_torch_tensor(tensor):
     elif isinstance(tensor, int):
         return torch.Tensor([tensor]).int().to(working_device)
     else:
-        raise Exception(f'Conversion of type {type(tensor)} to {type(torch.Tensor)} is not supported')
+        raise Exception(f"Conversion of type {type(tensor)} to {type(torch.Tensor)} is not supported")
 
 
-def fix_range_to_include_zero(range_min: torch.Tensor,
-                              range_max: torch.Tensor,
-                              n_bits: int) -> Tuple[torch.Tensor, torch.Tensor]:
+def fix_range_to_include_zero(
+    range_min: torch.Tensor, range_max: torch.Tensor, n_bits: int
+) -> Tuple[torch.Tensor, torch.Tensor]:
     """
     Adjusting the quantization range to include representation of 0.0 in the quantization grid.
     If quantization per-channel, then range_min and range_max should be tensors in the specific shape that allows
@@ -75,7 +89,7 @@ def fix_range_to_include_zero(range_min: torch.Tensor,
     max_negative = max_negative.float()
     mid_range = mid_range.float()
 
-    scale = (range_max - range_min) / (2 ** n_bits - 1)
+    scale = (range_max - range_min) / (2**n_bits - 1)
     min_range_adj = scale * torch.round(range_min / scale)
     max_range_adj = range_max - range_min + min_range_adj
 
@@ -84,12 +98,14 @@ def fix_range_to_include_zero(range_min: torch.Tensor,
     return min_range_adj, max_range_adj
 
 
-def lut_quantizer(tensor_data: torch.Tensor,
-                  lut_values: torch.Tensor,
-                  signed: bool,
-                  threshold: torch.Tensor,
-                  lut_values_bitwidth: int,
-                  eps: float) -> torch.Tensor:
+def lut_quantizer(
+    tensor_data: torch.Tensor,
+    lut_values: torch.Tensor,
+    signed: bool,
+    threshold: torch.Tensor,
+    lut_values_bitwidth: int,
+    eps: float,
+) -> torch.Tensor:
     """
     Quantize a tensor using a non-uniform quantization based on the pre-defined values.
     1. Scales tensor_data with the threshold into n-bit quantization range.
@@ -108,8 +124,9 @@ def lut_quantizer(tensor_data: torch.Tensor,
     Returns: Quantized tensor.
     """
 
-    tensor = int_quantization_with_threshold(tensor_data, n_bits=lut_values_bitwidth, signed=signed, threshold=threshold,
-                                             eps=eps)
+    tensor = int_quantization_with_threshold(
+        tensor_data, n_bits=lut_values_bitwidth, signed=signed, threshold=threshold, eps=eps
+    )
     tensor = tensor.unsqueeze(-1)
 
     expanded_lut_values = lut_values.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
@@ -121,11 +138,9 @@ def lut_quantizer(tensor_data: torch.Tensor,
     return quant_tensor
 
 
-def int_quantization_with_threshold(data: torch.Tensor,
-                                    n_bits: int,
-                                    signed: bool,
-                                    threshold: torch.Tensor,
-                                    eps: float) -> torch.Tensor:
+def int_quantization_with_threshold(
+    data: torch.Tensor, n_bits: int, signed: bool, threshold: torch.Tensor, eps: float
+) -> torch.Tensor:
     """
     Divides data by threshold and quantize it to integers in the quantization range (depends on signed value).
 
@@ -143,10 +158,9 @@ def int_quantization_with_threshold(data: torch.Tensor,
 
     if signed:
         clip_max = 2 ** (n_bits - 1) - 1
-        clip_min = -2 ** (n_bits - 1)
+        clip_min = -(2 ** (n_bits - 1))
     else:
-        clip_max = 2 ** n_bits - 1
+        clip_max = 2**n_bits - 1
         clip_min = 0
 
-    return torch.clip((data / (threshold + eps)) * (2 ** (n_bits - int(signed))),
-                      min=clip_min, max=clip_max)
+    return torch.clip((data / (threshold + eps)) * (2 ** (n_bits - int(signed))), min=clip_min, max=clip_max)
