@@ -26,6 +26,7 @@ from onnx import numpy_helper
 from mct_quantizers import PytorchQuantizationWrapper
 from mct_quantizers import get_ort_session_options
 from mct_quantizers import pytorch_quantizers
+from mct_quantizers.common.constants import MCTQ_VERSION
 from mct_quantizers.pytorch.quantizer_utils import get_working_device
 from tests.pytorch_tests.onnx_export_tests.test_activation_quantizers import _export_model, _check_load_and_inference, _get_qparams_from_attributes_for_single_quantizer, _get_qparams_from_input_tensors_for_single_quantizer
 
@@ -73,7 +74,7 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
                                              f'{onnx_channel_axis}'
         onnx_signed = node_qparams['signed']
         assert onnx_signed == True, f'Expected signed in weight quantizer to be True but is {onnx_signed}'
-        assert node_qparams['mctq_version'] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams["mctq_version"]}'
+        assert node_qparams[MCTQ_VERSION] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams[MCTQ_VERSION]}'
 
 
     def test_onnx_weight_pot(self):
@@ -116,7 +117,7 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
 
         onnx_signed = node_qparams['signed']
         assert onnx_signed == True, f'Expected signed in weight quantizer to be True but is {onnx_signed}'
-        assert node_qparams['mctq_version'] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams["mctq_version"]}'
+        assert node_qparams[MCTQ_VERSION] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams[MCTQ_VERSION]}'
 
 
     def test_onnx_weight_uniform(self):
@@ -160,7 +161,7 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
 
         onnx_signed = node_qparams['signed']
         assert onnx_signed == True, f'Expected signed in weight quantizer to be True but is {onnx_signed}'
-        assert node_qparams['mctq_version'] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams["mctq_version"]}'
+        assert node_qparams[MCTQ_VERSION] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams[MCTQ_VERSION]}'
 
     def test_onnx_weight_symmetric_per_tensor(self):
         thresholds = [3.]
@@ -193,7 +194,7 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
         onnx_nbits = node_qparams['num_bits']
         onnx_per_channel = node_qparams['per_channel']
         onnx_channel_axis = node_qparams['channel_axis']
-        assert node_qparams['mctq_version'] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams["mctq_version"]}'
+        assert node_qparams[MCTQ_VERSION] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams[MCTQ_VERSION]}'
 
 
 
@@ -244,7 +245,7 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
                                              f'{onnx_channel_axis}'
         onnx_signed = node_qparams['signed']
         assert onnx_signed == True, f'Expected signed in weight quantizer to be True but is {onnx_signed}'
-        assert node_qparams['mctq_version'] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams["mctq_version"]}'
+        assert node_qparams[MCTQ_VERSION] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams[MCTQ_VERSION]}'
 
 
     def test_onnx_weight_uniform_per_tensor(self):
@@ -289,7 +290,7 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
         assert onnx_channel_axis == channel_axis, f'Expected channel_axis in quantizer to be {channel_axis} but found {onnx_channel_axis}'
         onnx_signed = node_qparams['signed']
         assert onnx_signed == True, f'Expected signed in weight quantizer to be True but is {onnx_signed}'
-        assert node_qparams['mctq_version'] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams["mctq_version"]}'
+        assert node_qparams[MCTQ_VERSION] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams[MCTQ_VERSION]}'
 
 
 
