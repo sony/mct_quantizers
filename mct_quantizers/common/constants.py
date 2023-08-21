@@ -72,9 +72,11 @@ LUT_VALUES = 'lut_values'
 
 
 ## Constant values
-
 LAYER = "layer"
 STEPS = "optimizer_step"
 TRAINING = "training"
 EPS = 1e-8
 LUT_VALUES_BITWIDTH = 8
+
+# ONNX ops domain
+ONNX_CUSTOM_OP_DOMAIN = f"mct_quantizers"

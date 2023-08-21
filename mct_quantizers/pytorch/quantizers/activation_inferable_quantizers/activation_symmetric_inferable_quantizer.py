@@ -17,13 +17,12 @@ from typing import List
 import numpy as np
 
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
-from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS
+from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS, ONNX_CUSTOM_OP_DOMAIN
 from mct_quantizers.common.quant_info import QuantizationMethod
 
 if FOUND_TORCH:
     import torch
     from mct_quantizers.pytorch.quantizers.base_symmetric_inferable_quantizer import BaseSymmetricInferableQuantizer
-    from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
     from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.base_activation_quantizer_autograd_function import BaseActivationQuantizerAutogradFunction
 
     def quantize_sym_activations_torch(input_tensor: torch.Tensor,
