@@ -173,6 +173,7 @@ else:
 
 if FOUND_ONNXRUNTIME_EXTENSIONS:
     from onnxruntime_extensions import onnx_op, PyCustomOpDef
+    from mct_quantizers.pytorch.constants import ONNX_CUSTOM_OP_DOMAIN
 
     # Add onnx op function to use during onnxruntime ActivationSymmetricQuantizer op inference
     # Using this decorator the op ActivationSymmetricQuantizer is defined using its inputs, outputs and attributes.
