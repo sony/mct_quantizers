@@ -79,3 +79,6 @@ TRAINING = "training"
 EPS = 1e-8
 LUT_VALUES_BITWIDTH = 8
 MCTQ_VERSION = "mctq_version"
+
+# ONNX ops domain
+ONNX_CUSTOM_OP_DOMAIN = f"mct_quantizers"
