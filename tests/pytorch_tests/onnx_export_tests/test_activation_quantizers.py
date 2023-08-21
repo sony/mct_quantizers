@@ -25,6 +25,7 @@ from onnx import numpy_helper
 from mct_quantizers import PytorchActivationQuantizationHolder
 from mct_quantizers import get_ort_session_options
 from mct_quantizers import pytorch_quantizers
+from mct_quantizers.common.constants import MCTQ_VERSION
 from mct_quantizers.pytorch.quantizer_utils import get_working_device
 
 
@@ -118,7 +119,7 @@ class TestONNXExportActivationQuantizers(unittest.TestCase):
                                              f'{onnx_threshold}'
         assert onnx_signed == signed, f'Expected signed in quantizer to be {signed} but found {onnx_signed}'
         assert onnx_nbits == num_bits, f'Expected num_bits in quantizer to be {num_bits} but found {onnx_nbits}'
-        assert node_qparams['mctq_version'] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams["mctq_version"]}'
+        assert node_qparams[MCTQ_VERSION] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams[MCTQ_VERSION]}'
 
 
 
@@ -150,7 +151,7 @@ class TestONNXExportActivationQuantizers(unittest.TestCase):
                                              f'{onnx_threshold}'
         assert onnx_signed == signed, f'Expected signed in quantizer to be {signed} but found {onnx_signed}'
         assert onnx_nbits == num_bits, f'Expected num_bits in quantizer to be {num_bits} but found {onnx_nbits}'
-        assert node_qparams['mctq_version'] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams["mctq_version"]}'
+        assert node_qparams[MCTQ_VERSION] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams[MCTQ_VERSION]}'
 
     def test_onnx_activation_uniform(self):
         num_bits = 3
@@ -183,7 +184,7 @@ class TestONNXExportActivationQuantizers(unittest.TestCase):
                                       f' but found {onnx_min_range}'
         assert onnx_max_range == max_range[0], f'Expected max_range in quantizer to be {max_range} but found {onnx_max_range}'
         assert onnx_nbits == num_bits, f'Expected num_bits in quantizer to be {num_bits} but found {onnx_nbits}'
-        assert node_qparams['mctq_version'] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams["mctq_version"]}'
+        assert node_qparams[MCTQ_VERSION] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams[MCTQ_VERSION]}'
 
 
 
