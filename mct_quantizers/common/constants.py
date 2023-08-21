@@ -78,3 +78,4 @@ STEPS = "optimizer_step"
 TRAINING = "training"
 EPS = 1e-8
 LUT_VALUES_BITWIDTH = 8
+MCTQ_VERSION = "mctq_version"

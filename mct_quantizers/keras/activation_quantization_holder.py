@@ -14,9 +14,10 @@
 # ==============================================================================
 
 from mct_quantizers.common.base_inferable_quantizer import BaseInferableQuantizer
-from mct_quantizers.common.constants import ACTIVATION_HOLDER_QUANTIZER, FOUND_TF, TRAINING, STEPS
+from mct_quantizers.common.constants import ACTIVATION_HOLDER_QUANTIZER, FOUND_TF, TRAINING, STEPS, MCTQ_VERSION
 from mct_quantizers.common.get_all_subclasses import get_all_subclasses
 from mct_quantizers.logger import Logger
+from mct_quantizers import __version__ as mctq_version
 
 if FOUND_TF:
     import tensorflow as tf
@@ -53,6 +54,8 @@ if FOUND_TF:
             super(KerasActivationQuantizationHolder, self).__init__(**kwargs)
             self.activation_holder_quantizer = activation_holder_quantizer
 
+            self._mctq_version = mctq_version
+
         def get_config(self):
             """
             config(dict): dictionary  of ActivationQuantizationHolder Configuration
@@ -64,7 +67,10 @@ if FOUND_TF:
             config = {
                 ACTIVATION_HOLDER_QUANTIZER: keras.utils.serialize_keras_object(self.activation_holder_quantizer)}
 
-            return dict(list(base_config.items()) + list(config.items()))
+            return_config = dict(list(base_config.items()) + list(config.items()))
+            return_config[MCTQ_VERSION] = self._mctq_version
+
+            return return_config
 
         @classmethod
         def from_config(cls, config):
@@ -83,8 +89,16 @@ if FOUND_TF:
                                                                                module_objects=globals(),
                                                                                custom_objects=qi_inferable_custom_objects)
 
-            return cls(activation_holder_quantizer=activation_holder_quantizer,
-                       **config)
+            v = config.pop(MCTQ_VERSION, None)
+
+            obj = cls(activation_holder_quantizer=activation_holder_quantizer, **config)
+            obj._mctq_version = mctq_version if v is None else v
+
+            return obj
+
+        @property
+        def mctq_version(self):
+            return self._mctq_version
 
         def build(self, input_shape):
             """
