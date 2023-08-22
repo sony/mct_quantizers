@@ -15,9 +15,10 @@
 from typing import Dict, List, Any, Tuple
 
 from mct_quantizers.common.base_inferable_quantizer import BaseInferableQuantizer
-from mct_quantizers.common.constants import FOUND_TF, WEIGHTS_QUANTIZERS, STEPS, LAYER, TRAINING
+from mct_quantizers.common.constants import FOUND_TF, WEIGHTS_QUANTIZERS, STEPS, LAYER, TRAINING, MCTQ_VERSION
 from mct_quantizers.logger import Logger
 from mct_quantizers.common.get_all_subclasses import get_all_subclasses
+from mct_quantizers import __version__ as mctq_version
 
 if FOUND_TF:
     import tensorflow as tf
@@ -67,6 +68,8 @@ if FOUND_TF:
             self._track_trackable(layer, name='layer')
             self.weights_quantizers = weights_quantizers if weights_quantizers is not None else dict()
 
+            self._mctq_version = mctq_version
+
         def add_weights_quantizer(self, param_name: str, quantizer: BaseInferableQuantizer):
             """
             This function adds a weights quantizer to existing wrapper
@@ -104,7 +107,15 @@ if FOUND_TF:
             """
             base_config = super(KerasQuantizationWrapper, self).get_config()
             config = {WEIGHTS_QUANTIZERS: {k: keras.utils.serialize_keras_object(v) for k, v in self.weights_quantizers.items()}}
-            return dict(list(base_config.items()) + list(config.items()))
+
+            return_config = dict(list(base_config.items()) + list(config.items()))
+            return_config[MCTQ_VERSION] = self._mctq_version
+
+            return return_config
+
+        @property
+        def mctq_version(self):
+            return self._mctq_version
 
         def _set_weights_vars(self, is_training: bool = True):
             """
@@ -140,7 +151,13 @@ if FOUND_TF:
                                                                           module_objects=globals(),
                                                                           custom_objects=qi_inferable_custom_objects) for k, v in config.pop(WEIGHTS_QUANTIZERS).items()}
             layer = tf.keras.layers.deserialize(config.pop(LAYER))
-            return cls(layer=layer, weights_quantizers=weights_quantizers, **config)
+
+            v = config.pop(MCTQ_VERSION, None)
+
+            obj = cls(layer=layer, weights_quantizers=weights_quantizers, **config)
+            obj._mctq_version = mctq_version if v is None else v
+
+            return obj
 
         def build(self, input_shape):
             """

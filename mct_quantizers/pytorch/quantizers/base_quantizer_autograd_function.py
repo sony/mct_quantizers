@@ -16,6 +16,8 @@ from typing import Any, Dict
 
 import torch
 from mct_quantizers import __version__ as mctq_version
+from mct_quantizers.common.constants import MCTQ_VERSION
+
 
 class BaseQuantizerAutogradFunction(torch.autograd.Function):
     """
@@ -54,4 +56,4 @@ class BaseQuantizerAutogradFunction(torch.autograd.Function):
         Returns: Metadata dictionary for all quantizers onnx symbolic ops.
 
         """
-        return {"mctq_version_s": mctq_version}
+        return {f"{MCTQ_VERSION}_s": mctq_version}
