@@ -17,9 +17,7 @@ from typing import Tuple
 import numpy as np
 import torch
 
-from mct_quantizers.pytorch.constants import CPU, CUDA
-
-_device = CUDA if torch.cuda.is_available() else CPU
+_device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def get_working_device():
