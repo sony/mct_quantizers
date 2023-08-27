@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+from typing import List
+
 import numpy as np
 
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizerID
@@ -29,8 +31,8 @@ if FOUND_TORCH:
 
         def __init__(self,
                      num_bits: int,
-                     min_range: np.ndarray,
-                     max_range: np.ndarray):
+                     min_range: List[float],
+                     max_range: List[float]):
             """
             Initialize the quantizer with the specified parameters.
 
@@ -41,6 +43,9 @@ if FOUND_TORCH:
             """
 
             super(BaseUniformInferableQuantizer, self).__init__()
+            assert isinstance(min_range, list), f'min_range is expected to be a list, but is of type {type(min_range)}'
+            assert isinstance(max_range, list), f'max_range is expected to be a list, but is of type {type(max_range)}'
+
             self.num_bits = num_bits
             self.min_range = min_range
             self.max_range = max_range

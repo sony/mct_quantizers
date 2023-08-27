@@ -105,6 +105,13 @@ if FOUND_TORCH:
             super(WeightsUniformInferableQuantizer, self).__init__(num_bits=num_bits,
                                                                    min_range=min_range,
                                                                    max_range=max_range)
+            if per_channel:
+                assert channel_axis is not None, f'Channel axis is missing in per channel quantization'
+                assert len(min_range) >= 1, f'In per-channel quantization min_range should be of length >= 1 but is {len(min_range)}'
+                assert len(max_range) >= 1, f'In per-channel quantization max_range should be of length >= 1 but is {len(max_range)}'
+            else:
+                assert len(min_range) == 1, f'In per-tensor quantization min_range should be of length 1 but is {len(min_range)}'
+                assert len(max_range) == 1, f'In per-tensor quantization max_range should be of length 1 but is {len(max_range)}'
 
             # Align mix/max numpy arrays so they are torch Tensors on the working device
             min_range = to_torch_tensor(np.asarray(min_range)).to(get_working_device())

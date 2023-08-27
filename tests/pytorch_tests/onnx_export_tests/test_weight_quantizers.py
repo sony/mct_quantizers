@@ -176,7 +176,6 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
                                                                           )
         quantizer.enable_custom_impl()
 
-
         layer_with_quantizer = PytorchQuantizationWrapper(torch.nn.Conv2d(3, 4, 5),
                                                           {'weight': quantizer}).to(self.device)
 
@@ -293,4 +292,55 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
         assert node_qparams[MCTQ_VERSION] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams[MCTQ_VERSION]}'
 
 
+    def test_illegal_arguments(self):
+        # Test valid min/max len
+        per_channel = False
+        thresholds = [3., 3.]
+        with self.assertRaises(Exception) as e:
+            pytorch_quantizers.WeightsSymmetricInferableQuantizer(num_bits=8,
+                                                                  per_channel=per_channel,
+                                                                  threshold=thresholds,
+                                                                  channel_axis=0)
+        self.assertEqual(f"In per-tensor quantization threshold should be of length 1 but is {len(thresholds)}", str(e.exception))
+        with self.assertRaises(Exception) as e:
+            pytorch_quantizers.WeightsPOTInferableQuantizer(num_bits=8,
+                                                                  per_channel=per_channel,
+                                                                  threshold=thresholds,
+                                                                  channel_axis=0)
+        self.assertEqual(f"In per-tensor quantization threshold should be of length 1 but is {len(thresholds)}", str(e.exception))
+        with self.assertRaises(Exception) as e:
+            pytorch_quantizers.WeightsUniformInferableQuantizer(num_bits=8,
+                                                                  per_channel=per_channel,
+                                                                  min_range=[-t for t in thresholds],
+                                                                max_range=[1.],
+                                                                  channel_axis=0)
+        self.assertEqual(f"In per-tensor quantization min_range should be of length 1 but is {len(thresholds)}", str(e.exception))
+        with self.assertRaises(Exception) as e:
+            pytorch_quantizers.WeightsUniformInferableQuantizer(num_bits=8,
+                                                                  per_channel=per_channel,
+                                                                  min_range=[0.],
+                                                                max_range=thresholds,
+                                                                  channel_axis=0)
+        self.assertEqual(f"In per-tensor quantization max_range should be of length 1 but is {len(thresholds)}", str(e.exception))
+
+
+    # Test channel_axis exist in per-channel quantization
+        per_channel = True
+        thresholds = [3., 3.]
+        with self.assertRaises(Exception) as e:
+            pytorch_quantizers.WeightsSymmetricInferableQuantizer(num_bits=8,
+                                                                  per_channel=per_channel,
+                                                                  threshold=thresholds)
+        self.assertEqual(f"Channel axis is missing in per channel quantization", str(e.exception))
+        with self.assertRaises(Exception) as e:
+            pytorch_quantizers.WeightsPOTInferableQuantizer(num_bits=8,
+                                                                  per_channel=per_channel,
+                                                                  threshold=thresholds)
+        self.assertEqual(f"Channel axis is missing in per channel quantization", str(e.exception))
+        with self.assertRaises(Exception) as e:
+            pytorch_quantizers.WeightsUniformInferableQuantizer(num_bits=8,
+                                                                  per_channel=per_channel,
+                                                                  min_range=[-t for t in thresholds],
+                                                                max_range=thresholds)
+        self.assertEqual(f"Channel axis is missing in per channel quantization", str(e.exception))
 

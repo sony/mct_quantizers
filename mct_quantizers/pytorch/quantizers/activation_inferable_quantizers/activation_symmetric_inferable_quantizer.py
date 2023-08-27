@@ -78,6 +78,8 @@ if FOUND_TORCH:
                 threshold=threshold,
                 signed=signed)
 
+            assert len(threshold)==1, f'For activation, only per-tensor quantization is supported. Thus, threshold should be of length 1 but is {len(threshold)}'
+
             assert self.threshold_np.shape[0] == 1
             self.threshold_np = self.threshold_np[0]
 

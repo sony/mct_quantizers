@@ -93,10 +93,10 @@ if FOUND_TORCH:
             assert isinstance(max_range, list), f'max_range is expected to be a list, but is of type {type(max_range)}'
 
             assert len(
-                min_range) == 1, f'For activation, quantization per channel is not supported and min_range should be ' \
+                min_range) == 1, f'For activation, only per-tensor quantization is supported. Thus, min_range should be ' \
                                  f'of length 1 but is {len(min_range)}'
             assert len(
-                max_range) == 1, f'For activation, quantization per channel is not supported and max_range should be ' \
+                max_range) == 1, f'For activation, only per-tensor quantization is supported. Thus, max_range should be ' \
                                  f'of length 1 but is {len(max_range)}'
 
             # Activation is per-tensor thus we expect only a single min/max values

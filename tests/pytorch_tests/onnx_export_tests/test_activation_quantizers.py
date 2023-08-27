@@ -186,5 +186,30 @@ class TestONNXExportActivationQuantizers(unittest.TestCase):
         assert onnx_nbits == num_bits, f'Expected num_bits in quantizer to be {num_bits} but found {onnx_nbits}'
         assert node_qparams[MCTQ_VERSION] == mctq_version, f'Expected version to be {mctq_version} but is {node_qparams[MCTQ_VERSION]}'
 
+    def test_illegal_arguments(self):
 
+        # Test activation with more than one threshold
+        thresholds = [3., 3.]
+        with self.assertRaises(Exception) as e:
+            pytorch_quantizers.ActivationPOTInferableQuantizer(num_bits=8,
+                                                                  signed=True,
+                                                                  threshold=thresholds)
+        self.assertEqual(f"For activation, only per-tensor quantization is supported. Thus, threshold should be of length 1 but is {len(thresholds)}", str(e.exception))
+
+        with self.assertRaises(Exception) as e:
+            pytorch_quantizers.ActivationSymmetricInferableQuantizer(num_bits=8,
+                                                                  signed=True,
+                                                                  threshold=thresholds)
+        self.assertEqual(f"For activation, only per-tensor quantization is supported. Thus, threshold should be of length 1 but is {len(thresholds)}", str(e.exception))
+        with self.assertRaises(Exception) as e:
+            pytorch_quantizers.ActivationUniformInferableQuantizer(num_bits=8,
+                                                                  min_range=[-t for t in thresholds],
+                                                                   max_range=[3.])
+        self.assertEqual(f"For activation, only per-tensor quantization is supported. Thus, min_range should be of length 1 but is {len(thresholds)}", str(e.exception))
+
+        with self.assertRaises(Exception) as e:
+            pytorch_quantizers.ActivationUniformInferableQuantizer(num_bits=8,
+                                                                  min_range=[-3.],
+                                                                   max_range=thresholds)
+        self.assertEqual(f"For activation, only per-tensor quantization is supported. Thus, max_range should be of length 1 but is {len(thresholds)}", str(e.exception))
 
