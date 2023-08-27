@@ -20,6 +20,7 @@ from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, Quant
 from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS, ONNX_CUSTOM_OP_DOMAIN
 from mct_quantizers.common.quant_info import QuantizationMethod
 from mct_quantizers.common.quant_utils import adjust_range_to_include_zero
+from mct_quantizers.pytorch.onnxruntime_validations import validate_activation_params
 
 if FOUND_TORCH:
     import torch
@@ -202,6 +203,10 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
         Returns:
             Quantized data.
         """
+
+        validate_activation_params(input_tensor=tensor_data,
+                               min_range=range_min,
+                               max_range=range_max)
 
         # adjusts the quantization rage so the quantization grid include zero.
         a, b = adjust_range_to_include_zero(range_min, range_max, n_bits)

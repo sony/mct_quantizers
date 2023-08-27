@@ -19,6 +19,7 @@ import numpy as np
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
 from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS, ONNX_CUSTOM_OP_DOMAIN
 from mct_quantizers.common.quant_info import QuantizationMethod
+from mct_quantizers.pytorch.onnxruntime_validations import validate_activation_params
 
 if FOUND_TORCH:
     import torch
@@ -209,6 +210,10 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
            Returns:
                np.ndarray: Symmetrically quantized tensor.
         """
+
+        validate_activation_params(input_tensor=input_tensor,
+                               min_range=-threshold if signed else 0.,
+                               max_range=threshold)
 
         if signed:
             scale = threshold / (2 ** (num_bits - 1))

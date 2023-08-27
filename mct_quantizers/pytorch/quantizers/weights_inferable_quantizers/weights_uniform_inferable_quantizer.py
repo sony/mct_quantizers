@@ -21,7 +21,7 @@ from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTEN
 from mct_quantizers.common.quant_info import QuantizationMethod
 from mct_quantizers.common.quant_utils import adjust_range_to_include_zero
 from mct_quantizers.logger import Logger
-
+from mct_quantizers.pytorch.onnxruntime_validations import validate_weight_params
 
 if FOUND_TORCH:
     import torch
@@ -255,6 +255,13 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
            Returns:
                Symmetrically quantized tensor.
         """
+
+        validate_weight_params(input_tensor=input_tensor,
+                               per_channel=per_channel,
+                               min_range=min_range,
+                               max_range=max_range,
+                               channel_axis=channel_axis)
+
         # adjusts the quantization rage so the quantization grid include zero.
         a, b = adjust_range_to_include_zero(min_range, max_range, num_bits)
 
