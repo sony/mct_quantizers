@@ -48,6 +48,9 @@ if FOUND_TORCH:
             assert isinstance(min_range, list), f'min_range is expected to be a list, but is of type {type(min_range)}'
             assert isinstance(max_range, list), f'max_range is expected to be a list, but is of type {type(max_range)}'
 
+            for _min, _max in zip(min_range, max_range):
+                assert _min<_max, f"Max range must be greater than min value but min is {_min} and max is {_max}"
+
             # Align mix/max numpy arrays so they are torch Tensors on the working device
             min_range = to_torch_tensor(np.asarray(min_range)).to(get_working_device())
             max_range = to_torch_tensor(np.asarray(max_range)).to(get_working_device())

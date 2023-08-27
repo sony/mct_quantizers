@@ -344,3 +344,16 @@ class TestONNXExportWeightsQuantizers(unittest.TestCase):
                                                                 max_range=thresholds)
         self.assertEqual(f"Channel axis is missing in per channel quantization", str(e.exception))
 
+        # Check min > max
+        with self.assertRaises(Exception) as e:
+            pytorch_quantizers.WeightsUniformInferableQuantizer(num_bits=8,
+                                                                  per_channel=per_channel,
+                                                                  min_range=[-3.],
+                                                                max_range=[-5.])
+        self.assertEqual(f"Max range must be greater than min value but min is -3.0 and max is -5.0", str(e.exception))
+        with self.assertRaises(Exception) as e:
+            pytorch_quantizers.WeightsUniformInferableQuantizer(num_bits=8,
+                                                                  per_channel=True,
+                                                                  min_range=[-3., -2.],
+                                                                max_range=[5., -3.])
+        self.assertEqual(f"Max range must be greater than min value but min is -2.0 and max is -3.0", str(e.exception))

@@ -213,3 +213,8 @@ class TestONNXExportActivationQuantizers(unittest.TestCase):
                                                                    max_range=thresholds)
         self.assertEqual(f"For activation, only per-tensor quantization is supported. Thus, max_range should be of length 1 but is {len(thresholds)}", str(e.exception))
 
+        with self.assertRaises(Exception) as e:
+            pytorch_quantizers.ActivationUniformInferableQuantizer(num_bits=8,
+                                                                  min_range=[-3.],
+                                                                   max_range=[-5.])
+        self.assertEqual(f"Max range must be greater than min value but min is -3.0 and max is -5.0", str(e.exception))
