@@ -57,9 +57,6 @@ if FOUND_TF:
 
             super(WeightsUniformInferableQuantizer, self).__init__()
 
-            self.min_range = min_range
-            self.max_range = max_range
-
             # Validate inputs properties
             validate_uniform_min_max_ranges(min_range,
                                             max_range)
@@ -73,6 +70,8 @@ if FOUND_TF:
                                              adj_max=_max_range_np)
 
             self.num_bits = num_bits
+            self.min_range = _min_range_np.tolist()
+            self.max_range = _max_range_np.tolist()
             self.max_range_np = _max_range_np
             self.min_range_np = _min_range_np
 
