@@ -116,7 +116,10 @@ def lut_quantizer(tensor_data: torch.Tensor,
     Returns: Quantized tensor.
     """
 
-    tensor = int_quantization_with_threshold(tensor_data, n_bits=lut_values_bitwidth, signed=signed, threshold=threshold,
+    tensor = int_quantization_with_threshold(tensor_data,
+                                             n_bits=lut_values_bitwidth,
+                                             signed=signed,
+                                             threshold=threshold,
                                              eps=eps)
     tensor = tensor.unsqueeze(-1)
 

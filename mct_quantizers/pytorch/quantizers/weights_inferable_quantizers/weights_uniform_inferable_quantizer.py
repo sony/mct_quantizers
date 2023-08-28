@@ -38,7 +38,7 @@ if FOUND_TORCH:
                                        per_channel: bool,
                                        channel_axis: int):
         """
-           Quantizes the input tensor symmetrically using torch.
+           Quantizes the input tensor uniformly using torch.
 
            Args:
                input_tensor (torch.Tensor): The input tensor to be quantized.
@@ -49,7 +49,7 @@ if FOUND_TORCH:
                channel_axis (int): Axis to quantize the tensor in case of per-channel quantization.
 
            Returns:
-               Symmetrically quantized tensor.
+               Uniformly quantized tensor.
         """
         if isinstance(min_range, np.ndarray):
             min_range = torch.tensor(min_range, dtype=torch.float32).to(get_working_device())
@@ -113,24 +113,15 @@ if FOUND_TORCH:
                 assert len(min_range) == 1, f'In per-tensor quantization min_range should be of length 1 but is {len(min_range)}'
                 assert len(max_range) == 1, f'In per-tensor quantization max_range should be of length 1 but is {len(max_range)}'
 
-            # Align mix/max numpy arrays so they are torch Tensors on the working device
-            min_range = to_torch_tensor(np.asarray(min_range)).to(get_working_device())
-            max_range = to_torch_tensor(np.asarray(max_range)).to(get_working_device())
-
             self.per_channel = per_channel
             self.channel_axis = channel_axis
 
-            min_range, max_range = fix_range_to_include_zero(min_range,
-                                                             max_range,
-                                                             num_bits)
-
-            self.adjusted_min_range_np = min_range.cpu().numpy()
-            self.adjusted_max_range_np = max_range.cpu().numpy()
+            self.adjusted_min_range_np = self.min_range.cpu().numpy()
+            self.adjusted_max_range_np = self.max_range.cpu().numpy()
 
             # Compute the step size of quantized values.
-            self.scales = (max_range - min_range) / (2 ** num_bits - 1)
-            self.zero_points = -(
-                    min_range / self.scales).int()  # zp has to be positive, and a <=0, so we multiply by -1
+            self.scales = (self.max_range - self.min_range) / (2 ** num_bits - 1)
+            self.zero_points = -(self.min_range / self.scales).int()  # zp has to be positive, and a <=0, so we multiply by -1
 
             self.scales = self.scales.to(get_working_device())
             self.zero_points = self.zero_points.to(get_working_device())
@@ -242,7 +233,7 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
                                        per_channel: bool,
                                        channel_axis: int):
         """
-           Quantizes the input tensor symmetrically using numpy.
+           Quantizes the input tensor uniformly using numpy.
 
            Args:
                input_tensor (np.ndarray): The input tensor to be quantized.
@@ -253,7 +244,7 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
                channel_axis (int): Axis to quantize the tensor in case of per-channel quantization.
 
            Returns:
-               Symmetrically quantized tensor.
+               Uniformly quantized tensor.
         """
 
         validate_weight_params(input_tensor=input_tensor,
