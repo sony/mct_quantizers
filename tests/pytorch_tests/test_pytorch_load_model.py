@@ -134,8 +134,8 @@ class TestPytorchLoadModel(unittest.TestCase):
         self._one_layer_model_save_and_load(layer_with_quantizer)
 
     def test_save_and_load_weights_uniform(self):
-        min_range = np.asarray([3., 6., 2.])
-        max_range = np.asarray([13., 16., 12.])
+        min_range = [3., 6., 2.]
+        max_range = [13., 16., 12.]
         num_bits = 2
         quantizer = WeightsUniformInferableQuantizer(num_bits=num_bits,
                                                      per_channel=True,
