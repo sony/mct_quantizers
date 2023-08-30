@@ -53,8 +53,8 @@ class TestPytorchWeightsIllegalInferableQuantizers(unittest.TestCase):
 
     def test_zero_not_in_range_uniform_quantizer(self):
         num_bits = 3
-        min_range = [-10.7, 2.3, -6.6, 0]
-        max_range = [-4.1, 4.7, 20, 7]
+        min_range = np.asarray([-10.7, 2.3, -6.6, 0])
+        max_range = np.asarray([-4.1, 4.7, 20, 7])
         quantizer = WeightsUniformInferableQuantizer(num_bits=num_bits,
                                                      per_channel=True,
                                                      min_range=min_range,
