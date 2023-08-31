@@ -12,14 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-from typing import List
-
 import numpy as np
 
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizerID
 from mct_quantizers.common.constants import FOUND_TORCH
 from mct_quantizers.common.quant_info import QuantizationMethod
-from mct_quantizers.pytorch.quantizer_utils import get_working_device, to_torch_tensor, fix_range_to_include_zero
 
 if FOUND_TORCH:
     from mct_quantizers.pytorch.quantizers.base_pytorch_inferable_quantizer import BasePyTorchInferableQuantizer
@@ -32,8 +29,8 @@ if FOUND_TORCH:
 
         def __init__(self,
                      num_bits: int,
-                     min_range: List[float],
-                     max_range: List[float]):
+                     min_range: np.ndarray,
+                     max_range: np.ndarray):
             """
             Initialize the quantizer with the specified parameters.
 
@@ -44,24 +41,9 @@ if FOUND_TORCH:
             """
 
             super(BaseUniformInferableQuantizer, self).__init__()
-
-            assert isinstance(min_range, list), f'min_range is expected to be a list, but is of type {type(min_range)}'
-            assert isinstance(max_range, list), f'max_range is expected to be a list, but is of type {type(max_range)}'
-
-            for _min, _max in zip(min_range, max_range):
-                assert _min<_max, f"Max range must be greater than min value but min is {_min} and max is {_max}"
-
-            # Align mix/max numpy arrays so they are torch Tensors on the working device
-            min_range = to_torch_tensor(np.asarray(min_range)).to(get_working_device())
-            max_range = to_torch_tensor(np.asarray(max_range)).to(get_working_device())
-
-            min_range, max_range = fix_range_to_include_zero(min_range,
-                                                             max_range,
-                                                             num_bits)
+            self.num_bits = num_bits
             self.min_range = min_range
             self.max_range = max_range
-
-            self.num_bits = num_bits
             self.min_quantized_domain = 0
             self.max_quantized_domain = 2 ** num_bits - 1
 

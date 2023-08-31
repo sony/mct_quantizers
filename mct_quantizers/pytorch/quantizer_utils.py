@@ -17,8 +17,6 @@ from typing import Tuple
 import torch
 import numpy as np
 
-from mct_quantizers.logger import Logger
-
 
 def get_working_device():
     """
@@ -83,12 +81,6 @@ def fix_range_to_include_zero(range_min: torch.Tensor,
 
     min_range_adj = min_range_adj * mid_range + max_negative * range_min
     max_range_adj = max_range_adj * mid_range + min_positive * range_max
-
-    grid_range = (range_max - range_min)
-    if not torch.all(torch.isclose((min_range_adj - range_min)/grid_range, torch.tensor(0.), atol=1e-6)) or not torch.all(torch.isclose((min_range_adj - range_min)/grid_range, torch.tensor(0.), atol=1e-6)):
-        Logger.warning(
-                f"Adjusting (min_range, max_range) from ({range_min},{range_max}) to ({min_range_adj},{max_range_adj})")  # pragma: no cover
-
     return min_range_adj, max_range_adj
 
 
@@ -116,10 +108,7 @@ def lut_quantizer(tensor_data: torch.Tensor,
     Returns: Quantized tensor.
     """
 
-    tensor = int_quantization_with_threshold(tensor_data,
-                                             n_bits=lut_values_bitwidth,
-                                             signed=signed,
-                                             threshold=threshold,
+    tensor = int_quantization_with_threshold(tensor_data, n_bits=lut_values_bitwidth, signed=signed, threshold=threshold,
                                              eps=eps)
     tensor = tensor.unsqueeze(-1)
 
