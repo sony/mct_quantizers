@@ -147,7 +147,6 @@ class Logger:
             msg: Message to log.
 
         """
-        print(msg)
         Logger.get_logger().info(msg)
 
     @staticmethod
@@ -159,7 +158,6 @@ class Logger:
             msg: Message to log.
 
         """
-        print(msg)
         Logger.get_logger().warning(msg)
 
     @staticmethod
