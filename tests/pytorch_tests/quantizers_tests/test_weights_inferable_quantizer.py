@@ -174,8 +174,8 @@ class TestPytorchWeightsInferableQuantizers(unittest.TestCase):
 
     def test_uniform_weights_quantizer_per_channel(self):
         num_bits = 3
-        min_range = np.asarray([-10, -3, -8, 0])
-        max_range = np.asarray([4, 4, 20, 7])
+        min_range = [-10, -3, -8, 0]
+        max_range = [4, 4, 20, 7]
         quantizer = WeightsUniformInferableQuantizer(num_bits=num_bits,
                                                      per_channel=True,
                                                      min_range=min_range,
@@ -215,8 +215,8 @@ class TestPytorchWeightsInferableQuantizers(unittest.TestCase):
 
     def test_uniform_weights_quantizer_per_tensor(self):
         num_bits = 3
-        min_range = np.asarray([-10])
-        max_range = np.asarray([4])
+        min_range = [-10]
+        max_range = [4]
         quantizer = WeightsUniformInferableQuantizer(num_bits=num_bits,
                                                      per_channel=False,
                                                      min_range=min_range,
