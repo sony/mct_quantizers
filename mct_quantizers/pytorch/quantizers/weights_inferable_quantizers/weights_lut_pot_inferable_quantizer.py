@@ -161,8 +161,8 @@ if FOUND_TORCH:
                         input_rank_i=input_rank,
                         lut_values_bitwidth_i=lut_values_bitwidth,
                         eps_f=eps,
-                        signed_i=int(WeightsLUTSymmetricF.is_signed()),
-                        **WeightsLUTSymmetricF._get_metadata_attributes()
+                        signed_i=int(WeightsLUTPOTF.is_signed()),
+                        **WeightsLUTPOTF._get_metadata_attributes()
                         ).setType(
                 input_tensor.type())
 
