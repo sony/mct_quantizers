@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+from typing import List
+
 import numpy as np
 
 from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, QuantizationTarget, QuantizerID
@@ -35,8 +37,8 @@ if FOUND_TORCH:
 
         def __init__(self,
                      num_bits: int,
-                     lut_values: np.ndarray,
-                     threshold: np.ndarray,
+                     lut_values: List[float],
+                     threshold: List[float],
                      signed: bool,
                      lut_values_bitwidth: int = LUT_VALUES_BITWIDTH,
                      eps: float = EPS):
