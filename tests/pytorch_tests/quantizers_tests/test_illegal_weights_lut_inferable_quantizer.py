@@ -109,7 +109,7 @@ class BasePytorchWeightsIllegalLutQuantizerTest(unittest.TestCase):
                                 lut_values=lut_values,
                                 threshold=threshold,
                                 channel_axis=channel_axis)
-        self.assertEqual('Threshold is expected to be numpy array, but is of type <class \'list\'>',
+        self.assertEqual('Threshold is expected to be a list, but is of type <class \'numpy.ndarray\'>',
                          str(e.exception))
 
 
@@ -174,7 +174,7 @@ class TestPytorchWeightsIllegalSymmetricLutQuantizer(BasePytorchWeightsIllegalLu
 
     def test_illegal_threshold_type_symmetric_lut_quantizer(self):
         self.illegal_threshold_type_inferable_quantizer_test(inferable_quantizer=self.inferable_quantizer,
-                                                             threshold=[3., 2.],
+                                                             threshold=np.asarray([3., 2.]),
                                                              lut_values=[-25, 25],
                                                              per_channel=False,
                                                              channel_axis=None)
