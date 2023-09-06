@@ -110,9 +110,9 @@ if FOUND_TORCH:
 
             inputs.requires_grad = False
             return lut_quantizer(inputs,
-                                 lut_values=self.lut_values,
+                                 lut_values=self._lut_values_torch,
                                  signed=True,
-                                 threshold=self.threshold,
+                                 threshold=self._threshold_torch,
                                  lut_values_bitwidth=self.lut_values_bitwidth,
                                  eps=self.eps,
                                  per_channel=self.per_channel,

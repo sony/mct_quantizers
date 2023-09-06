@@ -98,9 +98,9 @@ def lut_quantizer(tensor_data: torch.Tensor,
                   threshold: torch.Tensor,
                   lut_values_bitwidth: int,
                   eps: float,
-                  per_channel:bool,
-                  channel_axis:int,
-                  input_rank:int) -> torch.Tensor:
+                  per_channel:bool=None,
+                  channel_axis:int=None,
+                  input_rank:int=None) -> torch.Tensor:
     """
     Quantize a tensor using a non-uniform quantization based on the pre-defined values.
     1. Scales tensor_data with the threshold into n-bit quantization range.

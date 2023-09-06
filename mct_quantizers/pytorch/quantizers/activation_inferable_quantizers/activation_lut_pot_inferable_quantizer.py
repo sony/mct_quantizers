@@ -62,7 +62,7 @@ if FOUND_TORCH:
                 lut_values_bitwidth=lut_values_bitwidth,
                 eps=eps)
 
-            is_threshold_pot = np.all(np.round(np.log2(threshold.flatten())) == np.log2(threshold.flatten()))
+            is_threshold_pot = np.all(np.round(np.log2(self._threshold_np.flatten())) == np.log2(self._threshold_np.flatten()))
             assert is_threshold_pot, f'Expected threshold to be power of 2 but is {threshold}'
 
             # Activation supports only per-tensor quantization
@@ -71,7 +71,7 @@ if FOUND_TORCH:
                                       f'should be of length 1 but is {len(threshold)}'
             self.threshold = self.threshold[0]
 
-            self.lut_values = to_torch_tensor(self.lut_values).to(get_working_device())
+            self.lut_values = to_torch_tensor(self._lut_values_np).to(get_working_device())
 
         def __call__(self, inputs: torch.Tensor):
             """
@@ -83,8 +83,12 @@ if FOUND_TORCH:
             Returns:
                 quantized tensor.
             """
-            return lut_quantizer(inputs, lut_values=self.lut_values, signed=self.signed,
-                                 threshold=self.threshold, lut_values_bitwidth=self.lut_values_bitwidth, eps=self.eps)
+            return lut_quantizer(inputs,
+                                 lut_values=self.lut_values,
+                                 signed=self.signed,
+                                 threshold=self.threshold,
+                                 lut_values_bitwidth=self.lut_values_bitwidth,
+                                 eps=self.eps)
 
 else:
     class ActivationLutPOTInferableQuantizer:  # pragma: no cover
