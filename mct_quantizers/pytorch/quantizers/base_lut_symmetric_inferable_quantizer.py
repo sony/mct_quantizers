@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 import warnings
+from typing import List
 
 import numpy as np
 
@@ -30,8 +31,8 @@ if FOUND_TORCH:
 
         def __init__(self,
                      num_bits: int,
-                     lut_values: np.ndarray,
-                     threshold: np.ndarray,
+                     lut_values: List[float],
+                     threshold: List[float],
                      signed: bool,
                      lut_values_bitwidth: int,
                      eps: float):
@@ -50,26 +51,31 @@ if FOUND_TORCH:
             super(BaseLUTSymmetricInferableQuantizer, self).__init__()
 
             assert isinstance(threshold,
-                              np.ndarray), f'Threshold is expected to be numpy array, but is of type {type(threshold)}'
-            assert threshold.ndim == 1, f'Threshold is expected to be flatten, but of shape {threshold.shape}'
+                              list), f'Threshold is expected to be a list, but is of type {type(threshold)}'
+            assert isinstance(lut_values,
+                              list), f'lut_values is expected to be a list, but is of type {type(lut_values)}'
 
-            assert len(np.unique(lut_values)) <= 2 ** num_bits, \
+
+            self._threshold_np = np.asarray(threshold)
+            self._lut_values_np = np.asarray(lut_values)
+
+            assert len(np.unique(self._lut_values_np)) <= 2 ** num_bits, \
                 f'Expected num of lut values to be less or equal than {2 ** num_bits} ' \
-                f'but got {len(lut_values)}'
+                f'but got {len(self._lut_values_np)}'
 
-            assert not np.any(lut_values - lut_values.astype(int)), f'Expected lut values to be integers'
+            assert not np.any(self._lut_values_np - self._lut_values_np.astype(int)), f'Expected lut values to be integers'
 
             if signed:
-                assert np.all((-1 * (2 ** (lut_values_bitwidth - int(signed))) <= lut_values) &
-                              (lut_values <= (2 ** (lut_values_bitwidth - int(signed)) - 1))), \
+                assert np.all((-1 * (2 ** (lut_values_bitwidth - int(signed))) <= self._lut_values_np) &
+                              (self._lut_values_np <= (2 ** (lut_values_bitwidth - int(signed)) - 1))), \
                     f'Expected lut values in the quantization range'
             else:
-                assert np.all(lut_values <= (2 ** lut_values_bitwidth)), f'Expected lut values in the ' \
+                assert np.all(self._lut_values_np <= (2 ** lut_values_bitwidth)), f'Expected lut values in the ' \
                                                                             f'quantization range'
 
             # If unsigned activation quantization, all lut_values must be positive
             if not signed:
-                assert np.all(lut_values >= 0), f'Expected unsigned lut values in unsigned activation ' \
+                assert np.all(self._lut_values_np >= 0), f'Expected unsigned lut values in unsigned activation ' \
                                                           f'quantization'
 
             # num_bits must be less than lut_values_bitwidth
@@ -79,9 +85,10 @@ if FOUND_TORCH:
                 warnings.warn("Num of bits equal to multiplier n bits, Please be aware LUT quantizier may be "
                               "inefficient in that case, consider using SymmetricInferableQuantizer instead")
 
-            self.signed = signed
             self.threshold = threshold
             self.lut_values = lut_values
+
+            self.signed = signed
             self.num_bits = num_bits
             self.lut_values_bitwidth = lut_values_bitwidth
             self.eps = eps

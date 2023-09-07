@@ -17,6 +17,8 @@ from typing import Tuple
 import numpy as np
 import torch
 
+from mct_quantizers.logger import Logger
+
 _device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
@@ -93,6 +95,15 @@ def fix_range_to_include_zero(
 
     min_range_adj = min_range_adj * mid_range + max_negative * range_min
     max_range_adj = max_range_adj * mid_range + min_positive * range_max
+
+    grid_range = range_max - range_min
+    if not torch.all(
+        torch.isclose((min_range_adj - range_min) / grid_range, torch.tensor(0.0), atol=1e-6)
+    ) or not torch.all(torch.isclose((min_range_adj - range_min) / grid_range, torch.tensor(0.0), atol=1e-6)):
+        Logger.warning(
+            f"Adjusting (min_range, max_range) from ({range_min},{range_max}) to ({min_range_adj},{max_range_adj})"
+        )  # pragma: no cover
+
     return min_range_adj, max_range_adj
 
 
@@ -103,6 +114,9 @@ def lut_quantizer(
     threshold: torch.Tensor,
     lut_values_bitwidth: int,
     eps: float,
+    per_channel: bool = None,
+    channel_axis: int = None,
+    input_rank: int = None,
 ) -> torch.Tensor:
     """
     Quantize a tensor using a non-uniform quantization based on the pre-defined values.
@@ -121,6 +135,10 @@ def lut_quantizer(
 
     Returns: Quantized tensor.
     """
+    if per_channel:
+        threshold_target_shape = [1] * input_rank
+        threshold_target_shape[channel_axis] = -1
+        threshold = torch.reshape(threshold, threshold_target_shape)
 
     tensor = int_quantization_with_threshold(
         tensor_data, n_bits=lut_values_bitwidth, signed=signed, threshold=threshold, eps=eps

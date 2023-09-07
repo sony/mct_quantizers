@@ -20,6 +20,7 @@ from mct_quantizers.common.base_inferable_quantizer import mark_quantizer, Quant
 from mct_quantizers.common.constants import FOUND_TORCH, FOUND_ONNXRUNTIME_EXTENSIONS, ONNX_CUSTOM_OP_DOMAIN
 from mct_quantizers.common.quant_info import QuantizationMethod
 from mct_quantizers.common.quant_utils import adjust_range_to_include_zero
+from mct_quantizers.pytorch.onnxruntime_validations import validate_activation_params
 
 if FOUND_TORCH:
     import torch
@@ -93,25 +94,18 @@ if FOUND_TORCH:
             assert isinstance(max_range, list), f'max_range is expected to be a list, but is of type {type(max_range)}'
 
             assert len(
-                min_range) == 1, f'For activation, quantization per channel is not supported and min_range should be ' \
+                min_range) == 1, f'For activation, only per-tensor quantization is supported. Thus, min_range should be ' \
                                  f'of length 1 but is {len(min_range)}'
             assert len(
-                max_range) == 1, f'For activation, quantization per channel is not supported and max_range should be ' \
+                max_range) == 1, f'For activation, only per-tensor quantization is supported. Thus, max_range should be ' \
                                  f'of length 1 but is {len(max_range)}'
 
             # Activation is per-tensor thus we expect only a single min/max values
-            min_range = min_range[0]
-            max_range = max_range[0]
+            self.min_range = self.min_range[0].cpu().item()
+            self.max_range = self.max_range[0].cpu().item()
 
-            # fixing quantization range to include 0
-            a = 0 if min_range > 0 else min_range
-            b = 0 if max_range < 0 else max_range
-
-            self.min_range = a
-            self.max_range = b
-
-            self.scale = float((b - a) / ((2 ** num_bits) - 1))
-            self.zero_point = int(-np.round(a / self.scale))  # zp has to be positive, and a <=0, so we multiply by -1
+            self.scale = float((self.max_range-self.min_range) / ((2 ** num_bits) - 1))
+            self.zero_point = int(-np.round(self.min_range / self.scale))  # zp has to be positive, and a <=0, so we multiply by -1
 
         def __call__(self, inputs: torch.Tensor):
             """
@@ -209,6 +203,10 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
         Returns:
             Quantized data.
         """
+
+        validate_activation_params(input_tensor=tensor_data,
+                               min_range=range_min,
+                               max_range=range_max)
 
         # adjusts the quantization rage so the quantization grid include zero.
         a, b = adjust_range_to_include_zero(range_min, range_max, n_bits)

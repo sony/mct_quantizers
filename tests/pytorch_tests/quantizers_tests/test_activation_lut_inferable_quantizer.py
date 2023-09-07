@@ -25,8 +25,8 @@ from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activatio
 class TestKerasActivationLutPotQuantizer(unittest.TestCase):
 
     def test_lut_pot_signed_quantizer(self):
-        lut_values = np.asarray([-25, 25])
-        thresholds = np.asarray([4.])
+        lut_values = [-25, 25]
+        thresholds = [4.]
         num_bits = 3
         signed = True
         lut_values_bitwidth = 8
@@ -60,7 +60,7 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
                                   f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                                   f'{len(np.unique(fake_quantized_tensor))} unique values')
 
-        quant_tensor_values = lut_values / (2 ** (lut_values_bitwidth - int(signed))) * thresholds
+        quant_tensor_values = np.asarray(lut_values) / (2 ** (lut_values_bitwidth - int(signed))) * np.asarray(thresholds)
         self.assertTrue(len(np.unique(fake_quantized_tensor)) <= 2 ** num_bits,
                                   f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                                   f'{len(np.unique(fake_quantized_tensor))} unique values')
@@ -71,12 +71,12 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
         clip_max = 2 ** (lut_values_bitwidth - 1) - 1
         clip_min = -2 ** (lut_values_bitwidth - 1)
 
-        tensor = torch.clip((input_tensor / thresholds) * (2 ** (lut_values_bitwidth - int(signed))),
+        tensor = torch.clip((input_tensor / np.asarray(thresholds)) * (2 ** (lut_values_bitwidth - int(signed))),
                             min=clip_min, max=clip_max)
         tensor = tensor.unsqueeze(-1)
-        expanded_lut_values = lut_values.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
+        expanded_lut_values = np.asarray(lut_values).reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
         lut_values_assignments = torch.argmin(torch.abs(tensor - expanded_lut_values), dim=-1)
-        centers = lut_values.flatten()[lut_values_assignments]
+        centers = np.asarray(lut_values).flatten()[lut_values_assignments]
 
         self.assertTrue(np.all(centers / (2 ** (lut_values_bitwidth - int(signed))) * thresholds ==
                                          fake_quantized_tensor), "Quantized tensor values weren't assigned correctly")
@@ -86,8 +86,8 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
                                   f'Expected some values to be negative but quantized tensor is {fake_quantized_tensor}')
 
     def test_lut_pot_unsigned_quantizer(self):
-        lut_values = np.asarray([25, 45])
-        thresholds = np.asarray([4.])
+        lut_values = [25, 45]
+        thresholds = [4.]
         num_bits = 3
         signed = False
         lut_values_bitwidth = 7
@@ -120,7 +120,7 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
                                   f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                                   f'{len(np.unique(fake_quantized_tensor))} unique values')
 
-        quant_tensor_values = lut_values / (2 ** (lut_values_bitwidth - int(signed))) * thresholds
+        quant_tensor_values = np.asarray(lut_values) / (2 ** (lut_values_bitwidth - int(signed))) * np.asarray(thresholds)
         self.assertTrue(len(np.unique(fake_quantized_tensor)) <= 2 ** num_bits,
                                   f'Quantized tensor expected to have no more than {2 ** num_bits} unique values but has '
                                   f'{len(np.unique(fake_quantized_tensor))} unique values')
@@ -131,12 +131,12 @@ class TestKerasActivationLutPotQuantizer(unittest.TestCase):
         clip_max = 2 ** lut_values_bitwidth - 1
         clip_min = 0
 
-        tensor = torch.clip((input_tensor / thresholds) * (2 ** (lut_values_bitwidth - int(signed))),
+        tensor = torch.clip((input_tensor / np.asarray(thresholds)) * (2 ** (lut_values_bitwidth - int(signed))),
                             min=clip_min, max=clip_max)
         tensor = tensor.unsqueeze(-1)
-        expanded_lut_values = lut_values.reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
+        expanded_lut_values = np.asarray(lut_values).reshape([*[1 for _ in range(len(tensor.shape) - 1)], -1])
         lut_values_assignments = torch.argmin(torch.abs(tensor - expanded_lut_values), dim=-1)
-        centers = lut_values.flatten()[lut_values_assignments]
+        centers = np.asarray(lut_values).flatten()[lut_values_assignments]
 
         self.assertTrue(np.all(centers / (2 ** (lut_values_bitwidth - int(signed))) * thresholds ==
                                          fake_quantized_tensor), "Quantized tensor values weren't assigned correctly")
