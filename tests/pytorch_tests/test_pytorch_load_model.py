@@ -93,8 +93,8 @@ class TestPytorchLoadModel(unittest.TestCase):
         self._one_layer_model_save_and_load(layer_with_quantizer)
 
     def test_save_and_load_activation_lut_pot(self):
-        lut_values = np.asarray([-25, 25])
-        thresholds = np.asarray([4.])
+        lut_values = [-25, 25]
+        thresholds = [4.]
         num_bits = 3
         signed = True
         lut_values_bitwidth = 8
@@ -147,10 +147,10 @@ class TestPytorchLoadModel(unittest.TestCase):
         self._one_layer_model_save_and_load(layer_with_quantizer)
 
     def test_save_and_load_weights_lut_symmetric(self):
-        lut_values = np.asarray([-25, 25])
+        lut_values = [-25, 25]
         per_channel = True
         num_bits = 8
-        threshold = np.asarray([3., 8., 7.])
+        threshold = [3., 8., 7.]
         channel_axis = 3
         lut_values_bitwidth = 8
         eps = 1e-8
@@ -160,16 +160,17 @@ class TestPytorchLoadModel(unittest.TestCase):
                                                           per_channel=per_channel,
                                                           channel_axis=channel_axis,
                                                           lut_values_bitwidth=lut_values_bitwidth,
-                                                          eps=eps)
+                                                          eps=eps,
+                                                          input_rank=4)
         layer_with_quantizer = PytorchQuantizationWrapper(torch.nn.Conv2d(3, 10, 3),
                                                           {'weight': quantizer}).to(self.device)
         self._one_layer_model_save_and_load(layer_with_quantizer)
 
     def test_save_and_load_weights_lut_pot(self):
-        lut_values = np.asarray([-25, 25])
+        lut_values = [-25, 25]
         per_channel = True
         num_bits = 8
-        threshold = np.asarray([1., 8., 4.])
+        threshold = [1., 8., 4.]
         channel_axis = 3
         lut_values_bitwidth = 8
         eps = 1e-8
@@ -179,7 +180,8 @@ class TestPytorchLoadModel(unittest.TestCase):
                                                     per_channel=per_channel,
                                                     channel_axis=channel_axis,
                                                     lut_values_bitwidth=lut_values_bitwidth,
-                                                    eps=eps)
+                                                    eps=eps,
+                                                    input_rank=4)
         layer_with_quantizer = PytorchQuantizationWrapper(torch.nn.Conv2d(3, 10, 3),
                                                           {'weight': quantizer}).to(self.device)
         self._one_layer_model_save_and_load(layer_with_quantizer)

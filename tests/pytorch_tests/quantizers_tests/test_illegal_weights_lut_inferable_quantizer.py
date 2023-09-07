@@ -109,19 +109,9 @@ class BasePytorchWeightsIllegalLutQuantizerTest(unittest.TestCase):
                                 lut_values=lut_values,
                                 threshold=threshold,
                                 channel_axis=channel_axis)
-        self.assertEqual('Threshold is expected to be numpy array, but is of type <class \'list\'>',
+        self.assertEqual('Threshold is expected to be a list, but is of type <class \'numpy.ndarray\'>',
                          str(e.exception))
 
-    def illegal_threshold_shape_inferable_quantizer_test(self, inferable_quantizer, threshold, lut_values,
-                                                         per_channel, channel_axis):
-        with self.assertRaises(Exception) as e:
-            inferable_quantizer(num_bits=8,
-                                per_channel=per_channel,
-                                lut_values=lut_values,
-                                threshold=threshold,
-                                channel_axis=channel_axis)
-        self.assertEqual(f'Threshold is expected to be flatten, but of shape {threshold.shape}',
-                         str(e.exception))
 
     def missing_channel_axis_inferable_quantizer(self, inferable_quantizer, threshold, lut_values,
                                                  per_channel):
@@ -142,22 +132,22 @@ class TestPytorchWeightsIllegalSymmetricLutQuantizer(BasePytorchWeightsIllegalLu
 
     def test_illegal_lut_values_symmetric_lut_quantizer(self):
         self.illegal_lut_values_inferable_quantizer_test(inferable_quantizer=self.inferable_quantizer,
-                                                              threshold=np.asarray([2.]),
-                                                              lut_values=np.asarray([-25.6, 25]),
+                                                              threshold=[2.],
+                                                              lut_values=[-25.6, 25],
                                                               per_channel=False,
                                                               channel_axis=None)
 
     def test_illegal_num_of_lut_values_symmetric_lut_quantizer(self):
         self.illegal_num_of_lut_values_inferable_quantizer_test(inferable_quantizer=self.inferable_quantizer,
-                                                                     threshold=np.asarray([2.]),
-                                                                     lut_values=np.asarray([-25, 25, 3, 19, 55]),
+                                                                     threshold=[2.],
+                                                                     lut_values=[-25, 25, 3, 19, 55],
                                                                      per_channel=False,
                                                                      channel_axis=None)
 
     def test_illegal_lut_values_range_symmetric_lut_quantizer(self):
         self.illegal_lut_values_range_inferable_quantizer_test(inferable_quantizer=self.inferable_quantizer,
-                                                                    threshold=np.asarray([2.]),
-                                                                    lut_values=np.asarray([-25, 25]),
+                                                                    threshold=[2.],
+                                                                    lut_values=[-25, 25],
                                                                     per_channel=False,
                                                                     channel_axis=None,
                                                                     lut_values_bitwidth=5)
@@ -165,8 +155,8 @@ class TestPytorchWeightsIllegalSymmetricLutQuantizer(BasePytorchWeightsIllegalLu
     def test_illegal_num_bit_bigger_than_lut_values_bitwidth_symmetric_lut_quantizer(self):
         self.illegal_num_bit_bigger_than_lut_values_bitwidth_inferable_quantizer_test(
             inferable_quantizer=self.inferable_quantizer,
-            threshold=np.asarray([2.]),
-            lut_values=np.asarray([-25, 25]),
+            threshold=[2.],
+            lut_values=[-25, 25],
             per_channel=False,
             channel_axis=None,
             lut_values_bitwidth=8,
@@ -175,8 +165,8 @@ class TestPytorchWeightsIllegalSymmetricLutQuantizer(BasePytorchWeightsIllegalLu
     def test_warning_num_bit_equal_lut_values_bitwidth_symmetric_lut_quantizer(self):
         self.warning_num_bit_equal_lut_values_bitwidth_inferable_quantizer_test(
             inferable_quantizer=self.inferable_quantizer,
-            threshold=np.asarray([2.]),
-            lut_values=np.asarray([-25, 25]),
+            threshold=[2.],
+            lut_values=[-25, 25],
             per_channel=False,
             channel_axis=None,
             lut_values_bitwidth=8,
@@ -184,29 +174,22 @@ class TestPytorchWeightsIllegalSymmetricLutQuantizer(BasePytorchWeightsIllegalLu
 
     def test_illegal_threshold_type_symmetric_lut_quantizer(self):
         self.illegal_threshold_type_inferable_quantizer_test(inferable_quantizer=self.inferable_quantizer,
-                                                             threshold=[3., 2.],
-                                                             lut_values=np.asarray([-25, 25]),
+                                                             threshold=np.asarray([3., 2.]),
+                                                             lut_values=[-25, 25],
                                                              per_channel=False,
                                                              channel_axis=None)
 
-    def test_illegal_threshold_shape_symmetric_lut_quantizer(self):
-        self.illegal_threshold_shape_inferable_quantizer_test(inferable_quantizer=self.inferable_quantizer,
-                                                              threshold=np.array([[3., 2.], [2., 5.]]),
-                                                              lut_values=np.asarray([-25, 25]),
-                                                              per_channel=False,
-                                                              channel_axis=None)
-
     def test_illegal_num_of_thresholds_symmetric_lut_quantizer(self):
         self.illegal_num_of_thresholds_inferable_quantizer_test(inferable_quantizer=self.inferable_quantizer,
-                                                                threshold=np.asarray([2., 7.]),
-                                                                lut_values=np.asarray([-25, 25]),
+                                                                threshold=[2., 7.],
+                                                                lut_values=[-25, 25],
                                                                 per_channel=False,
                                                                 channel_axis=None)
 
     def test_missing_channel_axis_symmetric_lut_quantizer(self):
         self.missing_channel_axis_inferable_quantizer(inferable_quantizer=self.inferable_quantizer,
-                                                      threshold=np.asarray([2.]),
-                                                      lut_values=np.asarray([-25, 25]),
+                                                      threshold=[2.],
+                                                      lut_values=[-25, 25],
                                                       per_channel=True)
 
 
@@ -220,39 +203,39 @@ class TestPytorchWeightsIllegalPotLutQuantizer(BasePytorchWeightsIllegalLutQuant
     def test_threshold_not_pot_lut_quantizer(self):
         with self.assertRaises(Exception) as e:
             self.inferable_quantizer(num_bits=8,
-                                     lut_values=np.asarray([25., 85.]),
+                                     lut_values=[25., 85.],
                                      per_channel=False,
                                      # Not POT threshold
-                                     threshold=np.asarray([3]))
+                                     threshold=[3])
         self.assertEqual('Expected threshold to be power of 2 but is [3]', str(e.exception))
 
         with self.assertRaises(Exception) as e:
             self.inferable_quantizer(num_bits=8,
-                                     lut_values=np.asarray([25., 85.]),
+                                     lut_values=[25., 85.],
                                      per_channel=False,
                                      # More than one threshold in per-tensor quantization
-                                     threshold=np.asarray([2, 3]))
+                                     threshold=[2, 3])
         self.assertEqual('In per-tensor quantization threshold should be of length 1 but is 2',
                          str(e.exception))
 
     def test_illegal_lut_values_pot_lut_quantizer(self):
         self.illegal_lut_values_inferable_quantizer_test(inferable_quantizer=self.inferable_quantizer,
-                                                              threshold=np.asarray([2.]),
-                                                              lut_values=np.asarray([-25.6, 25]),
+                                                              threshold=[2.],
+                                                              lut_values=[-25.6, 25],
                                                               per_channel=False,
                                                               channel_axis=None)
 
     def test_illegal_num_of_lut_values_pot_lut_quantizer(self):
         self.illegal_num_of_lut_values_inferable_quantizer_test(inferable_quantizer=self.inferable_quantizer,
-                                                                     threshold=np.asarray([2.]),
-                                                                     lut_values=np.asarray([-25, 25, 3, 19, 55]),
+                                                                     threshold=[2.],
+                                                                     lut_values=[-25, 25, 3, 19, 55],
                                                                      per_channel=False,
                                                                      channel_axis=None)
 
     def test_illegal_lut_values_range_pot_lut_quantizer(self):
         self.illegal_lut_values_range_inferable_quantizer_test(inferable_quantizer=self.inferable_quantizer,
-                                                                    threshold=np.asarray([2.]),
-                                                                    lut_values=np.asarray([-25, 25]),
+                                                                    threshold=[2.],
+                                                                    lut_values=[-25, 25],
                                                                     per_channel=False,
                                                                     channel_axis=None,
                                                                     lut_values_bitwidth=5)
@@ -260,8 +243,8 @@ class TestPytorchWeightsIllegalPotLutQuantizer(BasePytorchWeightsIllegalLutQuant
     def test_illegal_num_bit_bigger_than_lut_values_bitwidth_pot_lut_quantizer(self):
         self.illegal_num_bit_bigger_than_lut_values_bitwidth_inferable_quantizer_test(
             inferable_quantizer=self.inferable_quantizer,
-            threshold=np.asarray([2.]),
-            lut_values=np.asarray([-25, 25]),
+            threshold=[2.],
+            lut_values=[-25, 25],
             per_channel=False,
             channel_axis=None,
             lut_values_bitwidth=8,
@@ -270,8 +253,8 @@ class TestPytorchWeightsIllegalPotLutQuantizer(BasePytorchWeightsIllegalLutQuant
     def test_warning_num_bit_equal_lut_values_bitwidth_pot_lut_quantizer(self):
         self.warning_num_bit_equal_lut_values_bitwidth_inferable_quantizer_test(
             inferable_quantizer=self.inferable_quantizer,
-            threshold=np.asarray([2.]),
-            lut_values=np.asarray([-25, 25]),
+            threshold=[2.],
+            lut_values=[-25, 25],
             per_channel=False,
             channel_axis=None,
             lut_values_bitwidth=8,
@@ -284,22 +267,15 @@ class TestPytorchWeightsIllegalPotLutQuantizer(BasePytorchWeightsIllegalLutQuant
                                                              per_channel=False,
                                                              channel_axis=None)
 
-    def test_illegal_threshold_shape_pot_lut_quantizer(self):
-        self.illegal_threshold_shape_inferable_quantizer_test(inferable_quantizer=self.inferable_quantizer,
-                                                              threshold=np.array([[4., 2.], [2., 8.]]),
-                                                              lut_values=np.asarray([-25, 25]),
-                                                              per_channel=False,
-                                                              channel_axis=None)
-
     def test_illegal_num_of_thresholds_pot_lut_quantizer(self):
         self.illegal_num_of_thresholds_inferable_quantizer_test(inferable_quantizer=self.inferable_quantizer,
-                                                                threshold=np.asarray([2., 8.]),
-                                                                lut_values=np.asarray([-25, 25]),
+                                                                threshold=[2., 8.],
+                                                                lut_values=[-25, 25],
                                                                 per_channel=False,
                                                                 channel_axis=None)
 
     def test_missing_channel_axis_pot_lut_quantizer(self):
         self.missing_channel_axis_inferable_quantizer(inferable_quantizer=self.inferable_quantizer,
-                                                      threshold=np.asarray([2.]),
-                                                      lut_values=np.asarray([-25, 25]),
+                                                      threshold=[2.],
+                                                      lut_values=[-25, 25],
                                                       per_channel=True)
