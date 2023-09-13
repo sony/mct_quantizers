@@ -214,7 +214,7 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
                                    num_bits: int,
                                    threshold: np.ndarray,
                                    per_channel: int,
-                                   channel_axis: int):
+                                   channel_axis: int=None):
         """
            Quantizes the input tensor symmetrically using numpy.
 
