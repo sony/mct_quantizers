@@ -36,7 +36,7 @@ if FOUND_TORCH:
                                        min_range: np.ndarray,
                                        max_range: np.ndarray,
                                        per_channel: bool,
-                                       channel_axis: int):
+                                       channel_axis: int=None):
         """
            Quantizes the input tensor uniformly using torch.
 
@@ -231,7 +231,7 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
                                        min_range: np.ndarray,
                                        max_range: np.ndarray,
                                        per_channel: bool,
-                                       channel_axis: int):
+                                       channel_axis: int=None):
         """
            Quantizes the input tensor uniformly using numpy.
 
