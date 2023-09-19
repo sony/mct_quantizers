@@ -54,7 +54,7 @@ jobs:
           python -m unittest discover tests/keras_tests --verbose
       - name: Prepare for Torch
         run: |
-          pip uninstall tensorflow
+          pip uninstall tensorflow -y
           pip install torch==2.0.* torchvision onnx onnxruntime onnxruntime-extensions
       - name: Run Torch Tests
         run: |
