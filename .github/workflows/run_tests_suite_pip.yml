@@ -26,8 +26,6 @@ jobs:
         run: |
           git checkout tags/${{  inputs.mct_quantizers_version  }}
           pip install -r requirements.txt
-          pip install tensorflow==2.12.*
-          pip install torch==1.13.* torchvision
       - name: Build WHL file
         run: |
           version=$(python -c 'import mct_quantizers; print(mct_quantizers.__version__)')
@@ -46,7 +44,17 @@ jobs:
       - name: Remove MCT Quantizers code
         run: |
           rm -rf mct_quantizers
-      - name: Run Tests
+      - name: Install TF
         run: |
-          python -m unittest discover tests/keras_tests --verbose &
+          pip install tensorflow==2.13.*
+      - name: Run TF Tests
+        run: |
+          python -m unittest discover tests/keras_tests --verbose
+      - name: Prepare for Torch
+        run: |
+          pip uninstall tensorflow
+          pip install torch==2.0.* torchvision onnx onnxruntime onnxruntime-extensions
+      - name: Run Torch Tests
+        run: |
           python -m unittest discover tests/pytorch_tests --verbose
+          
