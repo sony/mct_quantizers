@@ -26,6 +26,7 @@ jobs:
         run: |
           git checkout tags/${{  inputs.mct_quantizers_version  }}
           pip install -r requirements.txt
+          pip install twine
       - name: Build WHL file
         run: |
           version=$(python -c 'import mct_quantizers; print(mct_quantizers.__version__)')
