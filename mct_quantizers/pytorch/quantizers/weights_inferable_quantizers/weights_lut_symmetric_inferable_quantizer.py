@@ -204,8 +204,8 @@ if FOUND_ONNXRUNTIME_EXTENSIONS:
                                        lut_values_bitwidth,
                                        eps,
                                        per_channel,
-                                       channel_axis,
-                                       input_rank
+                                       channel_axis=None,
+                                       input_rank=None
                                        ):
         quantized_tensor = lut_quantizer_np(tensor_data=input_tensor,
                                             lut_values=lut_values,

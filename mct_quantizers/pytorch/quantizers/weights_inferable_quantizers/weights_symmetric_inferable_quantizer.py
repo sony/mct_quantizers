@@ -209,10 +209,11 @@ else:
 
 if FOUND_ONNXRUNTIME_EXTENSIONS:
     from onnxruntime_extensions import PyCustomOpDef, onnx_op
-
-    def quantize_sym_weights_numpy(
-        input_tensor: np.ndarray, num_bits: int, threshold: np.ndarray, per_channel: int, channel_axis: int
-    ):
+    def quantize_sym_weights_numpy(input_tensor: np.ndarray,
+                                   num_bits: int,
+                                   threshold: np.ndarray,
+                                   per_channel: int,
+                                   channel_axis: int=None):
         """
         Quantizes the input tensor symmetrically using numpy.
 

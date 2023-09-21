@@ -57,8 +57,8 @@ def lut_quantizer_np(tensor_data: np.ndarray,
                      lut_values_bitwidth: int,
                      eps: float,
                      per_channel: bool,
-                     channel_axis: int,
-                     input_rank: int
+                     channel_axis: int=None,
+                     input_rank: int=None
                      ) -> np.ndarray:
     """
     Quantize a tensor using a non-uniform quantization based on the pre-defined values.

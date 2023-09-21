@@ -15,10 +15,12 @@
 import os
 import unittest
 import tensorflow as tf
+import numpy as np
 from keras.layers import Conv2D, DepthwiseConv2D, Conv2DTranspose, Dense
 
 from mct_quantizers import KerasQuantizationWrapper, keras_load_quantized_model
 from mct_quantizers.common.constants import WEIGHTS_QUANTIZERS
+from mct_quantizers.common.quant_utils import adjust_range_to_include_zero
 from mct_quantizers.keras.quantizers import WeightsPOTInferableQuantizer, WeightsSymmetricInferableQuantizer, \
     WeightsUniformInferableQuantizer, WeightsLUTPOTInferableQuantizer, WeightsLUTSymmetricInferableQuantizer
 from tests.keras_tests.test_keras_quantization_wrapper import WEIGHT, DEPTHWISE_WEIGHT
@@ -232,8 +234,15 @@ class BaseWeightsQuantizerLoadAndCompareTest(unittest.TestCase):
         self.assertEqual(len(tested_layer), 1, "Expecting exactly 1 layer of the tested layer type.")
         tested_layer = tested_layer[0]
 
+        expected_args = QUANTIZER2LAYER2ARGS[quantizer_type][layer_type]
+        if quantizer_type == WeightsUniformInferableQuantizer:
+            adj_min, adj_max = adjust_range_to_include_zero(np.asarray(expected_args['min_range']),
+                                                            np.asarray(expected_args['max_range']),
+                                                            expected_args['num_bits'])
+            expected_args['min_range'] = adj_min.tolist()
+            expected_args['max_range'] = adj_max.tolist()
         self.assertEqual(tested_layer.get_config()[WEIGHTS_QUANTIZERS][weight_name]['config'],
-                         QUANTIZER2LAYER2ARGS[quantizer_type][layer_type],
+                         expected_args,
                          f"Parameters of loaded quantizer should have the same values as saved quantizer, "
                          f"but some values are not match.")
 
