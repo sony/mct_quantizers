@@ -43,7 +43,7 @@ def _export_model(model, onnx_file_path, inputs_for_inference, opset_version=16)
 
 
 def _check_load_and_inference(onnx_file_path, input_shape=(1, 3, 8, 8)):
-    sess = ort.InferenceSession(onnx_file_path, get_ort_session_options())
+    sess = ort.InferenceSession(onnx_file_path, get_ort_session_options(), providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
     model_input_np = np.random.rand(*input_shape).astype(np.float32)
     input_feed = {i.name: t for i, t in zip(sess.get_inputs(), [model_input_np])}
     sess.run([o.name for o in sess.get_outputs()], input_feed)
