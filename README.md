@@ -38,18 +38,24 @@ The [`@mark_quantizer`](mct_quantizers/common/base_inferable_quantizer.py) decor
 This section provides a quick guide to getting started. We begin with the installation process, either via source code or the pip server. Then, we provide a short example of usage.
 
 ### Installation
-Please refer to the MCT install guide for installing the pip package or building from the source.
 
-#### From Source
+#### From PyPi - mct-quantizers package
+To install the latest stable release of MCT Quantizer from PyPi, run the following command:
 ```
-git clone https://github.com/sony/mct_quantizers.git
-python setup.py install
+pip install mct-quantizers
 ```
-#### From PyPi - nightly package
-Currently, only a nightly released package (unstable) is available via PyPi.
 
+If you prefer to use the nightly package (unstable version), you can install it with the following command:
 ```
 pip install mct-quantizers-nightly
+```
+
+#### From Source
+To work with the MCT Quantizers source code, follow these steps:
+```
+git clone https://github.com/sony/mct_quantizers.git
+cd mct_quantizers
+python setup.py install
 ```
 
 ### Requirements
