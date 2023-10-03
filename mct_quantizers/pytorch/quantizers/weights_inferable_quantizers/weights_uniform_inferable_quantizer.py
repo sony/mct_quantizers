@@ -204,6 +204,12 @@ if FOUND_TORCH:
             Returns:
                 The node in the ONNX graph representing the output of this operation.
             """
+            # When None is passed as channel_axis, the op has no attribute of channel_axis,
+            # which creates conflict with the onnxruntime function. For this reason, if we quantize
+            # per-tensor and channel_axis is None, we set it to 0.
+            if not per_channel and channel_axis is None:
+                channel_axis = 0
+
             return g.op(f"{ONNX_CUSTOM_OP_DOMAIN}::WeightsUniformQuantizer", input_tensor,
                         g.op('Constant', value_t=torch.tensor(min_range, dtype=torch.float32)),
                         g.op('Constant', value_t=torch.tensor(max_range, dtype=torch.float32)),
