@@ -177,8 +177,11 @@ if FOUND_TORCH:
             # When None is passed as channel_axis, the op has no attribute of channel_axis,
             # which creates conflict with the onnxruntime function. For this reason, if we quantize
             # per-tensor and channel_axis is None, we set it to 0.
+            # per-tensor and input_rank is None, we set it to 4.
             if not per_channel and channel_axis is None:
                 channel_axis = 0
+            if not per_channel and input_rank is None:
+                input_rank = 4
 
             return g.op(f"{ONNX_CUSTOM_OP_DOMAIN}::WeightsLUTSymmetricQuantizer", input_tensor,
                         g.op('Constant', value_t=torch.tensor(lut_values, dtype=torch.float32)),
