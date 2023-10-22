@@ -48,7 +48,7 @@ jobs:
           rm -rf mct_quantizers
       - name: Install TF
         run: |
-          pip install tensorflow==2.13.*
+          pip install tensorflow==2.14.*
       - name: Run TF Tests
         run: |
           python -m unittest discover tests/keras_tests --verbose
