@@ -361,3 +361,34 @@ class TestKerasWeightsInferableQuantizers(unittest.TestCase):
             self.assertTrue(0 in np.unique(channel_slice_i),
                             f'zero should be in quantization range, but quantized values are in set: '
                             f'{np.unique(channel_slice_i)}')
+
+    def test_negative_channel_axis_POT_quantizer(self):
+        quantizer = WeightsPOTInferableQuantizer(num_bits=8,
+                                                 per_channel=True,
+                                                 threshold=[1.] * 4,
+                                                 channel_axis=-2,
+                                                 input_rank=4)
+        input_tensor = tf.constant(np.random.rand(2, 3, 4, 5), dtype=tf.float32)
+        fake_quantized_tensor = quantizer(input_tensor)
+        self.assertTrue(np.linalg.norm(fake_quantized_tensor - input_tensor) < 0.04)
+
+    def test_negative_channel_axis_symmetric_quantizer(self):
+        quantizer = WeightsSymmetricInferableQuantizer(num_bits=8,
+                                                       per_channel=True,
+                                                       threshold=[0.99] * 3,
+                                                       channel_axis=-3,
+                                                       input_rank=4)
+        input_tensor = tf.constant(np.random.rand(2, 3, 4, 5), dtype=tf.float32)
+        fake_quantized_tensor = quantizer(input_tensor)
+        self.assertTrue(np.linalg.norm(fake_quantized_tensor - input_tensor) < 0.04)
+
+    def test_negative_channel_axis_uniform_quantizer(self):
+        quantizer = WeightsUniformInferableQuantizer(num_bits=8,
+                                                     per_channel=True,
+                                                     min_range=[-0.99, -0.99],
+                                                     max_range=[0.99, 0.99],
+                                                     channel_axis=-4,
+                                                     input_rank=4)
+        input_tensor = tf.constant(np.random.rand(2, 3, 4, 5), dtype=tf.float32)
+        fake_quantized_tensor = quantizer(input_tensor)
+        self.assertTrue(np.linalg.norm(fake_quantized_tensor - input_tensor) < 0.04)

@@ -74,6 +74,8 @@ if FOUND_TF:
             if per_channel:
                 assert input_rank is not None, f'Input rank is missing in per channel quantization'
                 assert channel_axis is not None, f'Channel axis is missing in per channel quantization'
+                assert -input_rank <= channel_axis < input_rank, \
+                    f'Channel axis out of range. Must be {-input_rank} <= channel_axis < {input_rank}'
                 assert len(threshold) >= 1, f'In per-channel quantization threshold list should be of length >= 1 ' \
                                             f'but is {len(threshold)} '
             else:
@@ -112,6 +114,7 @@ if FOUND_TF:
                 # If per-channel quantization is being used and the channel axis is not the last axis,
                 # create a permutation vector to move the channel axis to the last position
                 self.perm_vec = list(np.arange(self.input_rank))
+                channel_axis = self.perm_vec[self.channel_axis]
                 self.perm_vec[channel_axis] = self.input_rank - 1
                 self.perm_vec[self.input_rank - 1] = channel_axis
             else:

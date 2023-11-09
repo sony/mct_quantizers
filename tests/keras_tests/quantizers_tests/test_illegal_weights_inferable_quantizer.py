@@ -140,3 +140,31 @@ class TestKerasWeightsIllegalInferableQuantizers(unittest.TestCase):
                                              max_range=[4., 3.],
                                              channel_axis=1)
         self.assertEqual('Input rank is missing in per channel quantization', str(e.exception))
+
+    def test_out_of_range_channel_axis_POT_quantizer(self):
+        with self.assertRaises(Exception) as e:
+            WeightsPOTInferableQuantizer(num_bits=8,
+                                         per_channel=True,
+                                         threshold=[3., 2.],
+                                         channel_axis=-6,
+                                         input_rank=4)
+        self.assertEqual('Channel axis out of range. Must be -4 <= channel_axis < 4', str(e.exception))
+
+    def test_out_of_range_channel_axis_symmetric_quantizer(self):
+        with self.assertRaises(Exception) as e:
+            WeightsSymmetricInferableQuantizer(num_bits=8,
+                                               per_channel=True,
+                                               threshold=[3., 2.],
+                                               channel_axis=-6,
+                                               input_rank=4)
+        self.assertEqual('Channel axis out of range. Must be -4 <= channel_axis < 4', str(e.exception))
+
+    def test_out_of_range_channel_axis_uniform_quantizer(self):
+        with self.assertRaises(Exception) as e:
+            WeightsUniformInferableQuantizer(num_bits=8,
+                                             per_channel=True,
+                                             min_range=[3., 2.],
+                                             max_range=[4., 3.],
+                                             channel_axis=-6,
+                                             input_rank=4)
+        self.assertEqual('Channel axis out of range. Must be -4 <= channel_axis < 4', str(e.exception))
