@@ -429,3 +429,23 @@ class TestKerasWeightsIllegalPotLutQuantizer(BaseKerasWeightsIllegalLutQuantizer
                                                     lut_values=np.asarray([-25, 25]),
                                                     channel_axis=None,
                                                     per_channel=True)
+
+    def test_out_of_range_channel_axis_lut_pot_quantizer(self):
+        with self.assertRaises(Exception) as e:
+            WeightsLUTPOTInferableQuantizer(num_bits=2,
+                                            lut_values=list(range(4)),
+                                            per_channel=True,
+                                            threshold=[3., 2.],
+                                            channel_axis=-6,
+                                            input_rank=4)
+        self.assertEqual('Channel axis out of range. Must be -4 <= channel_axis < 4', str(e.exception))
+
+    def test_out_of_range_channel_axis_lut_symmetric_quantizer(self):
+        with self.assertRaises(Exception) as e:
+            WeightsLUTSymmetricInferableQuantizer(num_bits=2,
+                                                  lut_values=list(range(4)),
+                                                  per_channel=True,
+                                                  threshold=[3., 2.],
+                                                  channel_axis=-6,
+                                                  input_rank=4)
+        self.assertEqual('Channel axis out of range. Must be -4 <= channel_axis < 4', str(e.exception))
