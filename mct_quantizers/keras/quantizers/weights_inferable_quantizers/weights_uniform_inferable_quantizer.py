@@ -78,12 +78,19 @@ if FOUND_TF:
             if per_channel:
                 assert input_rank is not None, f'Input rank is missing in per channel quantization'
                 assert channel_axis is not None, f'Channel axis is missing in per channel quantization'
-                assert len(self.min_range_np) >= 1, f'In per-channel quantization min ranges list should be of length >= 1 but is {len(self.min_range_np)}'
-                assert len(self.max_range_np) >= 1, f'In per-channel quantization max ranges list should be of length >= 1 but is {len(self.max_range_np)}'
+                assert -input_rank <= channel_axis < input_rank, \
+                    f'Channel axis out of range. Must be {-input_rank} <= channel_axis < {input_rank}'
+                assert len(self.min_range_np) >= 1, \
+                    f'In per-channel quantization min ranges list should be of length >= 1 but is {len(self.min_range_np)}'
+                assert len(self.max_range_np) >= 1, \
+                    f'In per-channel quantization max ranges list should be of length >= 1 but is {len(self.max_range_np)}'
             else:
-                assert len(self.min_range_np) == 1, f'In per-tensor quantization min/max should be of length 1 but is {len(self.min_range)}'
-                assert len(self.min_range_np) == 1, f'In per-tensor quantization min_range should be of length 1 but is {len(self.min_range_np)}'
-                assert len(self.max_range_np) == 1, f'In per-tensor quantization max_range should be of length 1 but is {len(self.max_range_np)}'
+                assert len(self.min_range_np) == 1, \
+                    f'In per-tensor quantization min/max should be of length 1 but is {len(self.min_range)}'
+                assert len(self.min_range_np) == 1, \
+                    f'In per-tensor quantization min_range should be of length 1 but is {len(self.min_range_np)}'
+                assert len(self.max_range_np) == 1, \
+                    f'In per-tensor quantization max_range should be of length 1 but is {len(self.max_range_np)}'
                 self.min_range_np = self.min_range_np[0]
                 self.max_range_np = self.max_range_np[0]
 
@@ -97,6 +104,7 @@ if FOUND_TF:
                 # If per-channel quantization is being used and the channel axis is not the last axis,
                 # create a permutation vector to move the channel axis to the last position
                 self.perm_vec = list(np.arange(self.input_rank))
+                channel_axis = self.perm_vec[self.channel_axis]
                 self.perm_vec[channel_axis] = self.input_rank - 1
                 self.perm_vec[self.input_rank - 1] = channel_axis
             else:
