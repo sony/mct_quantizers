@@ -23,8 +23,7 @@ from tests.compatibility_tests.torch_comp_tests.compatibility_load_model_test im
     WeightsSymmetricLutQuantizerLoadAndCompareTest
 
 if __name__ == '__main__':
-    # mct_quantizers_version = sys.argv[1]
-    mct_quantizers_version = "v1.3.0"
+    mct_quantizers_version = sys.argv[1]
 
     suiteList = []
     test_loader = unittest.TestLoader()
