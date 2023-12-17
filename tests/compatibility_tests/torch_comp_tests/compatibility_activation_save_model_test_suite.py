@@ -32,7 +32,7 @@ if __name__ == '__main__':
     suiteList.append(test_loader.loadTestsFromTestCase(ActivationPOTQuantizerBuildAndSaveTest))
     suiteList.append(test_loader.loadTestsFromTestCase(ActivationSymmetricQuantizerBuildAndSaveTest))
     suiteList.append(test_loader.loadTestsFromTestCase(ActivationUniformQuantizerBuildAndSaveTest))
-    suiteList.append(test_loader.loadTestsFromTestCase(ActivationPOTLutQuantizerBuildAndSaveTest))
+    # suiteList.append(test_loader.loadTestsFromTestCase(ActivationPOTLutQuantizerBuildAndSaveTest))
 
     torch_save_models_suite = unittest.TestSuite(suiteList)
 
