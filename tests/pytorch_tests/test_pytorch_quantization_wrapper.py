@@ -20,6 +20,8 @@ import numpy as np
 
 from mct_quantizers.pytorch.quantize_wrapper import PytorchQuantizationWrapper
 
+WEIGHT = 'weight'
+
 
 class ZeroWeightsQuantizer:
     """
