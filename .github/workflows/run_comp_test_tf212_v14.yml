@@ -1,6 +1,8 @@
 name: Run Backward Compatibility Test - Tensorflow 2.12 MCTQ v1.4.0
 on:
   workflow_dispatch: # Allow manual triggers
+  schedule:
+    - cron: 0 0 * * *
 
 jobs:
   run-comp-tensorflow-2_12-v1_4:
