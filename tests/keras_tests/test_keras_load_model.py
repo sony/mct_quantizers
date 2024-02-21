@@ -15,10 +15,16 @@
 import os
 import tempfile
 import unittest
+from packaging import version
 
 import numpy as np
+import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.layers import Conv2D
+if version.parse(tf.__version__) >= version.parse("2.13"):
+    from keras.src.layers.core import TFOpLambda
+else:
+    from keras.layers.core import TFOpLambda
 
 from mct_quantizers.keras.activation_quantization_holder import KerasActivationQuantizationHolder
 from mct_quantizers.keras.load_model import keras_load_quantized_model
@@ -120,6 +126,14 @@ class TestKerasLoadModel(unittest.TestCase):
                                                         {'kernel': quantizer})
         self._one_layer_model_save_and_load(layer_with_quantizer)
 
+        quantizer = WeightsPOTInferableQuantizer(num_bits=num_bits,
+                                                 per_channel=False,
+                                                 threshold=[0.5])
+        layer_with_quantizer = KerasQuantizationWrapper(TFOpLambda(tf.add),
+                                                        {1: quantizer},
+                                                        {1: np.random.random(3).astype(np.float32)})
+        self._one_layer_model_save_and_load(layer_with_quantizer)
+
     def test_save_and_load_weights_symmetric(self):
         thresholds = [3., 6., 2.]
         num_bits = 2
@@ -130,6 +144,16 @@ class TestKerasLoadModel(unittest.TestCase):
                                                        input_rank=4)
         layer_with_quantizer = KerasQuantizationWrapper(Conv2D(3, 3),
                                                         {'kernel': quantizer})
+        self._one_layer_model_save_and_load(layer_with_quantizer)
+
+        quantizer = WeightsSymmetricInferableQuantizer(num_bits=num_bits,
+                                                       per_channel=False,
+                                                       threshold=[0.7])
+        layer_with_quantizer = KerasQuantizationWrapper(TFOpLambda(tf.matmul),
+                                                        {1: quantizer},
+                                                        {1: np.random.random((5, 3)).astype(np.float32)},
+                                                        op_call_args=[False],  # note: not needed but added for testing purposes
+                                                        op_call_kwargs={'transpose_b': True})
         self._one_layer_model_save_and_load(layer_with_quantizer)
 
     def test_save_and_load_weights_uniform(self):

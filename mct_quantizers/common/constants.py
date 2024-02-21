@@ -35,6 +35,10 @@ FOUND_ONNXRUNTIME_EXTENSIONS = importlib.util.find_spec(ONNXRUNTIME_EXTENSIONS) 
 IS_WEIGHTS = "is_weights"
 IS_ACTIVATIONS = "is_activations"
 WEIGHTS_QUANTIZERS = "weights_quantizer"
+WEIGHTS_VALUES = "weights_value"
+OP_CALL_ARGS = 'op_call_args'
+OP_CALL_KWARGS = 'op_call_kwargs'
+IS_INPUT_AS_LIST = 'is_inputs_as_list'
 WEIGHTS_QUANTIZATION_METHOD = 'weights_quantization_method'
 WEIGHTS_N_BITS = 'weights_n_bits'
 WEIGHTS_QUANTIZATION_PARAMS = 'weights_quantization_params'
@@ -79,6 +83,9 @@ TRAINING = "training"
 EPS = 1e-8
 LUT_VALUES_BITWIDTH = 8
 MCTQ_VERSION = "mctq_version"
+
+POSITIONAL_WEIGHT = 'positional_weight'
+QUANTIZED_POSITIONAL_WEIGHT = f'quantized_{POSITIONAL_WEIGHT}'
 
 # ONNX ops domain
 ONNX_CUSTOM_OP_DOMAIN = f"mct_quantizers"
