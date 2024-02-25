@@ -55,6 +55,19 @@ if FOUND_TF:
         return name.split(':')[0].split('/')[-1]
 
 
+    def _serialize_object(obj):
+        if isinstance(obj, tf.Tensor):
+            return {'class_name': '__tensor__',
+                    'config': {'value': obj.numpy().tolist(),
+                               'dtype': obj.dtype.name}}
+        elif isinstance(obj, np.ndarray):
+            return {'class_name': '__numpy__',
+                    'config': {'value': obj.tolist(),
+                               'dtype': obj.dtype.name}}
+        else:
+            Logger.error(f'_serialize_object only accepts tf.Tensor or np.ndarray but got type {type(obj)}')
+
+
     class KerasQuantizationWrapper(tf.keras.layers.Wrapper):
         def __init__(self,
                      layer: tf.keras.layers.Layer,
@@ -117,9 +130,10 @@ if FOUND_TF:
                                     f'but type is {type(weight_val)}')
             if version.parse(tf.__version__) < version.parse("2.13"):
                 # Convert all values to tensors because keras.utils.serialize_keras_object fails for numpy array
-                # before version 2.13
-                self.weight_values = {k: tf.convert_to_tensor(v) if isinstance(v, np.ndarray) else v
-                                      for k, v in self.weight_values.items()}
+                # before version 2.13 (TODO: remove this if-else when not supporting TF 2.12 and below)
+                self.serialize_fn = _serialize_object
+            else:
+                self.serialize_fn = keras.utils.serialize_keras_object
             self.op_call_args = [] if op_call_args is None else op_call_args
             self.op_call_kwargs = {} if op_call_kwargs is None else op_call_kwargs
             self.is_inputs_as_list = is_inputs_as_list
@@ -167,7 +181,7 @@ if FOUND_TF:
             """
             base_config = super(KerasQuantizationWrapper, self).get_config()
             config = {WEIGHTS_QUANTIZERS: {k: keras.utils.serialize_keras_object(v) for k, v in self.weights_quantizers.items()},
-                      WEIGHTS_VALUES: {k: keras.utils.serialize_keras_object(v) for k, v in self.weight_values.items()}}
+                      WEIGHTS_VALUES: {k: self.serialize_fn(v) for k, v in self.weight_values.items()}}
 
             return_config = {**base_config, **config}
             return_config[OP_CALL_ARGS] = self.op_call_args
