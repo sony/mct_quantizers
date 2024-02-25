@@ -53,7 +53,7 @@ class TestKerasQuantizationWrapper(unittest.TestCase):
         x = layers.Conv2D(6, 7, use_bias=False)(inputs)
         self.sub_const = np.random.random(x.shape[-1]).astype(np.float32)
         x = tf.subtract(self.sub_const, x)
-        self.mul_const = np.random.random((1, *x.shape[1:].as_list()))
+        self.mul_const = np.random.random((1, *x.shape[1:].as_list())).astype(np.float32)
         x = tf.keras.layers.Multiply()([x, self.mul_const])
         self.matmul_cont = np.random.random((2, x.shape[-1])).astype(np.float32)
         x = tf.matmul(x, self.matmul_cont, transpose_b=True)

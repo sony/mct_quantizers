@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 from typing import Dict, List, Any, Tuple, Union
+from packaging import version
 import numpy as np
 
 from mct_quantizers.common.base_inferable_quantizer import BaseInferableQuantizer
@@ -114,6 +115,11 @@ if FOUND_TF:
                 if not isinstance(weight_val, (np.ndarray, tf.Tensor)):
                     raise Exception(f'Positional weight at position {pos} should be either an ndarray or a tf.Tensor,',
                                     f'but type is {type(weight_val)}')
+            if version.parse(tf.__version__) < version.parse("2.13"):
+                # Convert all values to tensors because keras.utils.serialize_keras_object fails for numpy array
+                # before version 2.13
+                self.weight_values = {k: tf.convert_to_tensor(v) if isinstance(v, np.ndarray) else v
+                                      for k, v in self.weight_values.items()}
             self.op_call_args = [] if op_call_args is None else op_call_args
             self.op_call_kwargs = {} if op_call_kwargs is None else op_call_kwargs
             self.is_inputs_as_list = is_inputs_as_list
