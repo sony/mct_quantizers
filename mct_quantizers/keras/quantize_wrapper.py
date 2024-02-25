@@ -84,7 +84,8 @@ if FOUND_TF:
             Returns: None
 
             """
-            self.weights_quantizers.update({param_name: quantizer})
+            fixed_name = _weight_name(param_name)
+            self.weights_quantizers.update({fixed_name: quantizer})
 
         @property
         def is_weights_quantization(self) -> bool:
@@ -131,7 +132,6 @@ if FOUND_TF:
             """
             self._weights_vars = []
             for name, quantizer in self.weights_quantizers.items():
-                name = _weight_name(name)
                 weight = getattr(self.layer, name)
                 quantizer.initialize_quantization(weight.shape, _weight_name(weight.name) if is_training else None,
                                                   self)
