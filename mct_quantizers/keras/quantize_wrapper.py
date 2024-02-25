@@ -66,7 +66,10 @@ if FOUND_TF:
             """
             super(KerasQuantizationWrapper, self).__init__(layer, **kwargs)
             self._track_trackable(layer, name='layer')
-            self.weights_quantizers = weights_quantizers if weights_quantizers is not None else dict()
+
+            # making sure the attribute name is converted to the actual attribute field name in the layer.
+            self.weights_quantizers = {_weight_name(k): v for k, v in weights_quantizers.items()} \
+                if weights_quantizers is not None else dict()
 
             self._mctq_version = mctq_version
 
@@ -81,7 +84,8 @@ if FOUND_TF:
             Returns: None
 
             """
-            self.weights_quantizers.update({param_name: quantizer})
+            fixed_name = _weight_name(param_name)
+            self.weights_quantizers.update({fixed_name: quantizer})
 
         @property
         def is_weights_quantization(self) -> bool:
