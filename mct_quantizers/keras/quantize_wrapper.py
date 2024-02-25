@@ -137,20 +137,6 @@ if FOUND_TF:
 
             self._mctq_version = mctq_version
 
-        def add_weights_quantizer(self, param_name: str, quantizer: BaseInferableQuantizer):
-            """
-            This function adds a weights quantizer to existing wrapper
-
-            Args:
-                param_name: The name of the parameter to quantize
-                quantizer: A quantizer.
-
-            Returns: None
-
-            """
-            fixed_name = _weight_name(param_name)
-            self.weights_quantizers.update({fixed_name: quantizer})
-
         @property
         def is_weights_quantization(self) -> bool:
             """
@@ -361,7 +347,7 @@ if FOUND_TF:
                 _inputs = inputs if isinstance(inputs, list) else [inputs]
                 weight_positions = [w[0] for w in self._weights_vars]
                 for pos in sorted(weight_positions):
-                    _inputs.insert(pos, getattr(self, f'quantized_positional_weight_{pos}'))
+                    _inputs.insert(pos, getattr(self, f'{QUANTIZED_POSITIONAL_WEIGHT}_{pos}'))
 
                 if self.is_inputs_as_list:
                     outputs = self.layer.call(_inputs, *self.op_call_args, **self.op_call_kwargs)
@@ -397,7 +383,7 @@ else:
     class KerasQuantizationWrapper:
         def __init__(self,
                      layer,
-                     weights_quantizers: Dict[str, BaseInferableQuantizer] = None):
+                     weights_quantizers: Dict[str, BaseInferableQuantizer]):
             """
             Keras Quantization Wrapper takes a keras layer and quantizers and infer a quantized layer.
 

@@ -156,8 +156,7 @@ class BaseWeightsQuantizerBuildAndSaveTest(unittest.TestCase):
 
         weights_quantizer = quantizer(**quantizer_params)
 
-        quant_weights_layer = KerasQuantizationWrapper(layer)
-        quant_weights_layer.add_weights_quantizer(weight_name, weights_quantizer)
+        quant_weights_layer = KerasQuantizationWrapper(layer, {weight_name: weights_quantizer})
 
         model = _build_model_with_quantize_wrapper(quant_weights_layer=quant_weights_layer,
                                                    input_shape=input_shape,
