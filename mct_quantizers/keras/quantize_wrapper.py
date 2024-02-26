@@ -60,13 +60,13 @@ if FOUND_TF:
         A serialization function to replace keras.utils.serialize_keras_object for TF version < 2.13,
         which fails for objects of type tf.Tensor and np.ndarray, and mimic that function's operation
         in TF version >= 2.13.
-        May be deleted when TF 2.12 is no longer supported
+        May be deleted when TF 2.12 is no longer supported.
 
         Args:
-          obj: Object to be serialized
+          obj: Object to be serialized.
 
         Returns:
-            A dictionary with the object's config
+            A dictionary with the object's config.
         """
         if isinstance(obj, tf.Tensor):
             return {'class_name': '__tensor__',
@@ -77,7 +77,7 @@ if FOUND_TF:
                     'config': {'value': obj.tolist(),
                                'dtype': obj.dtype.name}}
         else:
-            Logger.error(f'_serialize_object only accepts tf.Tensor or np.ndarray but got type {type(obj)}')
+            Logger.error(f'_serialize_object only accepts tf.Tensor or np.ndarray but got type {type(obj)}.')
 
 
     class KerasQuantizationWrapper(tf.keras.layers.Wrapper):
@@ -102,10 +102,10 @@ if FOUND_TF:
             Args:
                 layer: A keras layer.
                 weights_quantizers: A dictionary between a weight's name or position to its quantizer.
-                weight_values: A dictionary between a weight's position to its value
-                op_call_args: A list containing the layer's call arguments
-                op_call_kwargs: A dictionary containing the layer's call keyword arguments
-                is_inputs_as_list: A boolean indicating the layer accepts the input tensors as a list
+                weight_values: A dictionary between a weight's position to its value.
+                op_call_args: A list containing the layer's call arguments.
+                op_call_kwargs: A dictionary containing the layer's call keyword arguments.
+                is_inputs_as_list: A boolean indicating the layer accepts the input tensors as a list.
 
             Examples:
 
@@ -135,31 +135,38 @@ if FOUND_TF:
             # making sure the attribute name is converted to the actual attribute field name in the layer.
             self.weights_quantizers = {_weight_name(k) if isinstance(k ,str) else k: v
                                        for k, v in weights_quantizers.items()}
+            # Initialize positional weights:
             self.weight_values = weight_values if weight_values is not None else dict()
             for pos, weight_val in self.weight_values.items():
                 if not isinstance(weight_val, (np.ndarray, tf.Tensor)):
-                    raise Exception(f'Positional weight at position {pos} should be either an ndarray or a tf.Tensor,',
-                                    f'but type is {type(weight_val)}')
+                    Logger.error(f'Positional weight at position {pos} should be either an ndarray or a tf.Tensor,'
+                                 f'but type is {type(weight_val)}')
             if version.parse(tf.__version__) < version.parse("2.13"):
                 # Convert all values to tensors because keras.utils.serialize_keras_object fails for numpy array
-                # before version 2.13 (TODO: remove this if-else when not supporting TF 2.12 and below)
+                # before version 2.13. (TODO: remove this if-else when not supporting TF 2.12 and below)
                 self.serialize_fn = _serialize_object
             else:
                 self.serialize_fn = keras.utils.serialize_keras_object
+
+            # Initialize functional layer arguments. For examples, see the class description.
             self.op_call_args = [] if op_call_args is None else op_call_args
             self.op_call_kwargs = {} if op_call_kwargs is None else op_call_kwargs
             self.is_inputs_as_list = is_inputs_as_list
 
             # Sanity checks
+            # 1. If there are no weight_values: verify all weight_quantizers are strings
+            # 2. If there are weight_values: verify all weight_quantizers and weight_values keys
+            #    are integers, and that they match.
+            # 3. A layer with both weights as attributes and positional weights is not supported.
             if len(self.weight_values) == 0:
                 # expecting weights_quantizers keys to be all strings
                 if not all([isinstance(w, str) for w in self.weights_quantizers]):
                     Logger.error('"weights_quantizers" keys should be all strings')
                 self.is_str_attr = True
             else:
-                # expecting both weights_quantizers and weight_values keys to be all integers
+                # expecting both weights_quantizers and weight_values keys to be all integers.
                 if not all([isinstance(w, int) for w in self.weight_values]):
-                    Logger.error('All "weight_values" keys should be integers')
+                    Logger.error('All "weight_values" keys should be integers.')
                 if not all([a == b for a, b in zip(weights_quantizers, weight_values)]):
                     Logger.error('Mismatch between "weights_quantizers" and "weight_values" keys')
                 self.is_str_attr = False
@@ -174,7 +181,7 @@ if FOUND_TF:
             """
             This function check weights quantizer exists in wrapper.
 
-            Returns: a boolean if weights quantizer exists
+            Returns: a boolean if weights quantizer exists.
 
             """
             return self.num_weights_quantizers > 0
@@ -182,7 +189,7 @@ if FOUND_TF:
         @property
         def num_weights_quantizers(self) -> int:
             """
-            Returns: number of weights quantizers
+            Returns: number of weights quantizers.
             """
             return len(self.weights_quantizers)
 
@@ -209,10 +216,10 @@ if FOUND_TF:
 
         def _set_weights_vars(self, is_training: bool = True):
             """
-            This function sets weights quantizers vars to the layer
+            This function sets weights quantizers vars to the layer.
 
             Args:
-                is_training: Flag to indicate whether training or not
+                is_training: Flag to indicate whether training or not.
 
             Returns: None
             """
@@ -240,7 +247,7 @@ if FOUND_TF:
                                                   self)
 
                 # Add weight to wrapper weight lists (rather than the layer weight lists), because it will be deleted
-                # from the layer's lists after the first call
+                # from the layer's lists after the first call.
                 self._weights_vars.append((name, weight, quantizer))
 
         @classmethod
@@ -248,19 +255,16 @@ if FOUND_TF:
             """
 
             Args:
-                config(dict): dictionary  of  KerasQuantizationWrapper Configuration
+                config(dict): dictionary  of  KerasQuantizationWrapper Configuration.
 
-            Returns: A KerasQuantizationWrapper
+            Returns: A KerasQuantizationWrapper.
 
             """
             numpy_deserialization = lambda **_config: tf.constant(**_config).numpy()
             tensor_deserialization = lambda **_config: tf.constant(**_config)
-
-            def maybe_int(x):
-                try:
-                    return int(x)
-                except ValueError:
-                    return x
+            # When reading weight quantizers keys, which may be either a string with attribute name or an integer, the
+            # key is always a string, so this function checks whether it was a string or integer before serialization.
+            maybe_int = lambda x: int(x) if x.isdigit() else x
 
             config = config.copy()
             qi_inferable_custom_objects = {subclass.__name__: subclass for subclass in
@@ -269,6 +273,7 @@ if FOUND_TF:
                 weights_quantizers = {maybe_int(k): keras.utils.deserialize_keras_object(v, module_objects=globals())
                                       for k, v in config.pop(WEIGHTS_QUANTIZERS).items()}
 
+            # read weights_values in this scope so deserialize_keras_object knows how to interpret the serialization.
             with keras.utils.custom_object_scope({'__numpy__': numpy_deserialization,
                                                   '__tensor__': tensor_deserialization}):
                 weights_values = {int(k): keras.utils.deserialize_keras_object(v)
@@ -293,7 +298,7 @@ if FOUND_TF:
             """
             KerasQuantization Wrapper build function.
             Args:
-                input_shape: the layer input shape
+                input_shape: the layer input shape.
 
             Returns: None
 
@@ -313,7 +318,7 @@ if FOUND_TF:
             This function update layer weights after quantization.
 
             Args:
-                quantized_weights: a dict of weight to update
+                quantized_weights: a dict of weight to update.
 
             Returns: None
 
@@ -322,16 +327,16 @@ if FOUND_TF:
                 weight = quantized_weights.get(weight_attr)
                 if isinstance(weight_attr, str):
                     # weight attribute is a string --> weight exists as attribute in layer so
-                    # override is with quantized weight
+                    # override is with quantized weight.
                     current_weight = getattr(self.layer, weight_attr)
                     setattr(self.layer, weight_attr, weight)
                 elif isinstance(weight_attr, int):
-                    # weight attribute is a string --> weight doesn't exist as attribute in layer
-                    # so create an attribute in wrapper for the quantized weight
+                    # weight attribute is an integer --> weight doesn't exist as attribute in layer
+                    # so create an attribute in wrapper for the quantized weight.
                     current_weight = getattr(self, f'{POSITIONAL_WEIGHT}_{weight_attr}')
                     setattr(self, f'{QUANTIZED_POSITIONAL_WEIGHT}_{weight_attr}', weight)
                 else:
-                    Logger.error(f'weight attribute should be either a string or an integer, but it is {weight_attr}')  # pragma: no cover
+                    Logger.error(f'weight attribute should be either a string or an integer, but it is {type(weight_attr)}')  # pragma: no cover
 
                 if current_weight.shape != weight.shape:
                     Logger.error(
@@ -340,9 +345,9 @@ if FOUND_TF:
 
         def call(self, inputs, training=None, **kwargs):
             """
-            KerasQuantizationWrapper call functions
+            KerasQuantizationWrapper call functions.
             Args:
-                inputs: Input tensors to specified layer
+                inputs: Input tensors to specified layer.
                 training: a boolean stating if layer is in training mode.
                 **kwargs:
 
@@ -364,7 +369,7 @@ if FOUND_TF:
                         _make_quantizer_fn(quantizer, unquantized_weight, False))
                     quantized_weights.update({name: quantized_weight})
                 else:
-                    # Keras weights inferable quantizer
+                    # Keras weights inferable quantizer.
                     quantized_weight = quantizer(unquantized_weight)
                     quantized_weights.update({name: quantized_weight})
 
@@ -415,13 +420,21 @@ else:
     class KerasQuantizationWrapper:
         def __init__(self,
                      layer,
-                     weights_quantizers: Dict[str, BaseInferableQuantizer]):
+                     weights_quantizers: Dict[str, BaseInferableQuantizer],
+                     weight_values: Dict = None,
+                     op_call_args: List = None,
+                     op_call_kwargs: Dict[str, Any] = None,
+                     is_inputs_as_list: bool = False):
             """
             Keras Quantization Wrapper takes a keras layer and quantizers and infer a quantized layer.
 
             Args:
                 layer: A keras layer.
                 weights_quantizers: A dictionary between a weight's name to its quantizer.
+                weight_values: A dictionary between a weight's position to its value.
+                op_call_args: A list containing the layer's call arguments.
+                op_call_kwargs: A dictionary containing the layer's call keyword arguments.
+                is_inputs_as_list: A boolean indicating the layer accepts the input tensors as a list.
             """
             Logger.critical('Installing tensorflow is mandatory '
                             'when using KerasQuantizationWrapper. '

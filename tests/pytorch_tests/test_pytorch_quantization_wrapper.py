@@ -86,6 +86,7 @@ class TestPytorchWeightsQuantizationWrapper(unittest.TestCase):
         self.assertTrue((0 == getattr(wrapper.layer, 'weight')).any())  # check the weight are now quantized
         self.assertTrue((y[0, :, 0, 0] == getattr(wrapper.layer, 'bias')).any())  # check the wrapper's outputs are equal to biases
 
+    def test_positional_weights_quantization_wrapper(self):
         wrapper = PytorchQuantizationWrapper(self.layers[1], {0: ZeroWeightsQuantizer()},
                                              weight_values={0: self.sub_const})
         (name, weight, quantizer) = wrapper._weights_vars[0]
