@@ -122,6 +122,15 @@ class TestPytorchLoadModel(unittest.TestCase):
                                                           {'weight': quantizer}).to(self.device)
         self._one_layer_model_save_and_load(layer_with_quantizer)
 
+        quantizer = WeightsPOTInferableQuantizer(num_bits=num_bits,
+                                                 per_channel=False,
+                                                 threshold=[1.0])
+        layer_with_quantizer = PytorchQuantizationWrapper(torch.sub,
+                                                          {0: quantizer},
+                                                          weight_values={0: torch.ones((3, 1, 1)).to(self.device)}
+                                                          ).to(self.device)
+        self._one_layer_model_save_and_load(layer_with_quantizer)
+
     def test_save_and_load_weights_symmetric(self):
         thresholds = [3., 6., 2.]
         num_bits = 2
@@ -131,6 +140,17 @@ class TestPytorchLoadModel(unittest.TestCase):
                                                        channel_axis=3)
         layer_with_quantizer = PytorchQuantizationWrapper(torch.nn.Conv2d(3, 10, 3),
                                                           {'weight': quantizer}).to(self.device)
+        self._one_layer_model_save_and_load(layer_with_quantizer)
+
+        quantizer = WeightsSymmetricInferableQuantizer(num_bits=num_bits,
+                                                       per_channel=False,
+                                                       threshold=[1.0])
+        layer_with_quantizer = PytorchQuantizationWrapper(torch.cat,
+                                                          {0: quantizer, 2: quantizer},
+                                                          weight_values={0: torch.ones((1, 2, 99, 99)).to(self.device),
+                                                                         2: torch.ones((1, 4, 99, 99)).to(self.device)},
+                                                          op_call_args=[1], is_inputs_as_list=True
+                                                          ).to(self.device)
         self._one_layer_model_save_and_load(layer_with_quantizer)
 
     def test_save_and_load_weights_uniform(self):
