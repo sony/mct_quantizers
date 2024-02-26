@@ -66,14 +66,14 @@ if FOUND_TORCH:
 
                 >>> attr_quant_dict = {0: mctq.pytorch.quantizers.WeightsPOTInferableQuantizer(4, [2.0], False)}
                 >>> attr_values = {0: torch.Tensor([1, 2, 3], dtype=torch.float32)}
-                >>> QuantizedConv2D = mctq.PytorchQuantizationWrapper(torch.sub), attr_quant_dict, attr_values)
+                >>> QuantizedSub = mctq.PytorchQuantizationWrapper(torch.sub), attr_quant_dict, attr_values)
 
                 creating a quantized function with constants and arguments: tf.cat([constant#1, Tensor, constant#2], dim=1)
                 >>> attr_quant_dict = {0: mctq.pytorch.quantizers.WeightsPOTInferableQuantizer(4, [2.0], False),
                 >>>                    2: mctq.pytorch.quantizers.WeightsPOTInferableQuantizer(4, [1.0], False)}
                 >>> attr_values = {0: torch.Tensor([[1,2,3], [4, 5, 6]], dtype=torch.float32),
                 >>>                2: torch.Tensor([[4,5,6], [4, 5, 6]], dtype=torch.float32)}
-                >>> QuantizedConv2D = mctq.PytorchQuantizationWrapper(torch.cat, attr_quant_dict, attr_values,
+                >>> QuantizedConcat = mctq.PytorchQuantizationWrapper(torch.cat, attr_quant_dict, attr_values,
                 >>>                                                   op_call_kwargs={'dim', 1})
 
             """

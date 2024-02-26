@@ -55,7 +55,19 @@ if FOUND_TF:
         return name.split(':')[0].split('/')[-1]
 
 
-    def _serialize_object(obj):
+    def _serialize_object(obj: Union[tf.Tensor, np.ndarray]) -> Dict:
+        """
+        A serialization function to replace keras.utils.serialize_keras_object for TF version < 2.13,
+        which fails for objects of type tf.Tensor and np.ndarray, and mimic that function's operation
+        in TF version >= 2.13.
+        May be deleted when TF 2.12 is no longer supported
+
+        Args:
+          obj: Object to be serialized
+
+        Returns:
+            A dictionary with the object's config
+        """
         if isinstance(obj, tf.Tensor):
             return {'class_name': '__tensor__',
                     'config': {'value': obj.numpy().tolist(),
@@ -109,12 +121,12 @@ if FOUND_TF:
 
                 >>> attr_quant_dict = {0: mctq.keras.quantizers.WeightsPOTInferableQuantizer(4, [2.0], False)}
                 >>> attr_values = {0: tf.constant([1, 2, 3], dtype=tf.float32)}
-                >>> QuantizedConv2D = mctq.KerasQuantizationWrapper(TFOpLambda(tf.subtract), attr_quant_dict, attr_values)
+                >>> QuantizedSub = mctq.KerasQuantizationWrapper(TFOpLambda(tf.subtract), attr_quant_dict, attr_values)
 
                 creating a quantized function with a constant and arguments: tf.matmul(KerasTensor, tf.constant, transpose_b=True)
                 >>> attr_quant_dict = {1: mctq.keras.quantizers.WeightsPOTInferableQuantizer(4, [2.0], False)}
                 >>> attr_values = {1: tf.constant([[1,2,3], [4, 5, 6]], dtype=tf.float32)}
-                >>> QuantizedConv2D = mctq.KerasQuantizationWrapper(TFOpLambda(tf.matmul), attr_quant_dict,
+                >>> QuantizedMatmul = mctq.KerasQuantizationWrapper(TFOpLambda(tf.matmul), attr_quant_dict,
                 >>>                                                 attr_values, op_call_kwargs={'transpose_b', True})
 
             """
