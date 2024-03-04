@@ -22,8 +22,6 @@ class QuantizationMethod(Enum):
 
     POWER_OF_TWO - Symmetric, uniform, threshold is power of two quantization.
 
-    KMEANS - k-means quantization.
-
     LUT_POT_QUANTIZER - quantization using a lookup table and power of 2 threshold.
 
     SYMMETRIC - Symmetric, uniform, quantization.
@@ -34,8 +32,7 @@ class QuantizationMethod(Enum):
 
     """
     POWER_OF_TWO = 0
-    KMEANS = 1
-    LUT_POT_QUANTIZER = 2
-    SYMMETRIC = 3
-    UNIFORM = 4
-    LUT_SYM_QUANTIZER = 5
+    LUT_POT_QUANTIZER = 1
+    SYMMETRIC = 2
+    UNIFORM = 3
+    LUT_SYM_QUANTIZER = 4
