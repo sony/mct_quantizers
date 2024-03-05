@@ -199,13 +199,13 @@ if FOUND_TF:
 
             """
             base_config = super(KerasQuantizationWrapper, self).get_config()
-            config = {WEIGHTS_QUANTIZERS: {k: keras.utils.serialize_keras_object(v) for k, v in self.weights_quantizers.items()},
-                      WEIGHTS_VALUES: {k: self.serialize_fn(v) for k, v in self.weight_values.items()}}
-
+            config = {WEIGHTS_QUANTIZERS: {k: keras.utils.serialize_keras_object(v) for k, v in self.weights_quantizers.items()}}
+            if len(self.weight_values) > 0:
+                config[WEIGHTS_VALUES] = {k: self.serialize_fn(v) for k, v in self.weight_values.items()}
+                config[OP_CALL_ARGS] = self.op_call_args
+                config[OP_CALL_KWARGS] = self.op_call_kwargs
+                config[IS_INPUT_AS_LIST] = self.is_inputs_as_list
             return_config = {**base_config, **config}
-            return_config[OP_CALL_ARGS] = self.op_call_args
-            return_config[OP_CALL_KWARGS] = self.op_call_kwargs
-            return_config[IS_INPUT_AS_LIST] = self.is_inputs_as_list
             return_config[MCTQ_VERSION] = self._mctq_version
 
             return return_config
