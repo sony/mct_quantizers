@@ -45,7 +45,7 @@ if FOUND_TORCH:
             representing the input index in the function\layer's inputs.
 
             Args:
-                layer: A pytorch module or as function.
+                module: A pytorch module or as function.
                 weights_quantizers: A dictionary between a weight's name or position to its quantizer.
                 weight_values: A dictionary between a weight's position to its value.
                 op_call_args: A list containing the layer's call arguments.

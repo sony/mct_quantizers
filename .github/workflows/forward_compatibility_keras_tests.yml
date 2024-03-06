@@ -1,0 +1,57 @@
+name: Run Keras Quantizers Forward Compatibility Tests
+
+on:
+  workflow_call:
+    inputs:
+      load_version:
+        description: 'MCT Quantizers version to load models'
+        required: true
+        type: string
+      python_version:
+        description: 'Python version'
+        required: true
+        type: string
+        default: '3.10.*'
+      tf_version:
+        description: 'TF version'
+        required: true
+        type: string
+        default: '2.12.*'
+
+jobs:
+  run-tensorflow-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Install Python 3
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{  inputs.python_version  }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install tensorflow==${{  inputs.tf_version  }}
+      - name: Run save model tests with latest version
+        run: |
+          cd tests
+          echo "Current directory: $PWD"
+          export PYTHONPATH="$PWD:${PYTHONPATH}"
+          echo "Updated PYTHONPATH: $PYTHONPATH"
+          cd ..
+          python tests/compatibility_tests/keras_comp_tests/compatibility_weights_save_model_test_suite.py ${{  inputs.load_version  }}
+          python tests/compatibility_tests/keras_comp_tests/compatibility_activation_save_model_test_suite.py ${{  inputs.load_version  }}
+      - name: Checkout to MCT Quantizers requested tag for loading test models
+        run: |
+          git checkout tags/${{  inputs.load_version  }}
+      - name: Run load model tests with load_version
+        run: |
+          cd tests
+          echo "Current directory: $PWD"
+          export PYTHONPATH="$PWD:${PYTHONPATH}"
+          echo "Updated PYTHONPATH: $PYTHONPATH"
+          cd ..
+          python tests/compatibility_tests/keras_comp_tests/compatibility_weights_load_model_test_suite.py ${{  inputs.load_version  }}
+          python tests/compatibility_tests/keras_comp_tests/compatibility_activation_load_model_test_suite.py ${{  inputs.load_version  }}
