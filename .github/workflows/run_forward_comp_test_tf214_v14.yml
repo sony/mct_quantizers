@@ -3,10 +3,6 @@ on:
   workflow_dispatch: # Allow manual triggers
   schedule:
     - cron: 0 0 * * *
-  # TODO: remove this before merge to main
-  pull_request:
-    branches:
-      - main
 
 jobs:
   run-forward-comp-tensorflow-2_14-v1_4:
