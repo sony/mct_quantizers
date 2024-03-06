@@ -201,7 +201,7 @@ if FOUND_TF:
             base_config = super(KerasQuantizationWrapper, self).get_config()
             config = {WEIGHTS_QUANTIZERS: {k: keras.utils.serialize_keras_object(v) for k, v in self.weights_quantizers.items()}}
             # Only create the wrapper attributes that handle positional weights if they exist, so the wrapper is forward
-            # compatible with older MCTQ versions (at least until MCT with start quantizing positional weights)
+            # compatible with older MCTQ versions (at least until MCT will start quantizing positional weights)
             if len(self.weight_values) > 0:
                 config[WEIGHTS_VALUES] = {k: self.serialize_fn(v) for k, v in self.weight_values.items()}
                 config[OP_CALL_ARGS] = self.op_call_args
