@@ -250,3 +250,5 @@ class TestPytorchLoadModel(unittest.TestCase):
 
         self.assertTrue({m.key: m.value for m in onnx_model.metadata_props} ==
                         {m.key: m.value for m in loaded_onnx_model.metadata_props})
+
+        os.remove(tmp_onnx_file)
