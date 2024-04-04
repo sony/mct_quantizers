@@ -82,10 +82,16 @@ STEPS = "optimizer_step"
 TRAINING = "training"
 EPS = 1e-8
 LUT_VALUES_BITWIDTH = 8
-MCTQ_VERSION = "mctq_version"
 
 POSITIONAL_WEIGHT = 'positional_weight'
 QUANTIZED_POSITIONAL_WEIGHT = f'quantized_{POSITIONAL_WEIGHT}'
 
 # ONNX ops domain
 ONNX_CUSTOM_OP_DOMAIN = f"mct_quantizers"
+
+
+## Metadata common fields
+FRAMEWORK_VERSION = 'framework_version'
+PYTHON_VERSION = 'python_version'
+MCTQ_VERSION = "mctq_version"
+ONNX_VERSION = 'onnx_version'
