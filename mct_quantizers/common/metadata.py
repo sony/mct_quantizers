@@ -15,7 +15,7 @@
 from typing import Dict
 import sys
 
-import mct_quantizers
+from mct_quantizers import __version__ as mctq_version
 from mct_quantizers.logger import Logger
 from mct_quantizers.common.constants import MCTQ_VERSION, PYTHON_VERSION
 
@@ -28,7 +28,7 @@ def verify_and_init_metadata(metadata: Dict = None):
         metadata (Dict): metadata dictionary. Should contain only string keys and string\interger\float values.
 
     Returns:
-        metadata dictionary with added default values.
+        The metadata dictionary with added default values.
 
     """
     if not isinstance(metadata, dict):
@@ -43,6 +43,6 @@ def verify_and_init_metadata(metadata: Dict = None):
     if PYTHON_VERSION not in metadata:
         metadata[PYTHON_VERSION] = sys.version
     if MCTQ_VERSION not in metadata:
-        metadata[MCTQ_VERSION] = mct_quantizers.__version__
+        metadata[MCTQ_VERSION] = mctq_version
 
     return metadata

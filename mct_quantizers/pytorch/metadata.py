@@ -68,10 +68,12 @@ if FOUND_ONNX:
         Returns:
             The model with metadata dictionary.
 
+        Example:
+            Adding author name and model version to an onnx model's metadata
+
+            >>> onnx_model_with_metadata = add_onnx_metadata(onnx_model, {'author': 'Jane Doe', 'model version': 3.5})
         """
         metadata = verify_and_init_metadata(metadata)
-        if FRAMEWORK_VERSION not in metadata:
-            metadata[FRAMEWORK_VERSION] = torch.__version__
         if ONNX_VERSION not in metadata:
             metadata[ONNX_VERSION] = onnx.__version__
 
@@ -83,6 +85,6 @@ if FOUND_ONNX:
 else:
     def add_onnx_metadata(model,
                           metadata):
-            Logger.critical('Installing pytorch is mandatory '
+            Logger.critical('Installing onnx is mandatory '
                             'when using add_onnx_metadata. '
-                            'Could not find Pytorch package.')  # pragma: no cover
+                            'Could not find onnx package.')  # pragma: no cover

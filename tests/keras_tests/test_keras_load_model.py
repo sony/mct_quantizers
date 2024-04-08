@@ -225,3 +225,10 @@ class TestKerasLoadModel(unittest.TestCase):
         os.remove(tmp_h5_file)
 
         self.assertTrue(loaded_model.metadata == model.metadata)
+
+        _, tmp_keras_file = tempfile.mkstemp('.keras')
+        keras.models.save_model(model, tmp_keras_file)
+        loaded_model = keras_load_quantized_model(tmp_keras_file)
+        os.remove(tmp_keras_file)
+
+        self.assertTrue(loaded_model.metadata == model.metadata)

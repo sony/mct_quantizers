@@ -64,11 +64,11 @@ if FOUND_TF:
         # Load model
         loaded_model = tf.keras.models.load_model(filepath, custom_objects=qi_custom_objects, compile=compile, **kwargs)
 
-        # Extract metadata is exists
+        # Extract metadata if exists
         metadata_layers = [l for l in loaded_model.layers if isinstance(l, MetadataLayer)]
         if len(metadata_layers) > 0:
             if len(metadata_layers) > 1:
-                Logger.warning('Found more than 1 MetadataLayer layers in model.')
+                Logger.warning('Found more than 1 MetadataLayer layers in model. Loading the metadata from the first layer only.')
             loaded_model.metadata_layer = metadata_layers[0]
             loaded_model.metadata = metadata_layers[0].metadata
         return loaded_model
