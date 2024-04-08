@@ -17,11 +17,13 @@ import tempfile
 import unittest
 
 import numpy as np
+import onnx
 import torch
 
 from mct_quantizers import PytorchActivationQuantizationHolder
 from mct_quantizers.pytorch.load_model import pytorch_load_quantized_model
 from mct_quantizers.pytorch.quantize_wrapper import PytorchQuantizationWrapper
+from mct_quantizers.pytorch.metadata import add_metadata, add_onnx_metadata
 from mct_quantizers.pytorch.quantizer_utils import get_working_device
 from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_lut_pot_inferable_quantizer import \
     ActivationLutPOTInferableQuantizer
@@ -41,6 +43,18 @@ from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_symm
     WeightsSymmetricInferableQuantizer
 from mct_quantizers.pytorch.quantizers.weights_inferable_quantizers.weights_uniform_inferable_quantizer import \
     WeightsUniformInferableQuantizer
+
+
+class TestModel(torch.nn.Module):
+    """
+    Dummy model for load & save test
+    """
+    def __init__(self):
+        super().__init__()
+        self.fc = torch.nn.Linear(3, 4)
+
+    def forward(self, inputs):
+        return self.fc(inputs) + 5
 
 
 class TestPytorchLoadModel(unittest.TestCase):
@@ -205,3 +219,36 @@ class TestPytorchLoadModel(unittest.TestCase):
         layer_with_quantizer = PytorchQuantizationWrapper(torch.nn.Conv2d(3, 10, 3),
                                                           {'weight': quantizer}).to(self.device)
         self._one_layer_model_save_and_load(layer_with_quantizer)
+
+    def test_save_and_load_metadata(self):
+        model = TestModel()
+        model = add_metadata(model, {'test': 'test123'})
+
+        _, tmp_pt_file = tempfile.mkstemp('.pt')
+
+        torch.save(model, tmp_pt_file)
+        loaded_model = pytorch_load_quantized_model(tmp_pt_file)
+        os.remove(tmp_pt_file)
+
+        self.assertTrue(loaded_model.metadata == model.metadata)
+
+        tmp_onnx_file = tmp_pt_file.replace('.pt', '.onnx')
+        torch.onnx.export(model,
+                          torch.ones((1, 3)),
+                          tmp_onnx_file,
+                          opset_version=16,
+                          verbose=False,
+                          input_names=['input'],
+                          output_names=['output'],
+                          dynamic_axes={'input': {0: 'batch_size'},
+                                        'output': {0: 'batch_size'}})
+
+        onnx_model = onnx.load(tmp_onnx_file)
+        onnx_model = add_onnx_metadata(onnx_model, {'test': 'test456'})
+        onnx.save(onnx_model, tmp_onnx_file)
+        loaded_onnx_model = onnx.load(tmp_onnx_file)
+
+        self.assertTrue({m.key: m.value for m in onnx_model.metadata_props} ==
+                        {m.key: m.value for m in loaded_onnx_model.metadata_props})
+
+        os.remove(tmp_onnx_file)

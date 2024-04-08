@@ -23,6 +23,7 @@ if FOUND_TF:
     from tensorflow.python.saved_model.load_options import LoadOptions
     from mct_quantizers.keras.activation_quantization_holder import KerasActivationQuantizationHolder
     from mct_quantizers.keras.quantize_wrapper import KerasQuantizationWrapper
+    from mct_quantizers.keras.metadata import MetadataLayer
     from mct_quantizers.keras.quantizers.base_keras_inferable_quantizer import BaseKerasInferableQuantizer
     keras = tf.keras
 
@@ -59,7 +60,18 @@ if FOUND_TF:
         kwargs = {}
         if options is not None:
             kwargs['options'] = options
-        return tf.keras.models.load_model(filepath, custom_objects=qi_custom_objects, compile=compile, **kwargs)
+
+        # Load model
+        loaded_model = tf.keras.models.load_model(filepath, custom_objects=qi_custom_objects, compile=compile, **kwargs)
+
+        # Extract metadata if exists
+        metadata_layers = [l for l in loaded_model.layers if isinstance(l, MetadataLayer)]
+        if len(metadata_layers) > 0:
+            if len(metadata_layers) > 1:
+                Logger.warning('Found more than 1 MetadataLayer layers in model. Loading the metadata from the first layer only.')
+            loaded_model.metadata_layer = metadata_layers[0]
+            loaded_model.metadata = metadata_layers[0].metadata
+        return loaded_model
 else:
     def keras_load_quantized_model(filepath, custom_objects=None, compile=True, options=None):
         """
