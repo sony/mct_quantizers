@@ -58,9 +58,31 @@ if FOUND_TF:
         model.metadata = model.metadata_layer.metadata
         return model
 
+    def get_metadata(model: tf.keras.Model) -> Dict:
+        """
+        Get the metadata dictionary from model.
+
+        Args:
+            model (Model): Keras model to extract metadata from.
+
+        Returns:
+            Model's the metadata dictionary.
+
+        Example:
+                Get model's metadata.
+
+                >>> metadata = get_metadata(model)
+        """
+        return getattr(model, 'metadata', {})
+
 else:
     def add_metadata(model,
                      metadata):
             Logger.critical('Installing tensorflow is mandatory '
                             'when using add_metadata. '
+                            'Could not find Tensorflow package.')  # pragma: no cover
+
+    def get_metadata(model):
+            Logger.critical('Installing tensorflow is mandatory '
+                            'when using get_metadata. '
                             'Could not find Tensorflow package.')  # pragma: no cover

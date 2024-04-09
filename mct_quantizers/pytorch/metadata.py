@@ -46,11 +46,33 @@ if FOUND_TORCH:
         model.metadata = metadata
         return model
 
+    def get_metadata(model: torch.nn.Module) -> Dict:
+        """
+        Get the metadata dictionary from model.
+
+        Args:
+            model (Module): Pytorch model to extract metadata from.
+
+        Returns:
+            Model's the metadata dictionary.
+
+        Example:
+                Get model's metadata.
+
+                >>> metadata = get_metadata(model)
+        """
+        return getattr(model, 'metadata', {})
+
 else:
     def add_metadata(model,
                      metadata):
             Logger.critical('Installing pytorch is mandatory '
                             'when using add_metadata. '
+                            'Could not find Pytorch package.')  # pragma: no cover
+
+    def get_metadata(model):
+            Logger.critical('Installing pytorch is mandatory '
+                            'when using get_metadata. '
                             'Could not find Pytorch package.')  # pragma: no cover
 
 
@@ -82,9 +104,32 @@ if FOUND_ONNX:
             meta.key, meta.value = k, v
         return model
 
+
+    def get_onnx_metadata(model: onnx.ModelProto) -> Dict:
+        """
+        Get the metadata dictionary from model.
+
+        Args:
+            model (ModelProto): onnx model to add the metadata to.
+
+        Returns:
+            Model's the metadata dictionary.
+
+        Example:
+                Get model's metadata.
+
+                >>> metadata = get_onnx_metadata(model)
+        """
+        return {prop.key: prop.value for prop in model.metadata_props}
+
 else:
     def add_onnx_metadata(model,
                           metadata):
             Logger.critical('Installing onnx is mandatory '
                             'when using add_onnx_metadata. '
+                            'Could not find onnx package.')  # pragma: no cover
+
+    def get_onnx_metadata(model):
+            Logger.critical('Installing onnx is mandatory '
+                            'when using get_onnx_metadata. '
                             'Could not find onnx package.')  # pragma: no cover
