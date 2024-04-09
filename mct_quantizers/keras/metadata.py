@@ -66,7 +66,7 @@ if FOUND_TF:
             model (Model): Keras model to extract metadata from.
 
         Returns:
-            Model's the metadata dictionary.
+            The model's the metadata dictionary.
 
         Example:
                 Get model's metadata.
