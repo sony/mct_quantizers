@@ -23,7 +23,7 @@ import torch
 from mct_quantizers import PytorchActivationQuantizationHolder
 from mct_quantizers.pytorch.load_model import pytorch_load_quantized_model
 from mct_quantizers.pytorch.quantize_wrapper import PytorchQuantizationWrapper
-from mct_quantizers.pytorch.metadata import add_metadata, add_onnx_metadata
+from mct_quantizers.pytorch.metadata import add_metadata, add_onnx_metadata, get_metadata, get_onnx_metadata
 from mct_quantizers.pytorch.quantizer_utils import get_working_device
 from mct_quantizers.pytorch.quantizers.activation_inferable_quantizers.activation_lut_pot_inferable_quantizer import \
     ActivationLutPOTInferableQuantizer
@@ -230,7 +230,7 @@ class TestPytorchLoadModel(unittest.TestCase):
         loaded_model = pytorch_load_quantized_model(tmp_pt_file)
         os.remove(tmp_pt_file)
 
-        self.assertTrue(loaded_model.metadata == model.metadata)
+        self.assertTrue(get_metadata(loaded_model) == get_metadata(model))
 
         tmp_onnx_file = tmp_pt_file.replace('.pt', '.onnx')
         torch.onnx.export(model,
@@ -248,7 +248,6 @@ class TestPytorchLoadModel(unittest.TestCase):
         onnx.save(onnx_model, tmp_onnx_file)
         loaded_onnx_model = onnx.load(tmp_onnx_file)
 
-        self.assertTrue({m.key: m.value for m in onnx_model.metadata_props} ==
-                        {m.key: m.value for m in loaded_onnx_model.metadata_props})
+        self.assertTrue(get_onnx_metadata(onnx_model) == get_onnx_metadata(loaded_onnx_model))
 
         os.remove(tmp_onnx_file)

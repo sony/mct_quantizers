@@ -103,7 +103,8 @@ class TestKerasQuantizationWrapper(unittest.TestCase):
         matmul_wrapper.build(self.output_shapes)
         (name, weight, quantizer) = matmul_wrapper._weights_vars[0]
         self.assertTrue(isinstance(matmul_wrapper, KerasQuantizationWrapper))
-        self.assertTrue(matmul_wrapper.layer.function is tf.matmul)
+        self.assertTrue(matmul_wrapper.layer.function is tf.matmul or
+                        matmul_wrapper.layer.function.__name__ == tf.matmul.__name__)  # fix for TF 2.15
         self.assertTrue(name == 1)
         self.assertTrue((weight == getattr(matmul_wrapper, f'positional_weight_{name}')).numpy().all())
         self.assertTrue(isinstance(quantizer, IdentityWeightsQuantizer))

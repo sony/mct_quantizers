@@ -28,7 +28,7 @@ else:
 
 from mct_quantizers.keras.activation_quantization_holder import KerasActivationQuantizationHolder
 from mct_quantizers.keras.load_model import keras_load_quantized_model
-from mct_quantizers.keras.metadata import add_metadata
+from mct_quantizers.keras.metadata import add_metadata, get_metadata
 from mct_quantizers.keras.quantize_wrapper import KerasQuantizationWrapper
 from mct_quantizers.keras.quantizers.activation_inferable_quantizers.activation_lut_pot_inferable_quantizer import \
     ActivationLutPOTInferableQuantizer
@@ -224,11 +224,11 @@ class TestKerasLoadModel(unittest.TestCase):
         loaded_model = keras_load_quantized_model(tmp_h5_file)
         os.remove(tmp_h5_file)
 
-        self.assertTrue(loaded_model.metadata == model.metadata)
+        self.assertTrue(get_metadata(loaded_model) == get_metadata(model))
 
         _, tmp_keras_file = tempfile.mkstemp('.keras')
         keras.models.save_model(model, tmp_keras_file)
         loaded_model = keras_load_quantized_model(tmp_keras_file)
         os.remove(tmp_keras_file)
 
-        self.assertTrue(loaded_model.metadata == model.metadata)
+        self.assertTrue(get_metadata(loaded_model) == get_metadata(model))
