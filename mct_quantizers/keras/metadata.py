@@ -22,7 +22,7 @@ from mct_quantizers.common.metadata import verify_and_init_metadata
 if FOUND_TF:
     import tensorflow as tf
 
-    @tf.keras.saving.register_keras_serializable()
+    @tf.keras.utils.register_keras_serializable()
     class MetadataLayer(tf.keras.layers.Layer):
         """
         A layer for holding the metadata dictionary.
