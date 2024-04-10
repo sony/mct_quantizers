@@ -89,8 +89,8 @@ if FOUND_TORCH:
             self.weight_values = weight_values if weight_values is not None else dict()
             for pos, weight_val in self.weight_values.items():
                 if not isinstance(weight_val, torch.Tensor):
-                    Logger.error(f'Positional weight at position {pos} should be either an ndarray or a tf.Tensor,'
-                                 f'but type is {type(weight_val)}')
+                    Logger.error(f'Positional weight at position {pos} should be a torch.Tensor, '
+                                 f'but type is {type(weight_val)}.')
 
             # Initialize functional module arguments. For examples, see the class description.
             self.op_call_args = [] if op_call_args is None else op_call_args
