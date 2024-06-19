@@ -1,0 +1,11 @@
+name: Run Tests - PyTorch 2.3
+on:
+  workflow_dispatch: # Allow manual triggers
+  schedule:
+    - cron: 0 0 * * *
+
+jobs:
+  run-pytorch-2_3:
+    uses: ./.github/workflows/run_pytorch_tests.yml
+    with:
+      torch-version: "2.3.*"
