@@ -35,8 +35,6 @@ def verify_and_init_metadata(metadata: Dict = None):
         Logger.error(f'metadata should be a dictionary, but got type {type(metadata)}.')
     if not all([isinstance(k, str) for k in metadata.keys()]):
         Logger.error('metadata dictionary should only have string keys.')
-    if not all([isinstance(v, (str, int, float)) for v in metadata.values()]):
-        Logger.error('metadata dictionary should only have string, integer or float values.')
 
     if metadata is None:
         metadata = {}
