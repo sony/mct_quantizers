@@ -217,7 +217,11 @@ class TestKerasLoadModel(unittest.TestCase):
     def test_save_and_load_metadata(self):
         _input = tf.keras.layers.Input((8,))
         model = tf.keras.Model(inputs=_input, outputs = _input + 5)
-        model = add_metadata(model, {'test': 'test123'})
+        model = add_metadata(model, {'test': 'test123',
+                                     'test_list': ['t1', 3.5, 1],
+                                     'test_dict': {'test_inner_float': 2.5,
+                                                   'test_inner_list': [1, 'foo', 3.4],
+                                                   'test_inner_dict': {'foofoo': 3}}})
 
         _, tmp_h5_file = tempfile.mkstemp('.h5')
         keras.models.save_model(model, tmp_h5_file)
