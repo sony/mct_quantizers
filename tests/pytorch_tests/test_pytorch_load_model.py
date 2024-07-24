@@ -222,7 +222,11 @@ class TestPytorchLoadModel(unittest.TestCase):
 
     def test_save_and_load_metadata(self):
         model = TestModel()
-        model = add_metadata(model, {'test': 'test123'})
+        model = add_metadata(model, {'test': 'test123',
+                                     'test_list': ['t1', 3.5, 1],
+                                     'test_dict': {'test_inner_float': 2.5,
+                                                   'test_inner_list': [1, 'foo', 3.4],
+                                                   'test_inner_dict': {'foofoo': 3}}})
 
         _, tmp_pt_file = tempfile.mkstemp('.pt')
 

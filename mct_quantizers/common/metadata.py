@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-from typing import Dict
+from typing import Dict, Any
 import sys
 
 from mct_quantizers import __version__ as mctq_version
@@ -25,18 +25,41 @@ def verify_and_init_metadata(metadata: Dict = None):
     Init the metadata dictionary and verify its compliance
 
     Args:
-        metadata (Dict): metadata dictionary. Should contain only string keys and string\interger\float values.
+        metadata (Dict): metadata dictionary. Should contain only string keys and string\interger\float values or
+        list/dictionaries with these allowed data types.
 
     Returns:
         The metadata dictionary with added default values.
 
     """
+
+    def _validate_metadata_value(value: Any) -> bool:
+        """
+        Validates that the value is either an int, float, str, list, or dict.
+        For lists, all elements must be int, float, or str.
+        For dicts, all keys must be str and all values must be int, float, str, list, or dict.
+
+        Args:
+            value (Any): The value to be validated.
+
+        Returns:
+            bool: True if the value is valid, False otherwise.
+        """
+        if isinstance(value, (int, float, str)):
+            return True
+        elif isinstance(value, list):
+            return all(_validate_metadata_value(item) for item in value)
+        elif isinstance(value, dict):
+            return all(isinstance(k, str) and _validate_metadata_value(v) for k, v in value.items())
+        return False
+
     if not isinstance(metadata, dict):
         Logger.error(f'metadata should be a dictionary, but got type {type(metadata)}.')
-    if not all([isinstance(k, str) for k in metadata.keys()]):
+    if not all(isinstance(k, str) for k in metadata.keys()):
         Logger.error('metadata dictionary should only have string keys.')
-    if not all([isinstance(v, (str, int, float)) for v in metadata.values()]):
-        Logger.error('metadata dictionary should only have string, integer or float values.')
+    if not all(_validate_metadata_value(v) for v in metadata.values()):
+        Logger.error('metadata dictionary values should only be strings, integers, floats, lists, '
+                     'or dictionaries with appropriate inner values.')
 
     if metadata is None:
         metadata = {}
