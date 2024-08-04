@@ -20,7 +20,7 @@ Please note that the quantization wrapper and the quantizers are framework-speci
 ## Quantizers:
 
 The library provides the "Inferable Quantizer" interface for implementing new quantizers. 
-This interface is based on the [`BaseInferableQuantizer`](common/base_inferable_quantizer.py) class, which allows the definition of quantizers used for emulating inference-time quantization.
+This interface is based on the [`BaseInferableQuantizer`](mct_quantizers/common/base_inferable_quantizer.py) class, which allows the definition of quantizers used for emulating inference-time quantization.
 
 On top of `BaseInferableQuantizer` the library defines a set of framework-specific quantizers for both weights and activations:
 1. [Keras Quantizers](mct_quantizers/keras/quantizers)
