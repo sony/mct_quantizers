@@ -58,8 +58,9 @@ def verify_and_init_metadata(metadata: Dict = None):
     if not all(isinstance(k, str) for k in metadata.keys()):
         Logger.error('metadata dictionary should only have string keys.')
     if not all(_validate_metadata_value(v) for v in metadata.values()):
-        Logger.error('metadata dictionary values should only be strings, integers, floats, lists, '
-                     'or dictionaries with appropriate inner values.')
+        Logger.warning('metadata dictionary values should be strings, integers, floats, lists, '
+                       'or dictionaries with appropriate inner values. Other types may cause issues '
+                       'with saving/loading the metadata.')
 
     if metadata is None:
         metadata = {}
