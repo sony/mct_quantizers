@@ -15,22 +15,22 @@ Users can set the quantizers and all the quantization information for each layer
 
 Please note that the quantization wrapper and the quantizers are framework-specific.
 
-<img src="quantization_infra.png" width="700">
+<img src="https://github.com/sony/mct_quantizers/raw/main/quantization_infra.png" width="700">
 
 ## Quantizers:
 
 The library provides the "Inferable Quantizer" interface for implementing new quantizers. 
-This interface is based on the [`BaseInferableQuantizer`](common/base_inferable_quantizer.py) class, which allows the definition of quantizers used for emulating inference-time quantization.
+This interface is based on the [`BaseInferableQuantizer`](https://github.com/sony/mct_quantizers/blob/main/mct_quantizers/common/base_inferable_quantizer.py) class, which allows the definition of quantizers used for emulating inference-time quantization.
 
 On top of `BaseInferableQuantizer` the library defines a set of framework-specific quantizers for both weights and activations:
-1. [Keras Quantizers](mct_quantizers/keras/quantizers)
-2. [Pytorch Quantizers](mct_quantizers/pytorch/quantizers)
+1. [Keras Quantizers](https://github.com/sony/mct_quantizers/tree/main/mct_quantizers/keras/quantizers)
+2. [Pytorch Quantizers](https://github.com/sony/mct_quantizers/tree/main/mct_quantizers/pytorch/quantizers)
 
 ### The mark_quantizer Decorator
 
-The [`@mark_quantizer`](mct_quantizers/common/base_inferable_quantizer.py) decorator is used to assign each quantizer with static properties that define its task compatibility. Each quantizer class should be decorated with this decorator, which defines the following properties:
- - [`QuantizationTarget`](mct_quantizers/common/base_inferable_quantizer.py): An Enum that indicates whether the quantizer is intended for weights or activations quantization.
- - [`QuantizationMethod`](mct_quantizers/common/quant_info.py): A list of quantization methods (Uniform, Symmetric, etc.).
+The [`@mark_quantizer`](https://github.com/sony/mct_quantizers/blob/main/mct_quantizers/common/base_inferable_quantizer.py) decorator is used to assign each quantizer with static properties that define its task compatibility. Each quantizer class should be decorated with this decorator, which defines the following properties:
+ - [`QuantizationTarget`](https://github.com/sony/mct_quantizers/blob/main/mct_quantizers/common/base_inferable_quantizer.py): An Enum that indicates whether the quantizer is intended for weights or activations quantization.
+ - [`QuantizationMethod`](https://github.com/sony/mct_quantizers/blob/main/mct_quantizers/common/quant_info.py): A list of quantization methods (Uniform, Symmetric, etc.).
  - `identifier`: A unique identifier for the quantizer class. This is a helper property that allows the creation of advanced quantizers for specific tasks.
  
 ## Getting Started
@@ -68,7 +68,7 @@ For use with Tensorflow, please install the following package:
 For use with PyTorch, please install the following package:
 [torch](https://pytorch.org/)
 
-You can also use the [requirements](requirements.txt) file to set up your environment.
+You can also use the [requirements](https://github.com/sony/mct_quantizers/blob/main/requirements.txt) file to set up your environment.
 
 ## License
-[Apache License 2.0](LICENSE.md).
+[Apache License 2.0](https://github.com/sony/mct_quantizers/blob/main/LICENSE.md).
