@@ -357,8 +357,8 @@ if FOUND_TF:
 
             """
             if training is not None and not isinstance(training, bool):
-                raise TypeError("The 'training' argument must be either None or a boolean. "
-                                "verify that you pass only one input")
+                Logger.critical(f"Argument type mismatch: expected 'training' argument to be of type 'boolean' "
+                                f"but got {type(training)}")
 
             if training is None:
                 training = tf.keras.backend.learning_phase()
