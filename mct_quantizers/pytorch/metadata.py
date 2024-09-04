@@ -82,6 +82,7 @@ if FOUND_ONNX:
     def add_onnx_metadata(model: onnx.ModelProto, metadata: Dict):
         """
         Init the metadata dictionary and verify its compliance, then add it to the model metadata_props.
+        Metadata values have to be of byte type.
 
         Args:
             model (ModelProto): onnx model to add the metadata to.
@@ -101,6 +102,8 @@ if FOUND_ONNX:
 
         for k, v in metadata.items():
             meta = model.metadata_props.add()
+            if not isinstance(v, (bytes, str)):
+                Logger.critical(f"ONNX metadata must be of byte type, but {v} has type {type(v)}")
             meta.key, meta.value = k, v
         return model
 
