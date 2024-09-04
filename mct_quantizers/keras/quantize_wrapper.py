@@ -356,6 +356,10 @@ if FOUND_TF:
             Returns: tensors that simulate a quantized layer.
 
             """
+            if training is not None and not isinstance(training, bool):
+                Logger.critical(f"Argument type mismatch: expected 'training' argument to be of type 'boolean' "
+                                f"but got {type(training)}")
+
             if training is None:
                 training = tf.keras.backend.learning_phase()
 
