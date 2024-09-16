@@ -255,3 +255,8 @@ class TestPytorchLoadModel(unittest.TestCase):
         self.assertTrue(get_onnx_metadata(onnx_model) == get_onnx_metadata(loaded_onnx_model))
 
         os.remove(tmp_onnx_file)
+
+        # Make sure assertion is raised in cases of invalid metadata value type.
+        with self.assertRaisesRegex(Exception, r"ONNX metadata must be of byte type, but 4.2 has type <class 'float'>"):
+            add_onnx_metadata(onnx_model, {'test': 'test456', 'foo': 4.2})
+
