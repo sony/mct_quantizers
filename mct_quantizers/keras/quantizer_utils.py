@@ -81,5 +81,6 @@ def int_quantization_with_threshold(data: tf.Tensor,
         clip_max = 2 ** n_bits - 1
         clip_min = 0
 
-    return tf.clip_by_value((data / (threshold + eps)) * (2 ** (n_bits - int(signed))),
-                            clip_value_max=clip_max, clip_value_min=clip_min)
+    int_data = (data / (threshold + eps)) * (2 ** (n_bits - int(signed)))
+    int_data = tf.round(int_data)  # https://github.com/sony/mct_quantizers/issues/105
+    return tf.clip_by_value(int_data, clip_value_max=clip_max, clip_value_min=clip_min)
