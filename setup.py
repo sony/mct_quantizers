@@ -16,11 +16,13 @@
 import argparse
 import sys
 from setuptools import setup, find_packages
-
+import os
 
 def read_install_requires():
     print("Reading install requirements")
-    return [r.split('\n')[0] for r in open('requirements.txt', 'r').readlines()]
+    requirements_path = os.path.join(os.path.dirname(__file__), 'requirements.txt')
+    with open(requirements_path, 'r') as f:
+        return [r.split('\n')[0] for r in f.readlines()]
 
 
 def get_log_description():
