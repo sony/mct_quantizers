@@ -20,9 +20,9 @@ import os
 
 def read_install_requires():
     print("Reading install requirements")
-    requirements_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'requirements.txt')
-    with open(requirements_path, 'r') as f:
-        return [r.split('\n')[0] for r in f.readlines()]
+    req = [r.split('\n')[0] for r in open('requirements.txt', 'r').readlines()]
+    print(req)
+    return req
 
 
 def get_log_description():
