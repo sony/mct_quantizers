@@ -21,7 +21,6 @@ import os
 def read_install_requires():
     print("Reading install requirements")
     req = [r.split('\n')[0] for r in open('requirements.txt', 'r').readlines()]
-    print(req)
     return req
 
 
