@@ -20,7 +20,7 @@ import os
 
 def read_install_requires():
     print("Reading install requirements")
-    requirements_path = os.path.join(os.path.dirname(__file__), 'requirements.txt')
+    requirements_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'requirements.txt')
     with open(requirements_path, 'r') as f:
         return [r.split('\n')[0] for r in f.readlines()]
 
