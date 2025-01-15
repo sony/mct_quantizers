@@ -20,8 +20,7 @@ from setuptools import setup, find_packages
 
 def read_install_requires():
     print("Reading install requirements")
-    req = [r.split('\n')[0] for r in open('requirements.txt', 'r').readlines()]
-    return req
+    return [r.split('\n')[0] for r in open('requirements.txt', 'r').readlines()]
 
 
 def get_log_description():
