@@ -26,7 +26,7 @@ jobs:
           echo "nightly_version=$version.$now" >> $GITHUB_ENV
           sed -i "s/attr: mct_quantizers.__version__/$version.$now/g" setup.cfg
           sed -i "s/name='mct-quantizers'/name='mct-quantizers-nightly'/g" setup.py
-          python -m build
+          python setup.py sdist bdist_wheel
       - name: Publish nightly
         run: |
           twine upload --repository pypi dist/* --verbose -u __token__ -p ${{ secrets.PYPI_API_KEY }}
