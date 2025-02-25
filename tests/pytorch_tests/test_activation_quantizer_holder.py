@@ -16,7 +16,6 @@ import os
 import tempfile
 import unittest
 
-import pytest
 import torch
 import numpy as np
 from torch.fx import symbolic_trace
