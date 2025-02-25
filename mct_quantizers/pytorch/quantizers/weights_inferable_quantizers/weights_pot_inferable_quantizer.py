@@ -77,16 +77,23 @@ if FOUND_TORCH:
             Returns:
                 quantized tensor.
             """
+            if self.reuse and not self.quantizer_first_run:
+                return self.resue_outputs
 
             if self._use_custom_impl and torch.jit.is_tracing():
-                return WeightsPOTF.apply(inputs,
-                                         self.num_bits,
-                                         self.threshold_np,
-                                         self.per_channel,
-                                         self.channel_axis)
+                outputs = WeightsPOTF.apply(inputs,
+                                             self.num_bits,
+                                             self.threshold_np,
+                                             self.per_channel,
+                                             self.channel_axis)
+            else:
+                outputs = super(WeightsPOTInferableQuantizer, self).__call__(inputs)
 
-            return super(WeightsPOTInferableQuantizer, self).__call__(inputs)
+            if self.reuse and self.quantizer_first_run:
+                self.resue_outputs = outputs
+                self.quantizer_first_run = False
 
+            return outputs
 
     class WeightsPOTF(BaseWeightQuantizerAutogradFunction):
         """

@@ -136,28 +136,39 @@ if FOUND_TORCH:
             Returns:
                 quantized weights
             """
+            if self.reuse and not self.quantizer_first_run:
+                return self.resue_outputs
+
             if self._use_custom_impl and torch.jit.is_tracing():
-                return WeightsUniformF.apply(inputs,
-                                             self.num_bits,
-                                             self.adjusted_min_range_np,
-                                             self.adjusted_max_range_np,
-                                             self.per_channel,
-                                             self.channel_axis)
+                outputs = WeightsUniformF.apply(inputs,
+                                                 self.num_bits,
+                                                 self.adjusted_min_range_np,
+                                                 self.adjusted_max_range_np,
+                                                 self.per_channel,
+                                                 self.channel_axis)
 
-            inputs.requires_grad = False
-            if self.per_channel:
-                return torch.fake_quantize_per_channel_affine(inputs,
-                                                              self.scales.flatten(),
-                                                              self.zero_points.flatten(),
-                                                              axis=self.channel_axis,
-                                                              quant_min=self.min_quantized_domain,
-                                                              quant_max=self.max_quantized_domain)
-            return torch.fake_quantize_per_tensor_affine(inputs,
-                                                         self.scales,
-                                                         self.zero_points,
-                                                         quant_min=self.min_quantized_domain,
-                                                         quant_max=self.max_quantized_domain)
 
+            elif self.per_channel:
+                inputs.requires_grad = False
+                outputs = torch.fake_quantize_per_channel_affine(inputs,
+                                                                  self.scales.flatten(),
+                                                                  self.zero_points.flatten(),
+                                                                  axis=self.channel_axis,
+                                                                  quant_min=self.min_quantized_domain,
+                                                                  quant_max=self.max_quantized_domain)
+            else:
+                inputs.requires_grad = False
+                outputs = torch.fake_quantize_per_tensor_affine(inputs,
+                                                                 self.scales,
+                                                                 self.zero_points,
+                                                                 quant_min=self.min_quantized_domain,
+                                                                 quant_max=self.max_quantized_domain)
+
+            if self.reuse and self.quantizer_first_run:
+                self.resue_outputs = outputs
+                self.quantizer_first_run = False
+
+            return outputs
 
     class WeightsUniformF(BaseWeightQuantizerAutogradFunction):
         """

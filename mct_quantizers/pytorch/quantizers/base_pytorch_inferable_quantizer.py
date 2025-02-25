@@ -31,8 +31,17 @@ if FOUND_TORCH:
             # enable_custom_impl should be invoked.
             self._use_custom_impl = False
 
+            # Reuse output: run only first quantizer opertion, save the result
+            # and return it for others quantizer operation
+            self.reuse = False
+            self.quantizer_first_run = True
+            self.resue_outputs = None
+
         def enable_custom_impl(self):
             self._use_custom_impl = True
+
+        def enable_reuse_quantizer(self):
+            self.reuse = True
 
         @abstractmethod
         def __call__(self, inputs: torch.Tensor):
