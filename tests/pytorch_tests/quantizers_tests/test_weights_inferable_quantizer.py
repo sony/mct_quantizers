@@ -247,13 +247,8 @@ class TestPytorchWeightsInferableQuantizers(unittest.TestCase):
                                                             max_range) - min_range) / scale) * scale + min_range
         self.assertTrue(torch.all(manually_quantized_tensor == fake_quantized_tensor))
 
-    def test_symmetric_weights_quantizer_reuse(self):
-        num_bits, thresholds = 8, [4]
+    def quantizer_reuse_test(self, quantizer):
 
-        # Create quantizer
-        quantizer = WeightsSymmetricInferableQuantizer(num_bits=num_bits,
-                                                       per_channel=False,
-                                                       threshold=thresholds)
         # Enable reuse
         quantizer.enable_reuse_quantizer()
         self.assertTrue(quantizer.reuse,
@@ -280,66 +275,31 @@ class TestPytorchWeightsInferableQuantizers(unittest.TestCase):
         quantized_tensor3 = quantizer(input_tensor)
         self.assertTrue(torch.all(quantizer.resue_outputs == quantized_tensor3))
 
+    def test_symmetric_weights_quantizer_reuse(self):
+        # Create quantizer
+        num_bits, thresholds = 8, [4]
+        quantizer = WeightsSymmetricInferableQuantizer(num_bits=num_bits,
+                                                       per_channel=False,
+                                                       threshold=thresholds)
+        # Test reuse quantizer
+        self.quantizer_reuse_test(quantizer)
+
     def test_pot_weights_quantizer_reuse(self):
+        # Create quantizer
         num_bits, thresholds = 6, [2, 4, 1]
         quantizer = WeightsPOTInferableQuantizer(num_bits=num_bits,
                                                  per_channel=True,
                                                  threshold=thresholds,
                                                  channel_axis=3)
-        # Enable reuse
-        quantizer.enable_reuse_quantizer()
-        self.assertTrue(quantizer.reuse,
-                        f'reuse should be true but got false')
-        self.assertTrue(quantizer.quantizer_first_run,
-                        f'At first quantizer_first_run should be true but got false')
-        self.assertTrue(quantizer.resue_outputs is None,
-                        f'At first resue_outputs should be None')
-
-        # Initialize a random input
-        input_tensor = torch.rand(1, 50, 50, 3).to(get_working_device())
-
-        # Quantize tensor: first run
-        quantized_tensor1 = quantizer(input_tensor)
-        self.assertTrue(not quantizer.quantizer_first_run,
-                        f'Now quantizer_first_run should be false but got true')
-        self.assertTrue(torch.all(quantizer.resue_outputs == quantized_tensor1))
-
-        # Quantize tensor: second run
-        quantized_tensor2 = quantizer(input_tensor)
-        self.assertTrue(torch.all(quantizer.resue_outputs == quantized_tensor2))
-
-        # Quantize tensor: third run
-        quantized_tensor3 = quantizer(input_tensor)
-        self.assertTrue(torch.all(quantizer.resue_outputs == quantized_tensor3))
+        # Test reuse quantizer
+        self.quantizer_reuse_test(quantizer)
 
     def test_uniform_weights_quantizer_reuse(self):
+        # Create quantizer
         num_bits, min_range, max_range = 4, [-10], [4]
         quantizer = WeightsUniformInferableQuantizer(num_bits=num_bits,
                                                      per_channel=False,
                                                      min_range=min_range,
                                                      max_range=max_range)
-        # Enable reuse
-        quantizer.enable_reuse_quantizer()
-        self.assertTrue(quantizer.reuse,
-                        f'reuse should be true but got false')
-        self.assertTrue(quantizer.quantizer_first_run,
-                        f'At first quantizer_first_run should be true but got false')
-        self.assertTrue(quantizer.resue_outputs is None,
-                        f'At first resue_outputs should be None')
-
-        # Initialize a random input
-        input_tensor = torch.rand(1, 50, 50, 3).to(get_working_device())
-
-        # Quantize tensor: first run
-        quantized_tensor1 = quantizer(input_tensor)
-        self.assertTrue(not quantizer.quantizer_first_run,
-                        f'Now quantizer_first_run should be false but got true')
-        self.assertTrue(torch.all(quantizer.resue_outputs == quantized_tensor1))
-
-        # Quantize tensor: second run
-        quantized_tensor2 = quantizer(input_tensor)
-        self.assertTrue(torch.all(quantizer.resue_outputs == quantized_tensor2))
-
-        # Quantize tensor: third run
-        quantized_tensor3 = quantizer(input_tensor)
-        self.assertTrue(torch.all(quantizer.resue_outputs == quantized_tensor3))
+        # Test reuse quantizer
+        self.quantizer_reuse_test(quantizer)
