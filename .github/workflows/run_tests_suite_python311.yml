@@ -25,5 +25,51 @@ jobs:
           pip install -r requirements.txt
           pip install tensorflow==2.15.*
           pip install torch==2.4.* onnx onnxruntime onnxruntime-extensions
+      - name: Export ONNX Model
+        run: |
+          python -c "
+          import torch
+          import onnx
+          from mct_quantizers.pytorch.quantizer_utils import get_working_device
+          from mct_quantizers.pytorch import pytorch_quantizers
+          from mct_quantizers import PytorchActivationQuantizationHolder
+
+          # Define device
+          device = get_working_device()
+
+          # Define quantizer
+          num_bits = 3
+          thresholds = [5.0]
+          signed = False
+          quantizer = pytorch_quantizers.ActivationSymmetricInferableQuantizer(
+              num_bits=num_bits, threshold=thresholds, signed=signed
+          )
+          quantizer.enable_custom_impl()
+
+          # Wrap in a layer
+          model = PytorchActivationQuantizationHolder(quantizer)
+          model.to(device)
+
+          # Define input
+          dummy_input = torch.rand(1, 3, 8, 8).to(device)
+
+          # Export to ONNX
+          torch.onnx.export(
+              model,
+              dummy_input,
+              'model.onnx',
+              opset_version=16,
+              input_names=['input'],
+              output_names=['output'],
+              dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}}
+          )
+          print('ONNX model exported successfully.')
+          "
+
+      - name: Upload ONNX Model Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: exported-onnx-model
+          path: model.onnx
       - name: Run unittests
         run: python -m unittest discover -s tests -v
