@@ -114,6 +114,7 @@ if FOUND_TORCH:
             self.scales = to_torch_tensor(self.scales).to(get_working_device())
             self.zero_points = torch.zeros(len(threshold), dtype=torch.int32).to(get_working_device())
 
+
         def __call__(self, inputs: torch.Tensor) -> torch.Tensor:
             """
             Quantize the given inputs using the quantizer parameters.
@@ -124,28 +125,36 @@ if FOUND_TORCH:
             Returns:
                 quantized tensor.
             """
+            if self.reuse and not self.quantizer_first_run:
+                return self.resue_outputs
 
             if self._use_custom_impl and torch.jit.is_tracing():
-                return WeightsSymmetricF.apply(inputs,
-                                               self.num_bits,
-                                               self.threshold_np,
-                                               self.per_channel,
-                                               self.channel_axis)
+                outputs = WeightsSymmetricF.apply(inputs,
+                                                   self.num_bits,
+                                                   self.threshold_np,
+                                                   self.per_channel,
+                                                   self.channel_axis)
+            elif self.per_channel:
+                inputs.requires_grad = False
+                outputs = torch.fake_quantize_per_channel_affine(inputs,
+                                                                  self.scales,
+                                                                  self.zero_points,
+                                                                  axis=self.channel_axis,
+                                                                  quant_min=self.min_quantized_domain,
+                                                                  quant_max=self.max_quantized_domain)
+            else:
+                inputs.requires_grad = False
+                outputs = torch.fake_quantize_per_tensor_affine(inputs,
+                                                                 self.scales,
+                                                                 self.zero_points,
+                                                                 quant_min=self.min_quantized_domain,
+                                                                 quant_max=self.max_quantized_domain)
 
-            inputs.requires_grad = False
-            if self.per_channel:
-                return torch.fake_quantize_per_channel_affine(inputs,
-                                                              self.scales,
-                                                              self.zero_points,
-                                                              axis=self.channel_axis,
-                                                              quant_min=self.min_quantized_domain,
-                                                              quant_max=self.max_quantized_domain)
-            return torch.fake_quantize_per_tensor_affine(inputs,
-                                                         self.scales,
-                                                         self.zero_points,
-                                                         quant_min=self.min_quantized_domain,
-                                                         quant_max=self.max_quantized_domain)
+            if self.reuse and self.quantizer_first_run:
+                self.resue_outputs = outputs
+                self.quantizer_first_run = False
 
+            return outputs
 
     class WeightsSymmetricF(BaseWeightQuantizerAutogradFunction):
         """

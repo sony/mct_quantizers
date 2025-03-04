@@ -96,30 +96,36 @@ if FOUND_TORCH:
             Returns:
                 quantized tensor.
             """
+            if self.reuse and not self.quantizer_first_run:
+                return self.resue_outputs
+
             if self._use_custom_impl and torch.jit.is_tracing():
-                return WeightsLUTSymmetricF.apply(inputs,
-                                                  self.num_bits,
-                                                  self._lut_values_np,
-                                                  self._threshold_np,
-                                                  self.lut_values_bitwidth,
-                                                  self.eps,
-                                                  self.per_channel,
-                                                  self.channel_axis,
-                                                  self.input_rank
-                                                  )
+                outputs = WeightsLUTSymmetricF.apply(inputs,
+                                                      self.num_bits,
+                                                      self._lut_values_np,
+                                                      self._threshold_np,
+                                                      self.lut_values_bitwidth,
+                                                      self.eps,
+                                                      self.per_channel,
+                                                      self.channel_axis,
+                                                      self.input_rank)
+            else:
+                inputs.requires_grad = False
+                outputs = lut_quantizer(inputs,
+                                         lut_values=self._lut_values_torch,
+                                         signed=True,
+                                         threshold=self._threshold_torch,
+                                         lut_values_bitwidth=self.lut_values_bitwidth,
+                                         eps=self.eps,
+                                         per_channel=self.per_channel,
+                                         channel_axis=self.channel_axis,
+                                         input_rank=self.input_rank)
 
-            inputs.requires_grad = False
-            return lut_quantizer(inputs,
-                                 lut_values=self._lut_values_torch,
-                                 signed=True,
-                                 threshold=self._threshold_torch,
-                                 lut_values_bitwidth=self.lut_values_bitwidth,
-                                 eps=self.eps,
-                                 per_channel=self.per_channel,
-                                 channel_axis=self.channel_axis,
-                                 input_rank=self.input_rank
-                                 )
+            if self.reuse and self.quantizer_first_run:
+                self.resue_outputs = outputs
+                self.quantizer_first_run = False
 
+            return outputs
 
     class WeightsLUTSymmetricF(BaseWeightQuantizerAutogradFunction):
         """
