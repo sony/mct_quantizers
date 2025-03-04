@@ -88,7 +88,8 @@ if FOUND_TORCH:
             assert len(
                 self.scales) == 1, f'For activation, quantization per channel is not supported and threshold should ' \
                                    f'be of length 1 but is {len(threshold)}'
-            self.scales = self.scales[0]
+            
+            self.scales = float(self.scales[0])
 
             self.zero_points = 0
 
