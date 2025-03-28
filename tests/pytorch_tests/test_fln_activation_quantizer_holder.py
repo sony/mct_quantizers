@@ -1,4 +1,4 @@
-# Copyright 2023 Sony Semiconductor Israel, Inc. All rights reserved.
+# Copyright 2025 Sony Semiconductor Israel, Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import numpy as np
 from torch.fx import symbolic_trace
 
 from mct_quantizers.pytorch.fln_activation_quantization_holder import PytorchFLNActivationQuantizationHolder
+from mct_quantizers.pytorch.activation_quantization_holder import PytorchActivationQuantizationHolder
 from mct_quantizers.pytorch.quantizers import ActivationSymmetricInferableQuantizer, ActivationPOTInferableQuantizer, ActivationUniformInferableQuantizer
 
 
@@ -55,6 +56,10 @@ class TestPytorchFNLActivationQuantizationHolderInference(unittest.TestCase):
             # Quantize tensor
             quantized_tensor = model(input_tensor)
 
+            # Only used when quantization_bypass is False
+            exp_model = PytorchActivationQuantizationHolder(quantizer)
+            exp_quantized_tensor = exp_model(input_tensor)
+
             self.assertTrue(isinstance(model.activation_holder_quantizer, exp_quantizer_class))
             self.assertTrue(model.quantization_bypass == exp_quantization_bypass)
 
@@ -76,14 +81,17 @@ class TestPytorchFNLActivationQuantizationHolderInference(unittest.TestCase):
             if quantization_bypass:
                 # Value is the same for input and output
                 self.assertTrue(np.allclose(quantized_tensor, input_tensor), f'Expected values are the same tensor but output tensor is {quantized_tensor}')  
-            else:
+            else:   # quantization_bypass is False
+                # Output value is the same as PytorchActivationQuantizationHolder
+                self.assertTrue(np.allclose(quantized_tensor, exp_quantized_tensor), f'Expected values are the same as PytorchActivationQuantizationHolder but output tensor is {quantized_tensor}')
+
                 self.assertTrue(len(torch.unique(quantized_tensor)) <= 2 ** quantizer_args["num_bits"], f'Quantized tensor expected to have no more than {2 ** quantizer_args["num_bits"]} unique values but has {len(np.unique(quantized_tensor))} unique values')
                 # Assert some values are negative (signed quantization)
                 self.assertTrue(torch.any(quantized_tensor < 0).item(), f'Expected some values to be negative but quantized tensor is {quantized_tensor}')
 
 
 class TestPytorchFLNActivationQuantizationHolder(unittest.TestCase):
-    
+
     def setUp(self):
         self.test_cases = [
             (ActivationPOTInferableQuantizer, {"num_bits": 3, "threshold": [4], "signed": True}, True),
@@ -99,17 +107,23 @@ class TestPytorchFLNActivationQuantizationHolder(unittest.TestCase):
             with self.subTest(quantizer_class=quantizer_class):
                 quantizer = quantizer_class(**quantizer_args)
                 model = PytorchFLNActivationQuantizationHolder(quantizer, quantization_bypass)
-                x = torch.ones(1, 1)
-                model(x)
+
+                # Initialize a random input to quantize between -50 to 50.
+                x = torch.from_numpy(np.random.rand(1, 3, 50, 50). astype(np.float32) * 100 - 50, )
+                exp_output_tensor = model(x)
+
                 fx_model = symbolic_trace(model)
                 
                 with tempfile.NamedTemporaryFile(delete=False, suffix='.pth') as tmp_file:
                     tmp_pth_file = tmp_file.name
-                
+
                 try:
                     torch.save(fx_model, tmp_pth_file)
                     loaded_model = torch.load(tmp_pth_file)
-                    loaded_model(x)
+                    output_tensor = loaded_model(x)
+
+                    # Output value is the same as the quanization holder before saving.
+                    self.assertTrue(np.allclose(output_tensor, exp_output_tensor), f'Expected values are the same as the quanization holder before saving but output tensor is {output_tensor}')
                 finally:
                     os.remove(tmp_pth_file)
 

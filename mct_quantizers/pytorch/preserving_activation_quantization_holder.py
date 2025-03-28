@@ -1,4 +1,4 @@
-# Copyright 2023 Sony Semiconductor Israel, Inc. All rights reserved.
+# Copyright 2025 Sony Semiconductor Israel, Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 # ==============================================================================
 
 from mct_quantizers.common.base_inferable_quantizer import BaseInferableQuantizer
-from mct_quantizers.common.constants import FOUND_TORCH, PRESERVING_ACTIVATION_HOLDER_QUANTIZER
+from mct_quantizers.common.constants import FOUND_TORCH
 from mct_quantizers.pytorch.activation_quantization_holder import PytorchActivationQuantizationHolder
 from mct_quantizers.logger import Logger
 
@@ -27,19 +27,19 @@ if FOUND_TORCH:
         """
         def __init__(self,
                      activation_holder_quantizer: BaseInferableQuantizer,
+                     quantization_bypass: bool = False,
                      **kwargs):
             """
 
             Args:
                 activation_holder_quantizer: Quantizer to use during inference.
-                **kwargs: Key-word arguments for the base layer
+                quantization_bypass: Indicates whether to bypass quantization for the activation holder.
+                **kwargs: Key-word arguments used by torch.nn.Module.
             """
 
             super(PytorchPreservingActivationQuantizationHolder, self).__init__(activation_holder_quantizer=activation_holder_quantizer,
                                                                                 **kwargs)
-            self.activation_holder_quantizer.initialize_quantization(None,
-                                                                     PRESERVING_ACTIVATION_HOLDER_QUANTIZER + "_out",
-                                                                     self)
+            self.quantization_bypass = quantization_bypass
 
         def forward(self, inputs):
             """
@@ -48,10 +48,12 @@ if FOUND_TORCH:
             Args:
                 inputs: Input tensors to quantize with the activation quantizer.
 
-            Returns: Output of the input tensor.
+            Returns: Output of the activation quantizer (quantized input tensor or input tensor).
 
             """
-            return inputs
+            if self.quantization_bypass:
+                return inputs
+            return super().forward(inputs)
 
 else:
     class PytorchPreservingActivationQuantizationHolder:  # pragma: no cover
