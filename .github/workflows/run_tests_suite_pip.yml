@@ -55,7 +55,7 @@ jobs:
       - name: Prepare for Torch
         run: |
           pip uninstall tensorflow -y
-          pip install torch==2.0.* torchvision onnx onnxruntime onnxruntime-extensions
+          pip install torch==2.0.* torchvision onnx onnxruntime "onnxruntime-extensions<0.14"
       - name: Run Torch Tests
         run: |
           python -m unittest discover tests/pytorch_tests --verbose
