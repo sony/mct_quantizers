@@ -62,11 +62,6 @@ QUANTIZER_ID = 'identifier'
 ACTIVATION_QUANTIZERS = "activation_quantizers"
 # In ActivationQuantizationHolder only one quantizer is used thus a new attribute name is needed
 ACTIVATION_HOLDER_QUANTIZER = "activation_holder_quantizer"
-# In FNLActivationQuantizationHolder only one quantizer is used thus a new attribute name is needed
-FLN_ACTIVATION_HOLDER_QUANTIZER = "fln_activation_holder_quantizer"
-# In PreservingActivationQuantizationHolder only one quantizer is used thus a new attribute name is needed
-PRESERVING_ACTIVATION_HOLDER_QUANTIZER = "preserving_activation_holder_quantizer"
-
 
 # Quantizer signature parameters:
 NUM_BITS = 'num_bits'

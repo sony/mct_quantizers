@@ -31,7 +31,7 @@ if FOUND_TORCH:
 
             Args:
                 activation_holder_quantizer: Quantizer to use during inference.
-                **kwargs: Key-word arguments for the base layer
+                **kwargs: Key-word arguments used by torch.nn.Module.
             """
 
             super(PytorchActivationQuantizationHolder, self).__init__(**kwargs)

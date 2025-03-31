@@ -69,8 +69,11 @@ class TestActivationQuantizationHolder(unittest.TestCase):
             with self.subTest(quantizer_class=quantizer_class):
                 quantizer = quantizer_class(**quantizer_args)
                 model = PytorchActivationQuantizationHolder(quantizer)
-                x = torch.ones(1, 1)
-                model(x)
+
+                # Initialize a random input to quantize between -50 to 50.
+                x = torch.from_numpy(np.random.rand(1, 3, 50, 50). astype(np.float32) * 100 - 50, )
+                exp_output_tensor = model(x)
+
                 fx_model = symbolic_trace(model)
                 
                 with tempfile.NamedTemporaryFile(delete=False, suffix='.pth') as tmp_file:
@@ -79,7 +82,10 @@ class TestActivationQuantizationHolder(unittest.TestCase):
                 try:
                     torch.save(fx_model, tmp_pth_file)
                     loaded_model = torch.load(tmp_pth_file)
-                    loaded_model(x)
+                    output_tensor = loaded_model(x)
+
+                    # Output value is the same as the quanization holder before saving.
+                    self.assertTrue(np.allclose(output_tensor, exp_output_tensor), f'Expected values are the same as the quanization holder before saving but output tensor is {output_tensor}')
                 finally:
                     os.remove(tmp_pth_file)
 
