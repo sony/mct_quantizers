@@ -251,7 +251,7 @@ class TestPytorchWeightsInferableQuantizers(unittest.TestCase):
 
         # Enable reuse
         quantizer.enable_reuse_quantizer()
-        self.assertTrue(quantizer.reuse,
+        self.assertTrue(quantizer.enable_reuse,
                         f'reuse should be true but got false')
         self.assertTrue(quantizer.quantizer_first_run,
                         f'At first quantizer_first_run should be true but got false')

@@ -34,6 +34,7 @@ if FOUND_TORCH:
             # Reuse output: run only first quantizer opertion, save the result
             # and return it for others quantizer operation
             self.reuse = False
+            self.enable_reuse = False
             self.quantizer_first_run = True
             self.resue_outputs = None
 
@@ -41,7 +42,11 @@ if FOUND_TORCH:
             self._use_custom_impl = True
 
         def enable_reuse_quantizer(self):
-            self.reuse = True
+            self.enable_reuse = True
+            self.quantizer_first_run = True
+
+        def disable_reuse_quantizer(self):
+            self.enable_reuse = False
 
         @abstractmethod
         def __call__(self, inputs: torch.Tensor):
