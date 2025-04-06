@@ -125,7 +125,7 @@ if FOUND_TORCH:
             Returns:
                 quantized tensor.
             """
-            if self.reuse and not self.quantizer_first_run:
+            if self.enable_reuse and not self.quantizer_first_run:
                 return self.resue_outputs
 
             if self._use_custom_impl and torch.jit.is_tracing():
@@ -150,7 +150,7 @@ if FOUND_TORCH:
                                                                  quant_min=self.min_quantized_domain,
                                                                  quant_max=self.max_quantized_domain)
 
-            if self.reuse and self.quantizer_first_run:
+            if self.enable_reuse and self.quantizer_first_run:
                 self.resue_outputs = outputs
                 self.quantizer_first_run = False
 

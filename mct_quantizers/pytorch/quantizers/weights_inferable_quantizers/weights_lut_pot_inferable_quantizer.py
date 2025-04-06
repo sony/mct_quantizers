@@ -81,7 +81,7 @@ if FOUND_TORCH:
             Returns:
                 quantized tensor.
             """
-            if self.reuse and not self.quantizer_first_run:
+            if self.enable_reuse and not self.quantizer_first_run:
                 return self.resue_outputs
 
             if self._use_custom_impl and torch.jit.is_tracing():
@@ -97,7 +97,7 @@ if FOUND_TORCH:
             else:
                 outputs = super(WeightsLUTPOTInferableQuantizer, self).__call__(inputs)
 
-            if self.reuse and self.quantizer_first_run:
+            if self.enable_reuse and self.quantizer_first_run:
                 self.resue_outputs = outputs
                 self.quantizer_first_run = False
 
