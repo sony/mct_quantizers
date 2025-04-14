@@ -5,7 +5,7 @@ on:
     - cron: 0 0 * * *
 
 jobs:
-  run-comp-torch-2_3-v1_4:
+  run-comp-torch-2_3-v1_5_2:
     uses: ./.github/workflows/compatibility_torch_tests.yml
     with:
       save_version: "v1.5.2"
