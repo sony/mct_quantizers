@@ -40,8 +40,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install torch==${{  inputs.torch_version  }} onnx onnxruntime "onnxruntime-extensions<0.14"
+      - name: Revert requirements for Torch 2.2
         if: startsWith(inputs.torch_version, '2.2')
-          git checkout . # revert changes in "requirements file to allow checking out to a release tag
+        run: |
+          git checkout .
       - name: Run save model tests with latest version
         run: |
           cd tests
