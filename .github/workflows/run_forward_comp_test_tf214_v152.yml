@@ -1,0 +1,13 @@
+name: Run Forward Compatibility Test - Tensorflow 2.14 MCTQ v1.5.2
+on:
+  workflow_dispatch: # Allow manual triggers
+  schedule:
+    - cron: 0 0 * * *
+
+jobs:
+  run-forward-comp-tensorflow-2_14-v1_5_2:
+    uses: ./.github/workflows/forward_compatibility_keras_tests.yml
+    with:
+      load_version: "v1.5.2"
+      python_version: "3.12"
+      tf_version: "2.14.*"
