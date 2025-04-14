@@ -40,6 +40,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install torch==${{  inputs.torch_version  }} onnx onnxruntime "onnxruntime-extensions<0.14"
+        if: startsWith(inputs.torch_version, '2.2')
+          git checkout . # revert changes in "requirements file to allow checking out to a release tag
       - name: Checkout to MCT Quantizers requested tag for saving test models
         run: |
           git checkout tags/${{  inputs.save_version  }}
