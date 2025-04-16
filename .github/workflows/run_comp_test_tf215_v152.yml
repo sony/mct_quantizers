@@ -1,13 +1,13 @@
-name: Run Backward Compatibility Test - Tensorflow 2.12 MCTQ v1.3.0
+name: Run Backward Compatibility Test - Tensorflow 2.15 MCTQ v1.5.2
 on:
   workflow_dispatch: # Allow manual triggers
   schedule:
     - cron: 0 0 * * *
 
 jobs:
-  run-comp-tensorflow-2_12-v1_3:
+  run-comp-tensorflow-2_15-v1_5_2:
     uses: ./.github/workflows/compatibility_keras_tests.yml
     with:
-      save_version: "v1.3.0"
+      save_version: "v1.5.2"
       python_version: "3.10"
-      tf_version: "2.12.*"
+      tf_version: "2.15.*"
