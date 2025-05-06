@@ -42,6 +42,7 @@ setup(name='mct-quantizers',
       long_description=get_log_description(),
       long_description_content_type="text/markdown",
       description='Infrastructure for support neural networks compression',
+      author_email='ssi-dnn-dev@sony.com',
       packages=find_packages(
           exclude=["tests", "tests.*",
                    "requirements", "requirements.*"]),
